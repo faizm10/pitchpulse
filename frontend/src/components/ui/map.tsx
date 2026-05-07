@@ -194,10 +194,18 @@ const Map = forwardRef<MapRef, MapProps>(function Map(
       attributionControl: {
         compact: true,
       },
-      projection: projectionRef.current,
       ...propsRef.current,
       ...viewportRef.current,
     });
+
+    const initialProjection = projectionRef.current;
+    if (initialProjection) {
+      try {
+        map.setProjection(initialProjection);
+      } catch (error) {
+        console.error("[Map] setProjection failed", error);
+      }
+    }
 
     const styleDataHandler = () => {
       clearStyleTimeout();
@@ -301,8 +309,18 @@ const Map = forwardRef<MapRef, MapProps>(function Map(
     currentStyleRef.current = newStyle;
     setIsStyleLoaded(false);
 
-    mapInstance.setStyle(newStyle, { diff: true });
+    mapInstance.setStyle(newStyle);
   }, [mapInstance, resolvedTheme, mapStyles, clearStyleTimeout]);
+
+  // Handle projection change
+  useEffect(() => {
+    if (!mapInstance || !projection) return;
+    try {
+      mapInstance.setProjection(projection);
+    } catch (error) {
+      console.error("[Map] setProjection failed", error);
+    }
+  }, [mapInstance, projection]);
 
   const contextValue = useMemo(
     () => ({
