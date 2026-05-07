@@ -79,8 +79,9 @@ function NewsBentoCard({
       )}
 
       <div className="relative flex h-full flex-col justify-end p-4">
-        <div className="inline-flex w-fit max-w-full items-center rounded-full border border-white/10 bg-black/55 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-neutral-200 backdrop-blur-sm">
-          {timeAgo(published)}
+        <div className="inline-flex w-fit max-w-full items-center gap-2 rounded-full border border-white/10 bg-black/35 px-2.5 py-1 text-[11px] font-medium tracking-wide text-white/90 backdrop-blur-md shadow-sm shadow-black/20">
+          <span className="h-1 w-1 rounded-full bg-white/70" />
+          <span>{timeAgo(published)}</span>
         </div>
 
         <p
