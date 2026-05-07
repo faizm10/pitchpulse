@@ -15,7 +15,13 @@ export async function GET() {
       return Response.json({ error: "Failed to fetch news" }, { status: 502 });
     }
     const data: ESPNNewsResponse = await res.json();
-    const articles = parseNews(data);
+    const allArticles = parseNews(data);
+    const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    const articles = allArticles.filter((article) => {
+      const ts = Date.parse(article.published);
+      if (Number.isNaN(ts)) return false;
+      return ts >= sevenDaysAgo;
+    });
     return Response.json(
       { articles },
       {
