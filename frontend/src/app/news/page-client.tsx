@@ -41,6 +41,7 @@ function NewsBentoCard({
   url,
   published,
   byline,
+  compact = false,
   className,
 }: {
   headline: string;
@@ -49,6 +50,7 @@ function NewsBentoCard({
   url: string;
   published: string;
   byline?: string | null;
+  compact?: boolean;
   className: string;
 }) {
   return (
@@ -77,18 +79,32 @@ function NewsBentoCard({
       )}
 
       <div className="relative flex h-full flex-col justify-end p-4">
-        <p className="line-clamp-3 text-base font-semibold leading-snug text-neutral-100">
+        <div className="inline-flex w-fit max-w-full items-center rounded-full border border-white/10 bg-black/55 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-neutral-200 backdrop-blur-sm">
+          {timeAgo(published)}
+        </div>
+
+        <p
+          className={[
+            "mt-3 text-neutral-100",
+            compact
+              ? "line-clamp-2 text-sm font-semibold leading-snug"
+              : "line-clamp-3 text-base font-semibold leading-snug",
+          ].join(" ")}
+        >
           {headline}
         </p>
-        {description && (
+
+        {!compact && description && (
           <p className="mt-2 line-clamp-3 text-xs leading-relaxed text-neutral-300/90">
             {description}
           </p>
         )}
-        <p className="mt-3 text-[10px] uppercase tracking-[0.18em] text-neutral-400/90">
-          {timeAgo(published)}
-          {byline ? ` · ${byline}` : ""}
-        </p>
+
+        {byline && !compact && (
+          <p className="mt-3 text-[10px] uppercase tracking-[0.18em] text-neutral-400/90">
+            {byline}
+          </p>
+        )}
       </div>
     </a>
   );
@@ -181,6 +197,7 @@ export function NewsPageClient() {
         {third && (
           <NewsBentoCard
             className="md:col-span-2 md:row-span-1"
+            compact
             headline={third.headline}
             description={third.description}
             imageUrl={third.imageUrl}
@@ -191,15 +208,20 @@ export function NewsPageClient() {
         )}
 
         {rest.map((article, index) => (
-          <NewsBentoCard
-            key={article.id}
-            className={
+          (() => {
+            const className =
               index % 7 === 0
                 ? "md:col-span-3 md:row-span-2"
                 : index % 7 === 3
                   ? "md:col-span-3 md:row-span-1"
-                  : "md:col-span-2 md:row-span-1"
-            }
+                  : "md:col-span-2 md:row-span-1";
+            const compact = className.includes("md:row-span-1");
+
+            return (
+          <NewsBentoCard
+            key={article.id}
+            className={className}
+            compact={compact}
             headline={article.headline}
             description={article.description}
             imageUrl={article.imageUrl}
@@ -207,6 +229,8 @@ export function NewsPageClient() {
             published={article.published}
             byline={article.byline}
           />
+            );
+          })()
         ))}
       </div>
     </div>
