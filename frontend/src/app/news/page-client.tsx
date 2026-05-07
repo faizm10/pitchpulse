@@ -65,7 +65,7 @@ function NewsBentoCard({
       ].join(" ")}
     >
       {imageUrl ? (
-        <div className="relative h-full">
+        <>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={imageUrl}
@@ -73,7 +73,7 @@ function NewsBentoCard({
             className="absolute inset-0 h-full w-full object-cover object-center opacity-90 transition group-hover:opacity-100"
           />
           <div className="absolute inset-0 bg-linear-to-t from-black/85 via-black/30 to-black/10" />
-        </div>
+        </>
       ) : (
         <div className="absolute inset-0 bg-linear-to-br from-white/6 via-white/2 to-transparent" />
       )}
