@@ -3,9 +3,24 @@ import type { ESPNScoreboardResponse } from "@/types/espn";
 
 export const revalidate = 60; // cache for 60 seconds
 
-const ESPN_SCOREBOARD =
-  "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard";
+const formatDate = (date: Date) =>
+  date.toISOString().slice(0, 10).replace(/-/g, "");
 
+const TOURNAMENT_START = new Date("2026-06-11");
+
+const TODAY = new Date();
+
+// If before tournament starts, lock to start date
+const startBase =
+  TODAY < TOURNAMENT_START ? TOURNAMENT_START : TODAY;
+
+// Build 7-day window
+const end = new Date(startBase);
+end.setDate(startBase.getDate() + 7);
+
+const ESPN_SCOREBOARD =
+  `https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=${formatDate(startBase)}-${formatDate(end)}`;
+  
 export async function GET() {
   try {
     const res = await fetch(ESPN_SCOREBOARD, {

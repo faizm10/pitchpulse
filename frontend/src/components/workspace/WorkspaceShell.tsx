@@ -1,9 +1,20 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ChevronDown, ChevronUp, GripHorizontal } from "lucide-react";
-import type { Match, NewsArticle, StandingsGroupBlock } from "@/types/espn";
+import {
+  ChevronDown,
+  ChevronUp,
+  GripHorizontal,
+} from "lucide-react";
+
+import type {
+  Match,
+  NewsArticle,
+  StandingsGroupBlock,
+} from "@/types/espn";
+
 import { cn } from "@/lib/utils";
+
 import { NewsTab } from "./NewsTab";
 import { GamesTab } from "./GamesTab";
 import { FeedStandings } from "./FeedStandings";
@@ -13,19 +24,29 @@ interface WorkspaceShellProps {
   matches: Match[];
   scoresLoading: boolean;
   scoresError: string | null;
+
   newsArticles: NewsArticle[];
   newsLoading: boolean;
   newsError: string | null;
   newsLastUpdated: Date | null;
+
   selectedMatchId: string | null;
+
   collapsed: boolean;
   mobileOpen: boolean;
+
   height: number;
+
   onHeightChange: (height: number) => void;
+
   onCollapseToggle: () => void;
+
   onMobileOpenChange: (open: boolean) => void;
+
   onSelectMatch: (id: string) => void;
+
   onClearSelectedMatch: () => void;
+
   standingsGroups: StandingsGroupBlock[];
   standingsLoading: boolean;
   standingsError: string | null;
@@ -39,33 +60,50 @@ export function WorkspaceShell({
   matches,
   scoresLoading,
   scoresError,
+
   newsArticles,
   newsLoading,
   newsError,
   newsLastUpdated,
+
   selectedMatchId,
+
   collapsed,
   mobileOpen,
+
   height,
+
   onHeightChange,
+
   onCollapseToggle,
+
   onMobileOpenChange,
+
   onSelectMatch,
+
   onClearSelectedMatch,
+
   standingsGroups,
   standingsLoading,
   standingsError,
 }: WorkspaceShellProps) {
   const [dragging, setDragging] = useState(false);
+
   const [isMobile, setIsMobile] = useState(false);
+
   const detailRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`);
+    const mediaQuery = window.matchMedia(
+      `(max-width: ${MOBILE_BREAKPOINT - 1}px)`
+    );
+
     const sync = () => setIsMobile(mediaQuery.matches);
 
     sync();
+
     mediaQuery.addEventListener("change", sync);
+
     return () => mediaQuery.removeEventListener("change", sync);
   }, []);
 
@@ -77,8 +115,12 @@ export function WorkspaceShell({
     function handlePointerMove(event: PointerEvent) {
       const nextHeight = Math.min(
         DESKTOP_MAX_HEIGHT,
-        Math.max(DESKTOP_MIN_HEIGHT, window.innerHeight - event.clientY)
+        Math.max(
+          DESKTOP_MIN_HEIGHT,
+          window.innerHeight - event.clientY
+        )
       );
+
       onHeightChange(nextHeight);
     }
 
@@ -87,11 +129,19 @@ export function WorkspaceShell({
     }
 
     window.addEventListener("pointermove", handlePointerMove);
+
     window.addEventListener("pointerup", handlePointerUp);
 
     return () => {
-      window.removeEventListener("pointermove", handlePointerMove);
-      window.removeEventListener("pointerup", handlePointerUp);
+      window.removeEventListener(
+        "pointermove",
+        handlePointerMove
+      );
+
+      window.removeEventListener(
+        "pointerup",
+        handlePointerUp
+      );
     };
   }, [dragging, isMobile, onHeightChange]);
 
@@ -106,55 +156,94 @@ export function WorkspaceShell({
     });
   }, [isMobile, selectedMatchId]);
 
-  const desktopHeight = collapsed ? 44 : height;
-  const mobileHeight = mobileOpen ? "min(72vh, 36rem)" : "3rem";
+  const desktopHeight = collapsed ? 52 : height;
+
+  const mobileHeight = mobileOpen
+    ? "min(78vh, 42rem)"
+    : "3.5rem";
 
   return (
     <>
+      {/* Mobile Overlay */}
       <div
         className={cn(
-          "absolute inset-0 z-[120] bg-black/30 transition-opacity md:hidden",
-          mobileOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
+          "absolute inset-0 z-[120] bg-black/40 backdrop-blur-sm transition-opacity md:hidden",
+          mobileOpen
+            ? "pointer-events-auto opacity-100"
+            : "pointer-events-none opacity-0"
         )}
         onClick={() => onMobileOpenChange(false)}
       />
 
+      {/* Workspace */}
       <section
         className={cn(
-          "pointer-events-auto absolute inset-x-0 bottom-0 z-[130] flex flex-col border-t border-white/10 bg-neutral-950/95 shadow-2xl shadow-black/40 backdrop-blur-md",
-          "transition-transform duration-200",
-          "md:left-0 md:right-0 md:bottom-0 md:rounded-t-2xl",
-          !isMobile && !dragging && "md:transition-[height,transform]",
-          mobileOpen ? "translate-y-0" : "translate-y-[calc(100%-3rem)] md:translate-y-0"
+          `
+          pointer-events-auto
+          absolute
+          inset-x-0
+          bottom-0
+          z-[130]
+          flex
+          flex-col
+          overflow-hidden
+          border-t
+          border-white/10
+          bg-neutral-950/90
+          shadow-[0_-20px_80px_rgba(0,0,0,0.75)]
+          backdrop-blur-3xl
+          `,
+          "transition-transform duration-300",
+          "md:left-0 md:right-0 md:bottom-0 md:rounded-t-[2rem]",
+          !isMobile &&
+            !dragging &&
+            "md:transition-[height,transform]",
+          mobileOpen
+            ? "translate-y-0"
+            : "translate-y-[calc(100%-3.5rem)] md:translate-y-0"
         )}
-        style={{ height: isMobile ? mobileHeight : desktopHeight }}
+        style={{
+          height: isMobile
+            ? mobileHeight
+            : desktopHeight,
+        }}
       >
+        {/* Premium Glow Line */}
+        <div className="h-px w-full bg-gradient-to-r from-transparent via-lime-400/60 to-transparent" />
+
+        {/* Resize Handle */}
         {!isMobile && !collapsed && (
           <button
             type="button"
             onPointerDown={() => setDragging(true)}
             className={cn(
-              "absolute left-0 right-0 top-0 h-3 -translate-y-1/2 cursor-row-resize bg-transparent",
-              dragging && "bg-blue-500/20"
+              "absolute left-0 right-0 top-0 h-4 -translate-y-1/2 cursor-row-resize bg-transparent",
+              dragging && "bg-lime-400/10"
             )}
             aria-label="Resize workspace"
           >
-            <span className="absolute left-1/2 top-1/2 h-px w-24 -translate-x-1/2 -translate-y-1/2 bg-white/20" />
+            <span className="absolute left-1/2 top-1/2 h-px w-28 -translate-x-1/2 -translate-y-1/2 bg-lime-400/40" />
           </button>
         )}
 
-        <div className="flex items-center justify-between border-b border-white/10 px-4 py-2.5">
-          <div className="flex items-center gap-3">
-            <GripHorizontal className="size-4 text-neutral-600" />
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-white/10 bg-white/[0.02] px-5 py-4">
+          <div className="flex items-center gap-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-lime-400/20 bg-lime-400/10">
+              <GripHorizontal className="size-5 text-lime-400" />
+            </div>
+
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-neutral-500">
-                Match feed
+              <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-lime-400">
+                World Cup
               </p>
-              <p className="text-sm font-medium text-neutral-200">
-                News · fixtures
-              </p>
+
+              <h2 className="mt-1 text-lg font-black text-white">
+                Match Intelligence Feed
+              </h2>
             </div>
           </div>
+
           <button
             type="button"
             onClick={() => {
@@ -162,35 +251,59 @@ export function WorkspaceShell({
                 onMobileOpenChange(!mobileOpen);
                 return;
               }
+
               onCollapseToggle();
             }}
-            className="flex h-8 w-8 items-center justify-center rounded-md text-neutral-400 transition hover:bg-white/5 hover:text-white"
-            aria-label={collapsed ? "Expand workspace" : "Collapse workspace"}
+            className="
+              flex
+              h-10
+              w-10
+              items-center
+              justify-center
+              rounded-xl
+              border
+              border-white/10
+              bg-white/[0.03]
+              text-neutral-400
+              transition-all
+              duration-300
+              hover:border-lime-400/20
+              hover:bg-lime-400/10
+              hover:text-white
+            "
+            aria-label={
+              collapsed
+                ? "Expand workspace"
+                : "Collapse workspace"
+            }
           >
             {collapsed || !mobileOpen ? (
-              <ChevronUp className="size-4" />
+              <ChevronUp className="size-5" />
             ) : (
-              <ChevronDown className="size-4" />
+              <ChevronDown className="size-5" />
             )}
           </button>
         </div>
 
+        {/* Content */}
         {!collapsed && (
-          <div className="min-h-0 flex-1 overflow-y-auto p-4">
+          <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto p-5">
             <div
               className={cn(
-                "grid min-h-0 gap-4",
+                "grid min-h-0 gap-5",
                 selectedMatchId
-                  ? "md:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1.05fr)]"
+                  ? "md:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1.1fr)]"
                   : "md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]"
               )}
             >
-              <section className="rounded-xl border border-white/[0.08] bg-black/25">
-                <div className="border-b border-white/[0.08] px-4 py-2.5">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-neutral-500">
-                    News
+              {/* News */}
+              <section className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl">
+                <div className="border-b border-white/10 px-5 py-3">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-lime-400">
+                    News Feed
                   </p>
                 </div>
+
                 <NewsTab
                   articles={newsArticles}
                   loading={newsLoading}
@@ -199,12 +312,14 @@ export function WorkspaceShell({
                 />
               </section>
 
-              <section className="min-w-0 rounded-xl border border-white/[0.08] bg-black/25">
-                <div className="border-b border-white/[0.08] px-4 py-2.5">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-neutral-500">
-                    Games
+              {/* Games + Standings */}
+              <section className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl">
+                <div className="border-b border-white/10 px-5 py-3">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-lime-400">
+                    Match Center
                   </p>
                 </div>
+
                 <GamesTab
                   matches={matches}
                   loading={scoresLoading}
@@ -214,15 +329,19 @@ export function WorkspaceShell({
                     if (isMobile) {
                       onMobileOpenChange(true);
                     }
+
                     onSelectMatch(id);
                   }}
                 />
-                <div className="border-t border-white/[0.08]">
-                  <div className="border-b border-white/[0.08] px-4 py-2.5">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-neutral-500">
+
+                {/* Standings */}
+                <div className="border-t border-white/10">
+                  <div className="border-b border-white/10 px-5 py-3">
+                    <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-lime-400">
                       Standings
                     </p>
                   </div>
+
                   <FeedStandings
                     groups={standingsGroups}
                     loading={standingsLoading}
@@ -231,28 +350,57 @@ export function WorkspaceShell({
                 </div>
               </section>
 
+              {/* Match Detail */}
               {selectedMatchId && (
                 <section
                   ref={detailRef}
-                  className="rounded-xl border border-white/[0.08] bg-black/25"
+                  className="
+                    rounded-2xl
+                    border
+                    border-lime-400/10
+                    bg-gradient-to-br
+                    from-white/[0.04]
+                    to-white/[0.02]
+                    backdrop-blur-xl
+                  "
                 >
-                  <div className="border-b border-white/[0.08] px-4 py-2.5">
+                  <div className="border-b border-white/10 px-5 py-3">
                     <div className="flex items-center justify-between gap-3">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-neutral-500">
-                        Match detail
+                      <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-lime-400">
+                        Match Detail
                       </p>
+
                       <button
                         type="button"
                         onClick={onClearSelectedMatch}
-                        className="text-[10px] uppercase tracking-[0.18em] text-neutral-500 transition hover:text-neutral-200"
+                        className="
+                          rounded-lg
+                          border
+                          border-white/10
+                          px-3
+                          py-1.5
+                          text-[11px]
+                          font-semibold
+                          uppercase
+                          tracking-[0.18em]
+                          text-neutral-400
+                          transition-all
+                          duration-300
+                          hover:border-red-400/20
+                          hover:bg-red-400/10
+                          hover:text-white
+                        "
                       >
                         Close
                       </button>
                     </div>
                   </div>
+
                   <MatchDetailContent
                     matchId={selectedMatchId}
-                    onClearSelection={onClearSelectedMatch}
+                    onClearSelection={
+                      onClearSelectedMatch
+                    }
                   />
                 </section>
               )}

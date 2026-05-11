@@ -11,11 +11,17 @@ interface LiveScoresPanelProps {
   lastUpdated: Date | null;
   onSelectMatch?: (id: string) => void;
   selectedMatchId?: string | null;
+
+  
 }
 
 function LoadingSkeleton() {
+
+  
   return (
+    
     <div>
+      
       {Array.from({ length: 3 }).map((_, i) => (
         <div key={i} className="px-3 py-3 border-b border-white/5 last:border-0 animate-pulse">
           {/* Time + broadcast row */}
