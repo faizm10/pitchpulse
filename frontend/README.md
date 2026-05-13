@@ -1,36 +1,82 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PitchPulse — Next.js + TypeScript
 
-## Getting Started
+A real-time, map-first intelligence dashboard for the FIFA World Cup 2026.
+Original design — not affiliated with FIFA.
 
-First, run the development server:
+## Stack
+
+- **Next.js 14** (App Router)
+- **TypeScript** (strict)
+- **React 18**
+- Plain CSS with custom properties (no Tailwind, no UI lib)
+- Mock data in `lib/data.ts` — swap for a real API later
+
+## Getting started
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open <http://localhost:3000>.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Project layout
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+nextjs/
+├── app/
+│   ├── layout.tsx              # root layout + font/styles
+│   ├── globals.css             # design tokens + base styles
+│   ├── page.tsx                # / — map home
+│   ├── matches/page.tsx        # /matches
+│   ├── bracket/page.tsx        # /bracket
+│   ├── stats/page.tsx          # /stats
+│   ├── news/page.tsx           # /news
+│   ├── mywc/page.tsx           # /mywc — pick your team
+│   ├── match/[id]/page.tsx     # /match/:id
+│   ├── stadium/[id]/page.tsx   # /stadium/:id
+│   └── country/[code]/page.tsx # /country/:code (CA, US, MX)
+│
+├── components/
+│   ├── Providers.tsx           # TweaksContext + MyTeamContext
+│   ├── Topbar.tsx              # global nav
+│   ├── TweaksPanel.tsx         # floating tweaks panel
+│   ├── Shared.tsx              # Flag, Logo, FormDots, BackBar, …
+│   ├── MapView.tsx             # cartographic dot-grid hero map
+│   ├── Rail.tsx                # live matches, AI summary, pulses, table
+│   ├── MatchesList.tsx
+│   ├── Bracket.tsx
+│   ├── Stats.tsx
+│   ├── News.tsx
+│   ├── MatchDetail.tsx
+│   ├── StadiumView.tsx         # 3D flip card
+│   ├── CountryView.tsx
+│   └── MyWorldCup.tsx
+│
+└── lib/
+    ├── types.ts                # TypeScript types
+    └── data.ts                 # mock data (stadiums, teams, matches, …)
+```
 
-## Learn More
+## Design system
 
-To learn more about Next.js, take a look at the following resources:
+- **Looks** (`data-look="atlas"`): `atlas` (cream paper, default), `broadcast` (dark mode), `festival` (warm)
+- **Type pairs** (`data-type`): `editorial` (default), `modernist`, `mono`
+- **Density** (`data-density`): `cozy`, `compact`
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+The look/type/density attributes are set on `<html>` from the Tweaks panel and read by CSS variables in `globals.css`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## What to swap when going live
 
-## Deploy on Vercel
+| File | Replace with |
+|---|---|
+| `lib/data.ts` | Real sports-data API (`fetch` in server components) |
+| `MapView.tsx` SVG | Mapbox GL or Leaflet renderer |
+| AI narrative strings | OpenAI / Gemini streamed completion |
+| `MyTeamContext` localStorage | User account preference |
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Notes
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- All match results, scores, and player events are **fictional**.
+- Team and host city names are real, public facts.
+- No FIFA marks or branded assets are used.
