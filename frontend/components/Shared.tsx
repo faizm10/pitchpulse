@@ -4,16 +4,153 @@ import Link from 'next/link';
 import { teams } from '@/lib/data';
 import type { FormResult } from '@/lib/types';
 
+import {
+  GB_ENG,
+  GB_SCT,
+} from "country-flag-icons/react/3x2";
+
 // ───── Flag ─────
-export function Flag({ code, w = 22, h = 14 }: { code: string; w?: number; h?: number }) {
-  const team = teams[code];
-  if (!team) return null;
+import {
+  AR,
+  AU,
+  AT,
+  BE,
+  BA,
+  BR,
+  CA,
+  CV,
+  CO,
+  CG,
+  CI,
+  CW,
+  CZ,
+  EC,
+  EG,
+  SV,
+  FR,
+  DE,
+  GH,
+  HT,
+  IR,
+  IQ,
+  JP,
+  JO,
+  KR,
+  MX,
+  MA,
+  NL,
+  NZ,
+  NO,
+  PA,
+  PY,
+  PT,
+  QA,
+  SA,
+  SN,
+  ZA,
+  ES,
+  SE,
+  CH,
+  TN,
+  TR,
+  US,
+  UY,
+  UZ,
+  DZ,
+  CD,
+  HR,
+  GB,
+  
+} from "country-flag-icons/react/3x2";
+
+const FLAGS: Record<string, React.ComponentType<any>> = {
+  // Co-hosts
+  CAN: CA,
+  MEX: MX,
+  USA: US,
+
+  // AFC
+  AUS: AU,
+  IRQ: IQ,
+  IRN: IR,
+  JPN: JP,
+  JOR: JO,
+  KOR: KR,
+  QAT: QA,
+  KSA: SA,
+  UZB: UZ,
+
+  // CAF
+  ALG: DZ,
+  CPV: CV,
+  COD: CD,
+  CIV: CI,
+  EGY: EG,
+  GHA: GH,
+  MAR: MA,
+  SEN: SN,
+  RSA: ZA,
+  TUN: TN,
+
+  // Concacaf
+  CUW: CW,
+  HAI: HT,
+  PAN: PA,
+
+  // CONMEBOL
+  ARG: AR,
+  BRA: BR,
+  COL: CO,
+  ECU: EC,
+  PAR: PY,
+  URU: UY,
+
+  // OFC
+  NZL: NZ,
+
+  // UEFA
+  AUT: AT,
+  BEL: BE,
+  BIH: BA,
+  CRO: HR,
+  CZE: CZ,
+  ENG: GB_ENG,
+  SCO: GB_SCT,
+  FRA: FR,
+  GER: DE,
+  NED: NL,
+  NOR: NO,
+  POR: PT,
+
+  ESP: ES,
+  SWE: SE,
+  SUI: CH,
+  TUR: TR,
+  
+  
+};
+export function Flag({
+  code,
+  w = 22,
+  h = 14,
+}: {
+  code: string;
+  w?: number;
+  h?: number;
+}) {
+  const FlagIcon = FLAGS[code];
+
+  if (!FlagIcon) return null;
+
   return (
-    <span className="flag" style={{ width: w, height: h }}>
-      {team.flag.map((c, i) => (
-        <span key={i} style={{ background: c }} />
-      ))}
-    </span>
+    <FlagIcon
+      style={{
+        width: w,
+        height: h,
+        borderRadius: 2,
+        objectFit: "cover",
+      }}
+    />
   );
 }
 

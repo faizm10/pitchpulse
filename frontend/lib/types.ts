@@ -109,6 +109,7 @@ export interface BracketMatch {
 }
 
 export interface Bracket {
+  R32: BracketMatch[];
   R16: BracketMatch[];
   QF: BracketMatch[];
   SF: BracketMatch[];

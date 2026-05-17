@@ -107,24 +107,26 @@ export function parseScoreboard(data: ESPNScoreboardResponse): Match[] {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function standingEntryFromEspnEntry(entry: any): GroupStandingEntry {
+  console.log('raw entry:', JSON.stringify(entry).slice(0, 200)); // add this
+
   const stat = (name: string) =>
     entry.stats?.find((s: { name: string }) => s.name === name)?.value ?? 0;
 
   const teamObj = typeof entry.team === "object" ? entry.team : null;
-  const logoHref: string =
-    teamObj?.logos?.[0]?.href ?? entry.logo?.[0]?.href ?? "";
+  const logoHref: string = teamObj?.logos?.[0]?.href ?? entry.logo?.[0]?.href ?? "";
+  
+  // Use team.abbreviation directly — never derive from name
   const abbreviation: string =
-    teamObj?.abbreviation ??
-    entry.abbreviation ??
-    String(entry.team).slice(0, 3).toUpperCase();
-  const name: string = teamObj?.displayName ?? String(entry.team ?? "");
+    teamObj?.abbreviation ?? entry.abbreviation ?? "";
+    
+  const name: string = teamObj?.displayName ?? teamObj?.name ?? String(entry.team ?? "");
 
   const goalsFor = stat("pointsFor");
   const goalsAgainst = stat("pointsAgainst");
   const pointDifferential = stat("pointDifferential");
 
   return {
-    teamId: String(entry.id),
+    teamId: String(teamObj?.id ?? entry.id ?? ""),
     abbreviation,
     name,
     logo: logoHref,
@@ -237,7 +239,7 @@ export function parseSummary(data: ESPNSummaryResponse): MatchDetail {
     description: a.description ?? "",
     published: a.published,
     url: a.links?.web?.href ?? "#",
-    imageUrl: a.images?.[0]?.url,
+    image: a.images?.[0]?.url,
     byline: a.byline,
   }));
 
@@ -260,13 +262,14 @@ export function parseSummary(data: ESPNSummaryResponse): MatchDetail {
 }
 
 export function parseNews(data: ESPNNewsResponse): NewsArticle[] {
+  console.log(data.articles[0]);
   return data.articles.map((article) => ({
     id: article.dataSourceIdentifier,
     headline: article.headline,
     description: article.description ?? "",
     published: article.published,
     url: article.links?.web?.href ?? "#",
-    imageUrl: article.images?.[0]?.url,
+    image: article.images?.[0]?.url,
     byline: article.byline,
   }));
 }

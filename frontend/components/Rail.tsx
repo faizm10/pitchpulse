@@ -6,7 +6,8 @@ import { useRouter } from 'next/navigation';
 import { matches, teams, pulses, stadiums, groups } from '@/lib/data';
 import { Flag, FormDots, ago } from './Shared';
 import { useTweaks, useMyTeam } from './Providers';
-import type { Match } from '@/lib/types';
+import type { Match as LocalMatch } from '@/lib/types';
+import type { Match } from '@/types/espn';
 
 const fullAi = `Argentina lead Japan 3–2 with 89 minutes played — Messi's late header has the Azteca shaking. Brazil hold a one-goal edge over Portugal in New Jersey. France and Belgium remain level. Morocco's first-half strike is the surprise of the day.`;
 
@@ -14,6 +15,7 @@ export function Rail() {
   const { tweaks } = useTweaks();
   const { myTeam } = useMyTeam();
   const [aiText, setAiText] = useState('');
+  const [liveMatches, setLiveMatches] = useState<Match[]>([]);
 
   useEffect(() => {
     if (!tweaks.aiSummary) return;
@@ -27,21 +29,40 @@ export function Rail() {
     return () => clearInterval(t);
   }, [tweaks.aiSummary]);
 
-  const live = matches.filter((m) => m.status === 'live');
+  useEffect(() => {
+    async function loadLive() {
+      try {
+        const res = await fetch('/api/scores');
+        const data = await res.json();
+        setLiveMatches((data.matches ?? []).filter((m: Match) => m.state === 'in'));
+      } catch {}
+    }
+    loadLive();
+    const interval = setInterval(loadLive, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
   const upcoming = matches.filter((m) => m.status === 'upcoming').slice(0, 4);
 
   return (
     <aside className="rail">
       <MyTeamBanner myTeam={myTeam} />
 
+      {/* Live Now */}
       <div className="rail-section">
         <div className="rail-h">
-          <span>LIVE NOW · {live.length}</span>
+          <span>LIVE NOW · {liveMatches.length}</span>
           <span style={{ color: 'var(--live)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
             <span className="status-dot live" /> ON AIR
           </span>
         </div>
-        {live.map((m) => <MatchRow key={m.id} m={m} />)}
+        {liveMatches.length === 0 ? (
+          <div className="mono" style={{ fontSize: 11, color: 'var(--ink-3)', padding: '8px 0' }}>
+            No live matches right now.
+          </div>
+        ) : (
+          liveMatches.map((m) => <LiveMatchRow key={m.id} m={m} />)
+        )}
       </div>
 
       {tweaks.aiSummary && (
@@ -174,7 +195,34 @@ function MyTeamBanner({ myTeam }: { myTeam: string | null }) {
   );
 }
 
-function MatchRow({ m }: { m: Match }) {
+function LiveMatchRow({ m }: { m: Match }) {
+  const router = useRouter();
+  return (
+    <div className="match-row" onClick={() => router.push(`/match/${m.id}`)}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        <Flag code={m.homeTeam.abbreviation} />
+        <Flag code={m.awayTeam.abbreviation} />
+      </div>
+      <div style={{ minWidth: 0 }}>
+        <div className="team-name-sm">{m.homeTeam.name}</div>
+        <div className="team-name-sm" style={{ opacity: 0.6 }}>{m.awayTeam.name}</div>
+        <div className="mono" style={{ fontSize: 9, color: 'var(--ink-3)', marginTop: 4, letterSpacing: '0.08em' }}>
+          {m.venue.city.toUpperCase()}
+        </div>
+      </div>
+      <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+        <div className="score">{m.homeTeam.score}</div>
+        <div className="score" style={{ opacity: 0.6 }}>{m.awayTeam.score}</div>
+        <div className="mono" style={{ fontSize: 9, color: 'var(--live)', letterSpacing: '0.08em' }}>
+          <span className="status-dot live" style={{ display: 'inline-block', marginRight: 4 }} />
+          {m.displayClock}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MatchRow({ m }: { m: LocalMatch }) {
   const router = useRouter();
   const stadium = stadiums.find((s) => s.id === m.stadium);
   return (

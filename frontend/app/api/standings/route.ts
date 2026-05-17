@@ -144,6 +144,21 @@ async function fetchSummary(
   }
 }
 
+const ESPN_ID_TO_ABB: Record<string, string> = {
+  "203": "MEX", "467": "RSA", "451": "KOR", "450": "CZE",
+  "206": "CAN", "452": "BIH", "4398": "QAT", "475": "SUI",
+  "205": "BRA", "2869": "MAR", "2654": "HAI", "580": "SCO",
+  "660": "USA", "210": "PAR", "628": "AUS", "465": "TUR",
+  "481": "GER", "11678": "CUW", "4789": "CIV", "209": "ECU",
+  "449": "NED", "627": "JPN", "466": "SWE", "659": "TUN",
+  "459": "BEL", "2620": "EGY", "469": "IRN", "2666": "NZL",
+  "164": "ESP", "2597": "CPV", "655": "KSA", "212": "URU",
+  "478": "FRA", "654": "SEN", "4375": "IRQ", "464": "NOR",
+  "202": "ARG", "624": "ALG", "474": "AUT", "2917": "JOR",
+  "482": "POR", "2850": "COD", "2570": "UZB", "208": "COL",
+  "448": "ENG", "477": "CRO", "4469": "GHA", "2659": "PAN",
+};
+
 export async function GET() {
   try {
     const groups = await collectAllGroupStandings();
