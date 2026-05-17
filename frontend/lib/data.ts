@@ -1292,6 +1292,7 @@ export const topCards: TopCards[] = [
 ];
 
 export const bracket: Bracket = {
+  "R32": [],
   "R16": [
     {
       "id": "r1",

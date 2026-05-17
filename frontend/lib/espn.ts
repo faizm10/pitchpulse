@@ -259,7 +259,7 @@ export function parseSummary(data: ESPNSummaryResponse): MatchDetail {
     throw new Error("Missing home or away competitor in summary");
   }
 
-  function summaryTeam(c: typeof home): MatchTeam {
+  function summaryTeam(c: NonNullable<typeof home>): MatchTeam {
     return {
       id: c.team.id,
       name: c.team.displayName,

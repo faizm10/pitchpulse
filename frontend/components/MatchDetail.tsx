@@ -57,14 +57,15 @@ export function MatchDetail({ id }: { id: string }) {
   }, [id]);
 
   useEffect(() => {
-    const match = detail;
-    if (!match) return;
+    if (!detail) return;
+    const homeName = detail.homeTeam.name;
+    const awayName = detail.awayTeam.name;
     let cancelled = false;
     async function loadPrediction() {
       setPredictionLoading(true);
       setPredictionError(null);
       try {
-        const p = await fetchPrediction(match.homeTeam.name, match.awayTeam.name);
+        const p = await fetchPrediction(homeName, awayName);
         if (!cancelled) setPrediction(p);
       } catch (e) {
         if (!cancelled) {
