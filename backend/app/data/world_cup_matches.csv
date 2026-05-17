@@ -1,0 +1,901 @@
+year,date,stage,home_team,away_team,home_goals,away_goals,result,neutral,city,country
+1930,1930-07-13,Group stage,Belgium,United States,0,3,A,true,Montevideo,Uruguay
+1930,1930-07-13,Group stage,France,Mexico,4,1,H,true,Montevideo,Uruguay
+1930,1930-07-14,Group stage,Brazil,Yugoslavia,1,2,A,true,Montevideo,Uruguay
+1930,1930-07-14,Group stage,Peru,Romania,1,3,A,true,Montevideo,Uruguay
+1930,1930-07-15,Group stage,Argentina,France,1,0,H,true,Montevideo,Uruguay
+1930,1930-07-16,Group stage,Chile,Mexico,3,0,H,true,Montevideo,Uruguay
+1930,1930-07-17,Group stage,Bolivia,Yugoslavia,0,4,A,true,Montevideo,Uruguay
+1930,1930-07-17,Group stage,Paraguay,United States,0,3,A,true,Montevideo,Uruguay
+1930,1930-07-18,Group stage,Uruguay,Peru,1,0,H,false,Montevideo,Uruguay
+1930,1930-07-19,Group stage,Argentina,Mexico,6,3,H,true,Montevideo,Uruguay
+1930,1930-07-19,Group stage,Chile,France,1,0,H,true,Montevideo,Uruguay
+1930,1930-07-20,Group stage,Belgium,Paraguay,0,1,A,true,Montevideo,Uruguay
+1930,1930-07-20,Group stage,Bolivia,Brazil,0,4,A,true,Montevideo,Uruguay
+1930,1930-07-21,Group stage,Uruguay,Romania,4,0,H,false,Montevideo,Uruguay
+1930,1930-07-22,Group stage,Argentina,Chile,3,1,H,true,Montevideo,Uruguay
+1930,1930-07-26,Group stage,Argentina,United States,6,1,H,true,Montevideo,Uruguay
+1930,1930-07-27,Group stage,Uruguay,Yugoslavia,6,1,H,false,Montevideo,Uruguay
+1930,1930-07-30,Group stage,Uruguay,Argentina,4,2,H,false,Montevideo,Uruguay
+1934,1934-05-27,Group stage,Argentina,Sweden,2,3,A,true,Bologna,Italy
+1934,1934-05-27,Group stage,Austria,France,3,2,H,true,Turin,Italy
+1934,1934-05-27,Group stage,Belgium,Germany,2,5,A,true,Florence,Italy
+1934,1934-05-27,Group stage,Brazil,Spain,1,3,A,true,Genoa,Italy
+1934,1934-05-27,Group stage,Czechoslovakia,Romania,2,1,H,true,Trieste,Italy
+1934,1934-05-27,Group stage,Egypt,Hungary,2,4,A,true,Naples,Italy
+1934,1934-05-27,Group stage,Italy,United States,7,1,H,false,Rome,Italy
+1934,1934-05-27,Group stage,Netherlands,Switzerland,2,3,A,true,Milan,Italy
+1934,1934-05-31,Group stage,Austria,Hungary,2,1,H,true,Bologna,Italy
+1934,1934-05-31,Group stage,Czechoslovakia,Switzerland,3,2,H,true,Turin,Italy
+1934,1934-05-31,Group stage,Germany,Sweden,2,1,H,true,Milan,Italy
+1934,1934-05-31,Group stage,Italy,Spain,1,1,D,false,Florence,Italy
+1934,1934-06-01,Group stage,Italy,Spain,1,0,H,false,Florence,Italy
+1934,1934-06-03,Group stage,Czechoslovakia,Germany,3,1,H,true,Rome,Italy
+1934,1934-06-03,Group stage,Italy,Austria,1,0,H,false,Milan,Italy
+1934,1934-06-07,Group stage,Austria,Germany,2,3,A,true,Naples,Italy
+1934,1934-06-10,Group stage,Italy,Czechoslovakia,2,1,H,false,Rome,Italy
+1938,1938-06-04,Group stage,Germany,Switzerland,1,1,D,true,Paris,France
+1938,1938-06-05,Group stage,Brazil,Poland,6,5,H,true,Strasbourg,France
+1938,1938-06-05,Group stage,Cuba,Romania,3,3,D,true,Toulouse,France
+1938,1938-06-05,Group stage,Czechoslovakia,Netherlands,3,0,H,true,Le Havre,France
+1938,1938-06-05,Group stage,France,Belgium,3,1,H,false,Colombes,France
+1938,1938-06-05,Group stage,Hungary,Indonesia,6,0,H,true,Reims,France
+1938,1938-06-05,Group stage,Italy,Norway,2,1,H,true,Marseille,France
+1938,1938-06-09,Group stage,Cuba,Romania,2,1,H,true,Toulouse,France
+1938,1938-06-09,Group stage,Germany,Switzerland,2,4,A,true,Paris,France
+1938,1938-06-12,Group stage,Brazil,Czechoslovakia,1,1,D,true,Bordeaux,France
+1938,1938-06-12,Group stage,Cuba,Sweden,0,8,A,true,Antibes,France
+1938,1938-06-12,Group stage,France,Italy,1,3,A,false,Colombes,France
+1938,1938-06-12,Group stage,Hungary,Switzerland,2,0,H,true,Lille,France
+1938,1938-06-14,Group stage,Brazil,Czechoslovakia,2,1,H,true,Bordeaux,France
+1938,1938-06-16,Group stage,Brazil,Italy,1,2,A,true,Marseille,France
+1938,1938-06-16,Group stage,Hungary,Sweden,5,1,H,true,Paris,France
+1938,1938-06-19,Group stage,Brazil,Sweden,4,2,H,true,Bordeaux,France
+1938,1938-06-19,Group stage,Hungary,Italy,2,4,A,true,Colombes,France
+1950,1950-06-24,Group stage,Brazil,Mexico,4,0,H,false,Rio de Janeiro,Brazil
+1950,1950-06-25,Group stage,Chile,England,0,2,A,true,Rio de Janeiro,Brazil
+1950,1950-06-25,Group stage,Italy,Sweden,2,3,A,true,São Paulo,Brazil
+1950,1950-06-25,Group stage,Spain,United States,3,1,H,true,Curitiba,Brazil
+1950,1950-06-25,Group stage,Switzerland,Yugoslavia,0,3,A,true,Belo Horizonte,Brazil
+1950,1950-06-28,Group stage,Brazil,Switzerland,2,2,D,false,São Paulo,Brazil
+1950,1950-06-28,Group stage,Mexico,Yugoslavia,1,4,A,true,Porto Alegre,Brazil
+1950,1950-06-29,Group stage,Chile,Spain,0,2,A,true,Rio de Janeiro,Brazil
+1950,1950-06-29,Group stage,England,United States,0,1,A,true,Belo Horizonte,Brazil
+1950,1950-06-29,Group stage,Paraguay,Sweden,2,2,D,true,Curitiba,Brazil
+1950,1950-07-01,Group stage,Brazil,Yugoslavia,2,0,H,false,Rio de Janeiro,Brazil
+1950,1950-07-02,Group stage,Bolivia,Uruguay,0,8,A,true,Belo Horizonte,Brazil
+1950,1950-07-02,Group stage,Chile,United States,5,2,H,true,Recife,Brazil
+1950,1950-07-02,Group stage,England,Spain,0,1,A,true,Rio de Janeiro,Brazil
+1950,1950-07-02,Group stage,Italy,Paraguay,2,0,H,true,São Paulo,Brazil
+1950,1950-07-02,Group stage,Mexico,Switzerland,1,2,A,true,Porto Alegre,Brazil
+1950,1950-07-09,Group stage,Brazil,Sweden,7,1,H,false,Rio de Janeiro,Brazil
+1950,1950-07-09,Group stage,Spain,Uruguay,2,2,D,true,São Paulo,Brazil
+1950,1950-07-13,Group stage,Brazil,Spain,6,1,H,false,Rio de Janeiro,Brazil
+1950,1950-07-13,Group stage,Sweden,Uruguay,2,3,A,true,São Paulo,Brazil
+1950,1950-07-16,Group stage,Brazil,Uruguay,1,2,A,false,Rio de Janeiro,Brazil
+1950,1950-07-16,Group stage,Spain,Sweden,1,3,A,true,São Paulo,Brazil
+1954,1954-06-16,Group stage,Austria,Scotland,1,0,H,true,Zürich,Switzerland
+1954,1954-06-16,Group stage,Brazil,Mexico,5,0,H,true,Geneva,Switzerland
+1954,1954-06-16,Group stage,Czechoslovakia,Uruguay,0,2,A,true,Bern,Switzerland
+1954,1954-06-16,Group stage,France,Yugoslavia,0,1,A,true,Lausanne,Switzerland
+1954,1954-06-17,Group stage,Belgium,England,4,4,D,true,Basel,Switzerland
+1954,1954-06-17,Group stage,Germany,Turkey,4,1,H,true,Bern,Switzerland
+1954,1954-06-17,Group stage,Hungary,South Korea,9,0,H,true,Zürich,Switzerland
+1954,1954-06-17,Group stage,Switzerland,Italy,2,1,H,false,Lausanne,Switzerland
+1954,1954-06-19,Group stage,Austria,Czechoslovakia,5,0,H,true,Zürich,Switzerland
+1954,1954-06-19,Group stage,Brazil,Yugoslavia,1,1,D,true,Lausanne,Switzerland
+1954,1954-06-19,Group stage,France,Mexico,3,2,H,true,Geneva,Switzerland
+1954,1954-06-19,Group stage,Scotland,Uruguay,0,7,A,true,Basel,Switzerland
+1954,1954-06-20,Group stage,Belgium,Italy,1,4,A,true,Lugano,Switzerland
+1954,1954-06-20,Group stage,Germany,Hungary,3,8,A,true,Basel,Switzerland
+1954,1954-06-20,Group stage,South Korea,Turkey,0,7,A,true,Geneva,Switzerland
+1954,1954-06-20,Group stage,Switzerland,England,0,2,A,false,Bern,Switzerland
+1954,1954-06-23,Group stage,Germany,Turkey,7,2,H,true,Zürich,Switzerland
+1954,1954-06-23,Group stage,Switzerland,Italy,4,1,H,false,Basel,Switzerland
+1954,1954-06-26,Group stage,England,Uruguay,2,4,A,true,Basel,Switzerland
+1954,1954-06-26,Group stage,Switzerland,Austria,5,7,A,false,Lausanne,Switzerland
+1954,1954-06-27,Group stage,Brazil,Hungary,2,4,A,true,Bern,Switzerland
+1954,1954-06-27,Group stage,Germany,Yugoslavia,2,0,H,true,Geneva,Switzerland
+1954,1954-06-30,Group stage,Austria,Germany,1,6,A,true,Basel,Switzerland
+1954,1954-06-30,Group stage,Hungary,Uruguay,4,2,H,true,Lausanne,Switzerland
+1954,1954-07-03,Group stage,Austria,Uruguay,3,1,H,true,Zürich,Switzerland
+1954,1954-07-04,Group stage,Germany,Hungary,3,2,H,true,Bern,Switzerland
+1958,1958-06-08,Group stage,Argentina,Germany,1,3,A,true,Malmö,Sweden
+1958,1958-06-08,Group stage,Austria,Brazil,0,3,A,true,Uddevalla,Sweden
+1958,1958-06-08,Group stage,Czechoslovakia,Northern Ireland,0,1,A,true,Halmstad,Sweden
+1958,1958-06-08,Group stage,England,Russia,2,2,D,true,Gothenburg,Sweden
+1958,1958-06-08,Group stage,France,Paraguay,7,3,H,true,Norrköping,Sweden
+1958,1958-06-08,Group stage,Hungary,Wales,1,1,D,true,Sandviken,Sweden
+1958,1958-06-08,Group stage,Scotland,Yugoslavia,1,1,D,true,Västerås,Sweden
+1958,1958-06-08,Group stage,Sweden,Mexico,3,0,H,false,Solna,Sweden
+1958,1958-06-11,Group stage,Argentina,Northern Ireland,3,1,H,true,Halmstad,Sweden
+1958,1958-06-11,Group stage,Austria,Russia,0,2,A,true,Borås,Sweden
+1958,1958-06-11,Group stage,Brazil,England,0,0,D,true,Gothenburg,Sweden
+1958,1958-06-11,Group stage,Czechoslovakia,Germany,2,2,D,true,Helsingborg,Sweden
+1958,1958-06-11,Group stage,France,Yugoslavia,2,3,A,true,Västerås,Sweden
+1958,1958-06-11,Group stage,Mexico,Wales,1,1,D,true,Solna,Sweden
+1958,1958-06-11,Group stage,Paraguay,Scotland,3,2,H,true,Norrköping,Sweden
+1958,1958-06-12,Group stage,Sweden,Hungary,2,1,H,false,Solna,Sweden
+1958,1958-06-15,Group stage,Argentina,Czechoslovakia,1,6,A,true,Helsingborg,Sweden
+1958,1958-06-15,Group stage,Austria,England,2,2,D,true,Borås,Sweden
+1958,1958-06-15,Group stage,Brazil,Russia,2,0,H,true,Gothenburg,Sweden
+1958,1958-06-15,Group stage,France,Scotland,2,1,H,true,Örebro,Sweden
+1958,1958-06-15,Group stage,Germany,Northern Ireland,2,2,D,true,Malmö,Sweden
+1958,1958-06-15,Group stage,Hungary,Mexico,4,0,H,true,Sandviken,Sweden
+1958,1958-06-15,Group stage,Paraguay,Yugoslavia,3,3,D,true,Eskilstuna,Sweden
+1958,1958-06-15,Group stage,Sweden,Wales,0,0,D,false,Solna,Sweden
+1958,1958-06-17,Group stage,Czechoslovakia,Northern Ireland,1,2,A,true,Malmö,Sweden
+1958,1958-06-17,Group stage,England,Russia,0,1,A,true,Gothenburg,Sweden
+1958,1958-06-17,Group stage,Hungary,Wales,1,2,A,true,Solna,Sweden
+1958,1958-06-19,Group stage,Brazil,Wales,1,0,H,true,Gothenburg,Sweden
+1958,1958-06-19,Group stage,France,Northern Ireland,4,0,H,true,Norrköping,Sweden
+1958,1958-06-19,Group stage,Germany,Yugoslavia,1,0,H,true,Malmö,Sweden
+1958,1958-06-19,Group stage,Sweden,Russia,2,0,H,false,Solna,Sweden
+1958,1958-06-24,Group stage,Brazil,France,5,2,H,true,Solna,Sweden
+1958,1958-06-24,Group stage,Sweden,Germany,3,1,H,false,Gothenburg,Sweden
+1958,1958-06-28,Group stage,France,Germany,6,3,H,true,Gothenburg,Sweden
+1958,1958-06-29,Group stage,Sweden,Brazil,2,5,A,false,Solna,Sweden
+1962,1962-05-30,Group stage,Argentina,Bulgaria,1,0,H,true,Rancagua,Chile
+1962,1962-05-30,Group stage,Brazil,Mexico,2,0,H,true,Viña del Mar,Chile
+1962,1962-05-30,Group stage,Chile,Switzerland,3,1,H,false,Santiago,Chile
+1962,1962-05-30,Group stage,Colombia,Uruguay,1,2,A,true,Arica,Chile
+1962,1962-05-31,Group stage,Czechoslovakia,Spain,1,0,H,true,Viña del Mar,Chile
+1962,1962-05-31,Group stage,England,Hungary,1,2,A,true,Rancagua,Chile
+1962,1962-05-31,Group stage,Germany,Italy,0,0,D,true,Santiago,Chile
+1962,1962-05-31,Group stage,Russia,Yugoslavia,2,0,H,true,Arica,Chile
+1962,1962-06-02,Group stage,Argentina,England,1,3,A,true,Rancagua,Chile
+1962,1962-06-02,Group stage,Brazil,Czechoslovakia,0,0,D,true,Viña del Mar,Chile
+1962,1962-06-02,Group stage,Chile,Italy,2,0,H,false,Santiago,Chile
+1962,1962-06-02,Group stage,Uruguay,Yugoslavia,1,3,A,true,Arica,Chile
+1962,1962-06-03,Group stage,Bulgaria,Hungary,1,6,A,true,Rancagua,Chile
+1962,1962-06-03,Group stage,Colombia,Russia,4,4,D,true,Arica,Chile
+1962,1962-06-03,Group stage,Germany,Switzerland,2,1,H,true,Santiago,Chile
+1962,1962-06-03,Group stage,Mexico,Spain,0,1,A,true,Viña del Mar,Chile
+1962,1962-06-06,Group stage,Argentina,Hungary,0,0,D,true,Rancagua,Chile
+1962,1962-06-06,Group stage,Brazil,Spain,2,1,H,true,Viña del Mar,Chile
+1962,1962-06-06,Group stage,Chile,Germany,0,2,A,false,Santiago,Chile
+1962,1962-06-06,Group stage,Russia,Uruguay,2,1,H,true,Arica,Chile
+1962,1962-06-07,Group stage,Bulgaria,England,0,0,D,true,Rancagua,Chile
+1962,1962-06-07,Group stage,Colombia,Yugoslavia,0,5,A,true,Arica,Chile
+1962,1962-06-07,Group stage,Czechoslovakia,Mexico,1,3,A,true,Viña del Mar,Chile
+1962,1962-06-07,Group stage,Italy,Switzerland,3,0,H,true,Santiago,Chile
+1962,1962-06-10,Group stage,Brazil,England,3,1,H,true,Viña del Mar,Chile
+1962,1962-06-10,Group stage,Chile,Russia,2,1,H,false,Arica,Chile
+1962,1962-06-10,Group stage,Czechoslovakia,Hungary,1,0,H,true,Rancagua,Chile
+1962,1962-06-10,Group stage,Germany,Yugoslavia,0,1,A,true,Santiago,Chile
+1962,1962-06-13,Group stage,Chile,Brazil,2,4,A,false,Santiago,Chile
+1962,1962-06-13,Group stage,Czechoslovakia,Yugoslavia,3,1,H,true,Viña del Mar,Chile
+1962,1962-06-16,Group stage,Chile,Yugoslavia,1,0,H,false,Santiago,Chile
+1962,1962-06-17,Group stage,Brazil,Czechoslovakia,3,1,H,true,Santiago,Chile
+1966,1966-07-11,Group stage,England,Uruguay,0,0,D,false,London,England
+1966,1966-07-12,Group stage,Brazil,Bulgaria,2,0,H,true,Liverpool,England
+1966,1966-07-12,Group stage,Germany,Switzerland,5,0,H,true,Sheffield,England
+1966,1966-07-12,Group stage,North Korea,Russia,0,3,A,true,Middlesbrough,England
+1966,1966-07-13,Group stage,Argentina,Spain,2,1,H,true,Birmingham,England
+1966,1966-07-13,Group stage,Chile,Italy,0,2,A,true,Sunderland,England
+1966,1966-07-13,Group stage,France,Mexico,1,1,D,true,London,England
+1966,1966-07-13,Group stage,Hungary,Portugal,1,3,A,true,Manchester,England
+1966,1966-07-15,Group stage,Brazil,Hungary,1,3,A,true,Liverpool,England
+1966,1966-07-15,Group stage,Chile,North Korea,1,1,D,true,Middlesbrough,England
+1966,1966-07-15,Group stage,France,Uruguay,1,2,A,true,London,England
+1966,1966-07-15,Group stage,Spain,Switzerland,2,1,H,true,Sheffield,England
+1966,1966-07-16,Group stage,Argentina,Germany,0,0,D,true,Birmingham,England
+1966,1966-07-16,Group stage,Bulgaria,Portugal,0,3,A,true,Manchester,England
+1966,1966-07-16,Group stage,England,Mexico,2,0,H,false,London,England
+1966,1966-07-16,Group stage,Italy,Russia,0,1,A,true,Sunderland,England
+1966,1966-07-19,Group stage,Argentina,Switzerland,2,0,H,true,Sheffield,England
+1966,1966-07-19,Group stage,Brazil,Portugal,1,3,A,true,Liverpool,England
+1966,1966-07-19,Group stage,Italy,North Korea,0,1,A,true,Middlesbrough,England
+1966,1966-07-19,Group stage,Mexico,Uruguay,0,0,D,true,London,England
+1966,1966-07-20,Group stage,Bulgaria,Hungary,1,3,A,true,Manchester,England
+1966,1966-07-20,Group stage,Chile,Russia,1,2,A,true,Sunderland,England
+1966,1966-07-20,Group stage,England,France,2,0,H,false,London,England
+1966,1966-07-20,Group stage,Germany,Spain,2,1,H,true,Birmingham,England
+1966,1966-07-23,Group stage,England,Argentina,1,0,H,false,London,England
+1966,1966-07-23,Group stage,Germany,Uruguay,4,0,H,true,Sheffield,England
+1966,1966-07-23,Group stage,Hungary,Russia,1,2,A,true,Sunderland,England
+1966,1966-07-23,Group stage,North Korea,Portugal,3,5,A,true,Liverpool,England
+1966,1966-07-25,Group stage,Germany,Russia,2,1,H,true,Liverpool,England
+1966,1966-07-26,Group stage,England,Portugal,2,1,H,false,London,England
+1966,1966-07-28,Group stage,Portugal,Russia,2,1,H,true,London,England
+1966,1966-07-30,Group stage,England,Germany,4,2,H,false,London,England
+1970,1970-05-31,Group stage,Mexico,Russia,0,0,D,false,Mexico City,Mexico
+1970,1970-06-02,Group stage,Bulgaria,Peru,2,3,A,true,León,Mexico
+1970,1970-06-02,Group stage,England,Romania,1,0,H,true,Guadalajara,Mexico
+1970,1970-06-02,Group stage,Israel,Uruguay,0,2,A,true,Puebla,Mexico
+1970,1970-06-03,Group stage,Belgium,El Salvador,3,0,H,true,Mexico City,Mexico
+1970,1970-06-03,Group stage,Brazil,Czechoslovakia,4,1,H,true,Guadalajara,Mexico
+1970,1970-06-03,Group stage,Germany,Morocco,2,1,H,true,León,Mexico
+1970,1970-06-03,Group stage,Italy,Sweden,1,0,H,true,Toluca,Mexico
+1970,1970-06-06,Group stage,Belgium,Russia,1,4,A,true,Mexico City,Mexico
+1970,1970-06-06,Group stage,Czechoslovakia,Romania,1,2,A,true,Guadalajara,Mexico
+1970,1970-06-06,Group stage,Italy,Uruguay,0,0,D,true,Puebla,Mexico
+1970,1970-06-06,Group stage,Morocco,Peru,0,3,A,true,León,Mexico
+1970,1970-06-07,Group stage,Brazil,England,1,0,H,true,Guadalajara,Mexico
+1970,1970-06-07,Group stage,Bulgaria,Germany,2,5,A,true,León,Mexico
+1970,1970-06-07,Group stage,Israel,Sweden,1,1,D,true,Toluca,Mexico
+1970,1970-06-07,Group stage,Mexico,El Salvador,4,0,H,false,Mexico City,Mexico
+1970,1970-06-10,Group stage,Brazil,Romania,3,2,H,true,Guadalajara,Mexico
+1970,1970-06-10,Group stage,El Salvador,Russia,0,2,A,true,Mexico City,Mexico
+1970,1970-06-10,Group stage,Germany,Peru,3,1,H,true,León,Mexico
+1970,1970-06-10,Group stage,Sweden,Uruguay,1,0,H,true,Puebla,Mexico
+1970,1970-06-11,Group stage,Bulgaria,Morocco,1,1,D,true,León,Mexico
+1970,1970-06-11,Group stage,Czechoslovakia,England,0,1,A,true,Guadalajara,Mexico
+1970,1970-06-11,Group stage,Israel,Italy,0,0,D,true,Toluca,Mexico
+1970,1970-06-11,Group stage,Mexico,Belgium,1,0,H,false,Mexico City,Mexico
+1970,1970-06-14,Group stage,Brazil,Peru,4,2,H,true,Guadalajara,Mexico
+1970,1970-06-14,Group stage,England,Germany,2,3,A,true,León,Mexico
+1970,1970-06-14,Group stage,Mexico,Italy,1,4,A,false,Toluca,Mexico
+1970,1970-06-14,Group stage,Russia,Uruguay,0,1,A,true,Mexico City,Mexico
+1970,1970-06-17,Group stage,Brazil,Uruguay,3,1,H,true,Guadalajara,Mexico
+1970,1970-06-17,Group stage,Germany,Italy,3,4,A,true,Mexico City,Mexico
+1970,1970-06-20,Group stage,Germany,Uruguay,1,0,H,true,Mexico City,Mexico
+1970,1970-06-21,Group stage,Brazil,Italy,4,1,H,true,Mexico City,Mexico
+1974,1974-06-13,Group stage,Brazil,Yugoslavia,0,0,D,true,Frankfurt am Main,Germany
+1974,1974-06-14,Group stage,DR Congo,Scotland,0,2,A,true,Dortmund,Germany
+1974,1974-06-14,Group stage,German DR,Australia,2,0,H,true,Hamburg,Germany
+1974,1974-06-14,Group stage,Germany,Chile,1,0,H,false,Berlin,Germany
+1974,1974-06-15,Group stage,Italy,Haiti,3,1,H,true,Munich,Germany
+1974,1974-06-15,Group stage,Poland,Argentina,3,2,H,true,Stuttgart,Germany
+1974,1974-06-15,Group stage,Sweden,Bulgaria,0,0,D,true,Düsseldorf,Germany
+1974,1974-06-15,Group stage,Uruguay,Netherlands,0,2,A,true,Hanover,Germany
+1974,1974-06-18,Group stage,Chile,German DR,1,1,D,true,Berlin,Germany
+1974,1974-06-18,Group stage,Germany,Australia,3,0,H,false,Hamburg,Germany
+1974,1974-06-18,Group stage,Scotland,Brazil,0,0,D,true,Frankfurt am Main,Germany
+1974,1974-06-18,Group stage,Yugoslavia,DR Congo,9,0,H,true,Gelsenkirchen,Germany
+1974,1974-06-19,Group stage,Argentina,Italy,1,1,D,true,Stuttgart,Germany
+1974,1974-06-19,Group stage,Bulgaria,Uruguay,1,1,D,true,Hanover,Germany
+1974,1974-06-19,Group stage,Haiti,Poland,0,7,A,true,Munich,Germany
+1974,1974-06-19,Group stage,Netherlands,Sweden,0,0,D,true,Dortmund,Germany
+1974,1974-06-22,Group stage,Australia,Chile,0,0,D,true,Berlin,Germany
+1974,1974-06-22,Group stage,DR Congo,Brazil,0,3,A,true,Gelsenkirchen,Germany
+1974,1974-06-22,Group stage,Germany,German DR,0,1,A,false,Hamburg,Germany
+1974,1974-06-22,Group stage,Scotland,Yugoslavia,1,1,D,true,Frankfurt am Main,Germany
+1974,1974-06-23,Group stage,Argentina,Haiti,4,1,H,true,Munich,Germany
+1974,1974-06-23,Group stage,Bulgaria,Netherlands,1,4,A,true,Dortmund,Germany
+1974,1974-06-23,Group stage,Poland,Italy,2,1,H,true,Stuttgart,Germany
+1974,1974-06-23,Group stage,Sweden,Uruguay,3,0,H,true,Düsseldorf,Germany
+1974,1974-06-26,Group stage,Brazil,German DR,1,0,H,true,Hanover,Germany
+1974,1974-06-26,Group stage,Germany,Yugoslavia,2,0,H,false,Düsseldorf,Germany
+1974,1974-06-26,Group stage,Netherlands,Argentina,4,0,H,true,Gelsenkirchen,Germany
+1974,1974-06-26,Group stage,Sweden,Poland,0,1,A,true,Stuttgart,Germany
+1974,1974-06-30,Group stage,Argentina,Brazil,1,2,A,true,Hanover,Germany
+1974,1974-06-30,Group stage,German DR,Netherlands,0,2,A,true,Gelsenkirchen,Germany
+1974,1974-06-30,Group stage,Germany,Sweden,4,2,H,false,Düsseldorf,Germany
+1974,1974-06-30,Group stage,Poland,Yugoslavia,2,1,H,true,Frankfurt am Main,Germany
+1974,1974-07-03,Group stage,Argentina,German DR,1,1,D,true,Gelsenkirchen,Germany
+1974,1974-07-03,Group stage,Germany,Poland,1,0,H,false,Frankfurt am Main,Germany
+1974,1974-07-03,Group stage,Netherlands,Brazil,2,0,H,true,Dortmund,Germany
+1974,1974-07-03,Group stage,Sweden,Yugoslavia,2,1,H,true,Düsseldorf,Germany
+1974,1974-07-06,Group stage,Brazil,Poland,0,1,A,true,Munich,Germany
+1974,1974-07-07,Group stage,Germany,Netherlands,2,1,H,false,Munich,Germany
+1978,1978-06-01,Group stage,Germany,Poland,0,0,D,true,Buenos Aires,Argentina
+1978,1978-06-02,Group stage,Argentina,Hungary,2,1,H,false,Buenos Aires,Argentina
+1978,1978-06-02,Group stage,France,Italy,1,2,A,true,Mar del Plata,Argentina
+1978,1978-06-02,Group stage,Mexico,Tunisia,1,3,A,true,Rosario,Argentina
+1978,1978-06-03,Group stage,Austria,Spain,2,1,H,true,Buenos Aires,Argentina
+1978,1978-06-03,Group stage,Brazil,Sweden,1,1,D,true,Mar del Plata,Argentina
+1978,1978-06-03,Group stage,Iran,Netherlands,0,3,A,true,Mendoza,Argentina
+1978,1978-06-03,Group stage,Peru,Scotland,3,1,H,true,Córdoba,Argentina
+1978,1978-06-06,Group stage,Argentina,France,2,1,H,false,Buenos Aires,Argentina
+1978,1978-06-06,Group stage,Germany,Mexico,6,0,H,true,Córdoba,Argentina
+1978,1978-06-06,Group stage,Hungary,Italy,1,3,A,true,Mar del Plata,Argentina
+1978,1978-06-06,Group stage,Poland,Tunisia,1,0,H,true,Rosario,Argentina
+1978,1978-06-07,Group stage,Austria,Sweden,1,0,H,true,Buenos Aires,Argentina
+1978,1978-06-07,Group stage,Brazil,Spain,0,0,D,true,Mar del Plata,Argentina
+1978,1978-06-07,Group stage,Iran,Scotland,1,1,D,true,Córdoba,Argentina
+1978,1978-06-07,Group stage,Netherlands,Peru,0,0,D,true,Mendoza,Argentina
+1978,1978-06-10,Group stage,Argentina,Italy,0,1,A,false,Buenos Aires,Argentina
+1978,1978-06-10,Group stage,France,Hungary,3,1,H,true,Mar del Plata,Argentina
+1978,1978-06-10,Group stage,Germany,Tunisia,0,0,D,true,Córdoba,Argentina
+1978,1978-06-10,Group stage,Mexico,Poland,1,3,A,true,Rosario,Argentina
+1978,1978-06-11,Group stage,Austria,Brazil,0,1,A,true,Mar del Plata,Argentina
+1978,1978-06-11,Group stage,Iran,Peru,1,4,A,true,Córdoba,Argentina
+1978,1978-06-11,Group stage,Netherlands,Scotland,2,3,A,true,Mendoza,Argentina
+1978,1978-06-11,Group stage,Spain,Sweden,1,0,H,true,Buenos Aires,Argentina
+1978,1978-06-14,Group stage,Argentina,Poland,2,0,H,false,Rosario,Argentina
+1978,1978-06-14,Group stage,Austria,Netherlands,1,5,A,true,Córdoba,Argentina
+1978,1978-06-14,Group stage,Brazil,Peru,3,0,H,true,Mendoza,Argentina
+1978,1978-06-14,Group stage,Germany,Italy,0,0,D,true,Buenos Aires,Argentina
+1978,1978-06-18,Group stage,Argentina,Brazil,0,0,D,false,Rosario,Argentina
+1978,1978-06-18,Group stage,Austria,Italy,0,1,A,true,Buenos Aires,Argentina
+1978,1978-06-18,Group stage,Germany,Netherlands,2,2,D,true,Córdoba,Argentina
+1978,1978-06-18,Group stage,Peru,Poland,0,1,A,true,Mendoza,Argentina
+1978,1978-06-21,Group stage,Argentina,Peru,6,0,H,false,Rosario,Argentina
+1978,1978-06-21,Group stage,Austria,Germany,3,2,H,true,Córdoba,Argentina
+1978,1978-06-21,Group stage,Brazil,Poland,3,1,H,true,Mendoza,Argentina
+1978,1978-06-21,Group stage,Italy,Netherlands,1,2,A,true,Buenos Aires,Argentina
+1978,1978-06-24,Group stage,Brazil,Italy,2,1,H,true,Buenos Aires,Argentina
+1978,1978-06-25,Group stage,Argentina,Netherlands,3,1,H,false,Buenos Aires,Argentina
+1982,1982-06-13,Group stage,Argentina,Belgium,0,1,A,true,Barcelona,Spain
+1982,1982-06-14,Group stage,Brazil,Russia,2,1,H,true,Seville,Spain
+1982,1982-06-14,Group stage,Italy,Poland,0,0,D,true,Vigo,Spain
+1982,1982-06-15,Group stage,Hungary,El Salvador,10,1,H,true,Elche,Spain
+1982,1982-06-15,Group stage,Peru,Cameroon,0,0,D,true,La Coruña,Spain
+1982,1982-06-15,Group stage,Scotland,New Zealand,5,2,H,true,Málaga,Spain
+1982,1982-06-16,Group stage,England,France,3,1,H,true,Bilbao,Spain
+1982,1982-06-16,Group stage,Germany,Algeria,1,2,A,true,Gijón,Spain
+1982,1982-06-16,Group stage,Spain,Honduras,1,1,D,false,Valencia,Spain
+1982,1982-06-17,Group stage,Chile,Austria,0,1,A,true,Oviedo,Spain
+1982,1982-06-17,Group stage,Czechoslovakia,Kuwait,1,1,D,true,Valladolid,Spain
+1982,1982-06-17,Group stage,Yugoslavia,Northern Ireland,0,0,D,true,Zaragoza,Spain
+1982,1982-06-18,Group stage,Argentina,Hungary,4,1,H,true,Alicante,Spain
+1982,1982-06-18,Group stage,Brazil,Scotland,4,1,H,true,Seville,Spain
+1982,1982-06-18,Group stage,Italy,Peru,1,1,D,true,Vigo,Spain
+1982,1982-06-19,Group stage,Belgium,El Salvador,1,0,H,true,Elche,Spain
+1982,1982-06-19,Group stage,Poland,Cameroon,0,0,D,true,La Coruña,Spain
+1982,1982-06-19,Group stage,Russia,New Zealand,3,0,H,true,Málaga,Spain
+1982,1982-06-20,Group stage,England,Czechoslovakia,2,0,H,true,Bilbao,Spain
+1982,1982-06-20,Group stage,Germany,Chile,4,1,H,true,Gijón,Spain
+1982,1982-06-20,Group stage,Spain,Yugoslavia,2,1,H,false,Valencia,Spain
+1982,1982-06-21,Group stage,Algeria,Austria,0,2,A,true,Oviedo,Spain
+1982,1982-06-21,Group stage,France,Kuwait,4,1,H,true,Valladolid,Spain
+1982,1982-06-21,Group stage,Honduras,Northern Ireland,1,1,D,true,Zaragoza,Spain
+1982,1982-06-22,Group stage,Belgium,Hungary,1,1,D,true,Elche,Spain
+1982,1982-06-22,Group stage,Poland,Peru,5,1,H,true,La Coruña,Spain
+1982,1982-06-22,Group stage,Russia,Scotland,2,2,D,true,Málaga,Spain
+1982,1982-06-23,Group stage,Argentina,El Salvador,2,0,H,true,Alicante,Spain
+1982,1982-06-23,Group stage,Brazil,New Zealand,4,0,H,true,Seville,Spain
+1982,1982-06-23,Group stage,Italy,Cameroon,1,1,D,true,Vigo,Spain
+1982,1982-06-24,Group stage,Algeria,Chile,3,2,H,true,Oviedo,Spain
+1982,1982-06-24,Group stage,France,Czechoslovakia,1,1,D,true,Valladolid,Spain
+1982,1982-06-24,Group stage,Honduras,Yugoslavia,0,1,A,true,Zaragoza,Spain
+1982,1982-06-25,Group stage,England,Kuwait,1,0,H,true,Bilbao,Spain
+1982,1982-06-25,Group stage,Germany,Austria,1,0,H,true,Gijón,Spain
+1982,1982-06-25,Group stage,Spain,Northern Ireland,0,1,A,false,Valencia,Spain
+1982,1982-06-28,Group stage,Austria,France,0,1,A,true,Madrid,Spain
+1982,1982-06-28,Group stage,Poland,Belgium,3,0,H,true,Barcelona,Spain
+1982,1982-06-29,Group stage,Germany,England,0,0,D,true,Madrid,Spain
+1982,1982-06-29,Group stage,Italy,Argentina,2,1,H,true,Barcelona,Spain
+1982,1982-07-01,Group stage,Austria,Northern Ireland,2,2,D,true,Madrid,Spain
+1982,1982-07-01,Group stage,Belgium,Russia,0,1,A,true,Barcelona,Spain
+1982,1982-07-02,Group stage,Argentina,Brazil,1,3,A,true,Barcelona,Spain
+1982,1982-07-02,Group stage,Spain,Germany,1,2,A,false,Madrid,Spain
+1982,1982-07-04,Group stage,France,Northern Ireland,4,1,H,true,Madrid,Spain
+1982,1982-07-04,Group stage,Poland,Russia,0,0,D,true,Barcelona,Spain
+1982,1982-07-05,Group stage,Italy,Brazil,3,2,H,true,Barcelona,Spain
+1982,1982-07-05,Group stage,Spain,England,0,0,D,false,Madrid,Spain
+1982,1982-07-08,Group stage,Germany,France,3,3,D,true,Seville,Spain
+1982,1982-07-08,Group stage,Poland,Italy,0,2,A,true,Barcelona,Spain
+1982,1982-07-10,Group stage,Poland,France,3,2,H,true,Alicante,Spain
+1982,1982-07-11,Group stage,Italy,Germany,3,1,H,true,Madrid,Spain
+1986,1986-05-31,Group stage,Bulgaria,Italy,1,1,D,true,Mexico City,Mexico
+1986,1986-06-01,Group stage,Canada,France,0,1,A,true,León,Mexico
+1986,1986-06-01,Group stage,Spain,Brazil,0,1,A,true,Guadalajara,Mexico
+1986,1986-06-02,Group stage,Argentina,South Korea,3,1,H,true,Mexico City,Mexico
+1986,1986-06-02,Group stage,Morocco,Poland,0,0,D,true,Monterrey,Mexico
+1986,1986-06-02,Group stage,Russia,Hungary,6,0,H,true,Irapuato,Mexico
+1986,1986-06-03,Group stage,Algeria,Northern Ireland,1,1,D,true,Guadalajara,Mexico
+1986,1986-06-03,Group stage,Mexico,Belgium,2,1,H,false,Mexico City,Mexico
+1986,1986-06-03,Group stage,Portugal,England,1,0,H,true,Monterrey,Mexico
+1986,1986-06-04,Group stage,Paraguay,Iraq,1,0,H,true,Toluca,Mexico
+1986,1986-06-04,Group stage,Scotland,Denmark,0,1,A,true,Nezahualcóyotl,Mexico
+1986,1986-06-04,Group stage,Uruguay,Germany,1,1,D,true,Querétaro,Mexico
+1986,1986-06-05,Group stage,France,Russia,1,1,D,true,León,Mexico
+1986,1986-06-05,Group stage,Italy,Argentina,1,1,D,true,Puebla,Mexico
+1986,1986-06-05,Group stage,South Korea,Bulgaria,1,1,D,true,Mexico City,Mexico
+1986,1986-06-06,Group stage,Brazil,Algeria,1,0,H,true,Guadalajara,Mexico
+1986,1986-06-06,Group stage,England,Morocco,0,0,D,true,Monterrey,Mexico
+1986,1986-06-06,Group stage,Hungary,Canada,2,0,H,true,Irapuato,Mexico
+1986,1986-06-07,Group stage,Mexico,Paraguay,1,1,D,false,Mexico City,Mexico
+1986,1986-06-07,Group stage,Northern Ireland,Spain,1,2,A,true,Guadalajara,Mexico
+1986,1986-06-07,Group stage,Poland,Portugal,1,0,H,true,Monterrey,Mexico
+1986,1986-06-08,Group stage,Denmark,Uruguay,6,1,H,true,Nezahualcóyotl,Mexico
+1986,1986-06-08,Group stage,Germany,Scotland,2,1,H,true,Querétaro,Mexico
+1986,1986-06-08,Group stage,Iraq,Belgium,1,2,A,true,Toluca,Mexico
+1986,1986-06-09,Group stage,Hungary,France,0,3,A,true,León,Mexico
+1986,1986-06-09,Group stage,Russia,Canada,2,0,H,true,Irapuato,Mexico
+1986,1986-06-10,Group stage,Argentina,Bulgaria,2,0,H,true,Mexico City,Mexico
+1986,1986-06-10,Group stage,South Korea,Italy,2,3,A,true,Puebla,Mexico
+1986,1986-06-11,Group stage,England,Poland,3,0,H,true,Monterrey,Mexico
+1986,1986-06-11,Group stage,Mexico,Iraq,1,0,H,false,Mexico City,Mexico
+1986,1986-06-11,Group stage,Paraguay,Belgium,2,2,D,true,Toluca,Mexico
+1986,1986-06-11,Group stage,Portugal,Morocco,1,3,A,true,Guadalajara,Mexico
+1986,1986-06-12,Group stage,Algeria,Spain,0,3,A,true,Monterrey,Mexico
+1986,1986-06-12,Group stage,Northern Ireland,Brazil,0,3,A,true,Guadalajara,Mexico
+1986,1986-06-13,Group stage,Denmark,Germany,2,0,H,true,Querétaro,Mexico
+1986,1986-06-13,Group stage,Scotland,Uruguay,0,0,D,true,Nezahualcóyotl,Mexico
+1986,1986-06-15,Group stage,Mexico,Bulgaria,2,0,H,false,Mexico City,Mexico
+1986,1986-06-15,Group stage,Russia,Belgium,3,4,A,true,León,Mexico
+1986,1986-06-16,Group stage,Argentina,Uruguay,1,0,H,true,Puebla,Mexico
+1986,1986-06-16,Group stage,Brazil,Poland,4,0,H,true,Guadalajara,Mexico
+1986,1986-06-17,Group stage,Italy,France,0,2,A,true,Mexico City,Mexico
+1986,1986-06-17,Group stage,Morocco,Germany,0,1,A,true,Monterrey,Mexico
+1986,1986-06-18,Group stage,Denmark,Spain,1,5,A,true,Querétaro,Mexico
+1986,1986-06-18,Group stage,England,Paraguay,3,0,H,true,Mexico City,Mexico
+1986,1986-06-21,Group stage,Brazil,France,1,1,D,true,Guadalajara,Mexico
+1986,1986-06-21,Group stage,Mexico,Germany,0,0,D,false,Monterrey,Mexico
+1986,1986-06-22,Group stage,Argentina,England,2,1,H,true,Mexico City,Mexico
+1986,1986-06-22,Group stage,Spain,Belgium,1,1,D,true,Puebla,Mexico
+1986,1986-06-25,Group stage,Argentina,Belgium,2,0,H,true,Mexico City,Mexico
+1986,1986-06-25,Group stage,France,Germany,0,2,A,true,Guadalajara,Mexico
+1986,1986-06-28,Group stage,France,Belgium,4,2,H,true,Puebla,Mexico
+1986,1986-06-29,Group stage,Argentina,Germany,3,2,H,true,Mexico City,Mexico
+1990,1990-06-08,Group stage,Argentina,Cameroon,0,1,A,true,Milan,Italy
+1990,1990-06-09,Group stage,Italy,Austria,1,0,H,false,Rome,Italy
+1990,1990-06-09,Group stage,Russia,Romania,0,2,A,true,Bari,Italy
+1990,1990-06-09,Group stage,United Arab Emirates,Colombia,0,2,A,true,Bologna,Italy
+1990,1990-06-10,Group stage,Brazil,Sweden,2,1,H,true,Turin,Italy
+1990,1990-06-10,Group stage,Germany,Yugoslavia,4,1,H,true,Milan,Italy
+1990,1990-06-10,Group stage,United States,Czechoslovakia,1,5,A,true,Florence,Italy
+1990,1990-06-11,Group stage,Costa Rica,Scotland,1,0,H,true,Genoa,Italy
+1990,1990-06-11,Group stage,England,Republic of Ireland,1,1,D,true,Cagliari,Italy
+1990,1990-06-12,Group stage,Belgium,South Korea,2,0,H,true,Verona,Italy
+1990,1990-06-12,Group stage,Netherlands,Egypt,1,1,D,true,Palermo,Italy
+1990,1990-06-13,Group stage,Argentina,Russia,2,0,H,true,Naples,Italy
+1990,1990-06-13,Group stage,Uruguay,Spain,0,0,D,true,Udine,Italy
+1990,1990-06-14,Group stage,Cameroon,Romania,2,1,H,true,Bari,Italy
+1990,1990-06-14,Group stage,Italy,United States,1,0,H,false,Rome,Italy
+1990,1990-06-14,Group stage,Yugoslavia,Colombia,1,0,H,true,Bologna,Italy
+1990,1990-06-15,Group stage,Austria,Czechoslovakia,0,1,A,true,Florence,Italy
+1990,1990-06-15,Group stage,Germany,United Arab Emirates,5,1,H,true,Milan,Italy
+1990,1990-06-16,Group stage,Brazil,Costa Rica,1,0,H,true,Turin,Italy
+1990,1990-06-16,Group stage,England,Netherlands,0,0,D,true,Cagliari,Italy
+1990,1990-06-16,Group stage,Sweden,Scotland,1,2,A,true,Genoa,Italy
+1990,1990-06-17,Group stage,Belgium,Uruguay,3,1,H,true,Verona,Italy
+1990,1990-06-17,Group stage,Republic of Ireland,Egypt,0,0,D,true,Palermo,Italy
+1990,1990-06-17,Group stage,South Korea,Spain,1,3,A,true,Udine,Italy
+1990,1990-06-18,Group stage,Argentina,Romania,1,1,D,true,Naples,Italy
+1990,1990-06-18,Group stage,Cameroon,Russia,0,4,A,true,Bari,Italy
+1990,1990-06-19,Group stage,Austria,United States,2,1,H,true,Florence,Italy
+1990,1990-06-19,Group stage,Germany,Colombia,1,1,D,true,Milan,Italy
+1990,1990-06-19,Group stage,Italy,Czechoslovakia,2,0,H,false,Rome,Italy
+1990,1990-06-19,Group stage,Yugoslavia,United Arab Emirates,4,1,H,true,Bologna,Italy
+1990,1990-06-20,Group stage,Brazil,Scotland,1,0,H,true,Turin,Italy
+1990,1990-06-20,Group stage,Sweden,Costa Rica,1,2,A,true,Genoa,Italy
+1990,1990-06-21,Group stage,Belgium,Spain,1,2,A,true,Verona,Italy
+1990,1990-06-21,Group stage,England,Egypt,1,0,H,true,Cagliari,Italy
+1990,1990-06-21,Group stage,Republic of Ireland,Netherlands,1,1,D,true,Palermo,Italy
+1990,1990-06-21,Group stage,South Korea,Uruguay,0,1,A,true,Udine,Italy
+1990,1990-06-23,Group stage,Cameroon,Colombia,2,1,H,true,Naples,Italy
+1990,1990-06-23,Group stage,Czechoslovakia,Costa Rica,4,1,H,true,Bari,Italy
+1990,1990-06-24,Group stage,Brazil,Argentina,0,1,A,true,Turin,Italy
+1990,1990-06-24,Group stage,Germany,Netherlands,2,1,H,true,Milan,Italy
+1990,1990-06-25,Group stage,Republic of Ireland,Romania,0,0,D,true,Genoa,Italy
+1990,1990-06-25,Group stage,Italy,Uruguay,2,0,H,false,Rome,Italy
+1990,1990-06-26,Group stage,England,Belgium,1,0,H,true,Bologna,Italy
+1990,1990-06-26,Group stage,Spain,Yugoslavia,1,2,A,true,Verona,Italy
+1990,1990-06-30,Group stage,Italy,Republic of Ireland,1,0,H,false,Rome,Italy
+1990,1990-06-30,Group stage,Yugoslavia,Argentina,0,0,D,true,Florence,Italy
+1990,1990-07-01,Group stage,Cameroon,England,2,3,A,true,Naples,Italy
+1990,1990-07-01,Group stage,Germany,Czechoslovakia,1,0,H,true,Milan,Italy
+1990,1990-07-03,Group stage,Italy,Argentina,1,1,D,false,Naples,Italy
+1990,1990-07-04,Group stage,Germany,England,1,1,D,true,Turin,Italy
+1990,1990-07-07,Group stage,Italy,England,2,1,H,false,Bari,Italy
+1990,1990-07-08,Group stage,Germany,Argentina,1,0,H,true,Rome,Italy
+1994,1994-06-17,Group stage,Germany,Bolivia,1,0,H,true,Chicago,United States
+1994,1994-06-17,Group stage,Spain,South Korea,2,2,D,true,Dallas,United States
+1994,1994-06-18,Group stage,Colombia,Romania,1,3,A,true,Pasadena,United States
+1994,1994-06-18,Group stage,Italy,Republic of Ireland,0,1,A,true,East Rutherford,United States
+1994,1994-06-18,Group stage,United States,Switzerland,1,1,D,false,Pontiac,United States
+1994,1994-06-19,Group stage,Belgium,Morocco,1,0,H,true,Orlando,United States
+1994,1994-06-19,Group stage,Cameroon,Sweden,2,2,D,true,Pasadena,United States
+1994,1994-06-19,Group stage,Norway,Mexico,1,0,H,true,"Washington, D.C.",United States
+1994,1994-06-20,Group stage,Brazil,Russia,2,0,H,true,Palo Alto,United States
+1994,1994-06-20,Group stage,Netherlands,Saudi Arabia,2,1,H,true,"Washington, D.C.",United States
+1994,1994-06-21,Group stage,Argentina,Greece,4,0,H,true,Foxborough,United States
+1994,1994-06-21,Group stage,Germany,Spain,1,1,D,true,Chicago,United States
+1994,1994-06-21,Group stage,Nigeria,Bulgaria,3,0,H,true,Dallas,United States
+1994,1994-06-22,Group stage,Romania,Switzerland,1,4,A,true,Pontiac,United States
+1994,1994-06-22,Group stage,United States,Colombia,2,1,H,false,Pasadena,United States
+1994,1994-06-23,Group stage,Italy,Norway,1,0,H,true,East Rutherford,United States
+1994,1994-06-23,Group stage,South Korea,Bolivia,0,0,D,true,Foxborough,United States
+1994,1994-06-24,Group stage,Brazil,Cameroon,3,0,H,true,Palo Alto,United States
+1994,1994-06-24,Group stage,Mexico,Republic of Ireland,2,1,H,true,Orlando,United States
+1994,1994-06-24,Group stage,Sweden,Russia,3,1,H,true,Pontiac,United States
+1994,1994-06-25,Group stage,Argentina,Nigeria,2,1,H,true,Foxborough,United States
+1994,1994-06-25,Group stage,Belgium,Netherlands,1,0,H,true,Orlando,United States
+1994,1994-06-25,Group stage,Saudi Arabia,Morocco,2,1,H,true,East Rutherford,United States
+1994,1994-06-26,Group stage,Bulgaria,Greece,4,0,H,true,Chicago,United States
+1994,1994-06-26,Group stage,Switzerland,Colombia,0,2,A,true,Palo Alto,United States
+1994,1994-06-26,Group stage,United States,Romania,0,1,A,false,Pasadena,United States
+1994,1994-06-27,Group stage,Bolivia,Spain,1,3,A,true,Chicago,United States
+1994,1994-06-27,Group stage,Germany,South Korea,3,2,H,true,Dallas,United States
+1994,1994-06-28,Group stage,Brazil,Sweden,1,1,D,true,Pontiac,United States
+1994,1994-06-28,Group stage,Republic of Ireland,Norway,0,0,D,true,East Rutherford,United States
+1994,1994-06-28,Group stage,Italy,Mexico,1,1,D,true,"Washington, D.C.",United States
+1994,1994-06-28,Group stage,Russia,Cameroon,6,1,H,true,Palo Alto,United States
+1994,1994-06-29,Group stage,Belgium,Saudi Arabia,0,1,A,true,"Washington, D.C.",United States
+1994,1994-06-29,Group stage,Morocco,Netherlands,1,2,A,true,Orlando,United States
+1994,1994-06-30,Group stage,Argentina,Bulgaria,0,2,A,true,Dallas,United States
+1994,1994-06-30,Group stage,Greece,Nigeria,0,2,A,true,Foxborough,United States
+1994,1994-07-02,Group stage,Germany,Belgium,3,2,H,true,Chicago,United States
+1994,1994-07-02,Group stage,Spain,Switzerland,3,0,H,true,"Washington, D.C.",United States
+1994,1994-07-03,Group stage,Romania,Argentina,3,2,H,true,Pasadena,United States
+1994,1994-07-03,Group stage,Saudi Arabia,Sweden,1,3,A,true,Dallas,United States
+1994,1994-07-04,Group stage,Netherlands,Republic of Ireland,2,0,H,true,Orlando,United States
+1994,1994-07-04,Group stage,United States,Brazil,0,1,A,false,Palo Alto,United States
+1994,1994-07-05,Group stage,Mexico,Bulgaria,1,1,D,true,East Rutherford,United States
+1994,1994-07-05,Group stage,Nigeria,Italy,1,2,A,true,Foxborough,United States
+1994,1994-07-09,Group stage,Italy,Spain,2,1,H,true,Foxborough,United States
+1994,1994-07-09,Group stage,Netherlands,Brazil,2,3,A,true,Dallas,United States
+1994,1994-07-10,Group stage,Bulgaria,Germany,2,1,H,true,East Rutherford,United States
+1994,1994-07-10,Group stage,Romania,Sweden,2,2,D,true,Palo Alto,United States
+1994,1994-07-13,Group stage,Bulgaria,Italy,1,2,A,true,East Rutherford,United States
+1994,1994-07-13,Group stage,Sweden,Brazil,0,1,A,true,Pasadena,United States
+1994,1994-07-16,Group stage,Sweden,Bulgaria,4,0,H,true,Pasadena,United States
+1994,1994-07-17,Group stage,Brazil,Italy,0,0,D,true,Pasadena,United States
+1998,1998-06-10,Group stage,Brazil,Scotland,2,1,H,true,Saint-Denis,France
+1998,1998-06-10,Group stage,Morocco,Norway,2,2,D,true,Montpellier,France
+1998,1998-06-11,Group stage,Cameroon,Austria,1,1,D,true,Toulouse,France
+1998,1998-06-11,Group stage,Italy,Chile,2,2,D,true,Bordeaux,France
+1998,1998-06-12,Group stage,France,South Africa,3,0,H,false,Marseille,France
+1998,1998-06-12,Group stage,Paraguay,Bulgaria,0,0,D,true,Montpellier,France
+1998,1998-06-12,Group stage,Saudi Arabia,Denmark,0,1,A,true,Lens,France
+1998,1998-06-13,Group stage,South Korea,Mexico,1,3,A,true,Lyon,France
+1998,1998-06-13,Group stage,Netherlands,Belgium,0,0,D,true,Saint-Denis,France
+1998,1998-06-13,Group stage,Spain,Nigeria,2,3,A,true,Nantes,France
+1998,1998-06-14,Group stage,Argentina,Japan,1,0,H,true,Toulouse,France
+1998,1998-06-14,Group stage,Jamaica,Croatia,1,3,A,true,Lens,France
+1998,1998-06-14,Group stage,Serbia,Iran,1,0,H,true,Saint-Étienne,France
+1998,1998-06-15,Group stage,England,Tunisia,2,0,H,true,Marseille,France
+1998,1998-06-15,Group stage,Germany,United States,2,0,H,true,Paris,France
+1998,1998-06-15,Group stage,Romania,Colombia,1,0,H,true,Lyon,France
+1998,1998-06-16,Group stage,Brazil,Morocco,3,0,H,true,Nantes,France
+1998,1998-06-16,Group stage,Scotland,Norway,1,1,D,true,Bordeaux,France
+1998,1998-06-17,Group stage,Chile,Austria,1,1,D,true,Saint-Étienne,France
+1998,1998-06-17,Group stage,Italy,Cameroon,3,0,H,true,Montpellier,France
+1998,1998-06-18,Group stage,France,Saudi Arabia,4,0,H,false,Saint-Denis,France
+1998,1998-06-18,Group stage,South Africa,Denmark,1,1,D,true,Toulouse,France
+1998,1998-06-19,Group stage,Nigeria,Bulgaria,1,0,H,true,Paris,France
+1998,1998-06-19,Group stage,Spain,Paraguay,0,0,D,true,Saint-Étienne,France
+1998,1998-06-20,Group stage,Belgium,Mexico,2,2,D,true,Bordeaux,France
+1998,1998-06-20,Group stage,Japan,Croatia,0,1,A,true,Nantes,France
+1998,1998-06-20,Group stage,Netherlands,South Korea,5,0,H,true,Marseille,France
+1998,1998-06-21,Group stage,Argentina,Jamaica,5,0,H,true,Paris,France
+1998,1998-06-21,Group stage,Germany,Serbia,2,2,D,true,Lens,France
+1998,1998-06-21,Group stage,United States,Iran,1,2,A,true,Lyon,France
+1998,1998-06-22,Group stage,Colombia,Tunisia,1,0,H,true,Montpellier,France
+1998,1998-06-22,Group stage,Romania,England,2,1,H,true,Toulouse,France
+1998,1998-06-23,Group stage,Brazil,Norway,1,2,A,true,Marseille,France
+1998,1998-06-23,Group stage,Chile,Cameroon,1,1,D,true,Nantes,France
+1998,1998-06-23,Group stage,Italy,Austria,2,1,H,true,Saint-Denis,France
+1998,1998-06-23,Group stage,Scotland,Morocco,0,3,A,true,Saint-Étienne,France
+1998,1998-06-24,Group stage,France,Denmark,2,1,H,false,Lyon,France
+1998,1998-06-24,Group stage,Nigeria,Paraguay,1,3,A,true,Toulouse,France
+1998,1998-06-24,Group stage,South Africa,Saudi Arabia,2,2,D,true,Bordeaux,France
+1998,1998-06-24,Group stage,Spain,Bulgaria,6,1,H,true,Lens,France
+1998,1998-06-25,Group stage,Belgium,South Korea,1,1,D,true,Paris,France
+1998,1998-06-25,Group stage,Germany,Iran,2,0,H,true,Montpellier,France
+1998,1998-06-25,Group stage,Netherlands,Mexico,2,2,D,true,Saint-Étienne,France
+1998,1998-06-25,Group stage,United States,Serbia,0,1,A,true,Nantes,France
+1998,1998-06-26,Group stage,Argentina,Croatia,1,0,H,true,Bordeaux,France
+1998,1998-06-26,Group stage,Colombia,England,0,2,A,true,Lens,France
+1998,1998-06-26,Group stage,Japan,Jamaica,1,2,A,true,Lyon,France
+1998,1998-06-26,Group stage,Romania,Tunisia,1,1,D,true,Saint-Denis,France
+1998,1998-06-27,Group stage,Brazil,Chile,4,1,H,true,Paris,France
+1998,1998-06-27,Group stage,Italy,Norway,1,0,H,true,Marseille,France
+1998,1998-06-28,Group stage,France,Paraguay,1,0,H,false,Lens,France
+1998,1998-06-28,Group stage,Nigeria,Denmark,1,4,A,true,Saint-Denis,France
+1998,1998-06-29,Group stage,Germany,Mexico,2,1,H,true,Montpellier,France
+1998,1998-06-29,Group stage,Netherlands,Serbia,2,1,H,true,Toulouse,France
+1998,1998-06-30,Group stage,Argentina,England,2,2,D,true,Saint-Étienne,France
+1998,1998-06-30,Group stage,Romania,Croatia,0,1,A,true,Bordeaux,France
+1998,1998-07-03,Group stage,Brazil,Denmark,3,2,H,true,Nantes,France
+1998,1998-07-03,Group stage,France,Italy,0,0,D,false,Saint-Denis,France
+1998,1998-07-04,Group stage,Germany,Croatia,0,3,A,true,Lyon,France
+1998,1998-07-04,Group stage,Netherlands,Argentina,2,1,H,true,Marseille,France
+1998,1998-07-07,Group stage,Brazil,Netherlands,1,1,D,true,Marseille,France
+1998,1998-07-08,Group stage,France,Croatia,2,1,H,false,Saint-Denis,France
+1998,1998-07-11,Group stage,Netherlands,Croatia,1,2,A,true,Paris,France
+1998,1998-07-12,Group stage,France,Brazil,3,0,H,false,Saint-Denis,France
+2002,2002-05-31,Group stage,France,Senegal,0,1,A,true,Seoul,South Korea
+2002,2002-06-01,Group stage,Germany,Saudi Arabia,8,0,H,true,Sapporo,Japan
+2002,2002-06-01,Group stage,Republic of Ireland,Cameroon,1,1,D,true,Niigata,Japan
+2002,2002-06-01,Group stage,Uruguay,Denmark,1,2,A,true,Ulsan,South Korea
+2002,2002-06-02,Group stage,Argentina,Nigeria,1,0,H,true,Kashima,Japan
+2002,2002-06-02,Group stage,England,Sweden,1,1,D,true,Saitama,Japan
+2002,2002-06-02,Group stage,Paraguay,South Africa,2,2,D,true,Busan,South Korea
+2002,2002-06-02,Group stage,Spain,Slovenia,3,1,H,true,Gwangju,South Korea
+2002,2002-06-03,Group stage,Brazil,Turkey,2,1,H,true,Ulsan,South Korea
+2002,2002-06-03,Group stage,Croatia,Mexico,0,1,A,true,Niigata,Japan
+2002,2002-06-03,Group stage,Italy,Ecuador,2,0,H,true,Sapporo,Japan
+2002,2002-06-04,Group stage,China PR,Costa Rica,0,2,A,true,Gwangju,South Korea
+2002,2002-06-04,Group stage,Japan,Belgium,2,2,D,false,Saitama,Japan
+2002,2002-06-04,Group stage,South Korea,Poland,2,0,H,false,Busan,South Korea
+2002,2002-06-05,Group stage,Germany,Republic of Ireland,1,1,D,true,Kashima,Japan
+2002,2002-06-05,Group stage,Russia,Tunisia,2,0,H,true,Kobe,Japan
+2002,2002-06-05,Group stage,United States,Portugal,3,2,H,true,Suwon,South Korea
+2002,2002-06-06,Group stage,Cameroon,Saudi Arabia,1,0,H,true,Saitama,Japan
+2002,2002-06-06,Group stage,Denmark,Senegal,1,1,D,true,Daegu,South Korea
+2002,2002-06-06,Group stage,France,Uruguay,0,0,D,true,Busan,South Korea
+2002,2002-06-07,Group stage,Argentina,England,0,1,A,true,Sapporo,Japan
+2002,2002-06-07,Group stage,Spain,Paraguay,3,1,H,true,Jeonju,South Korea
+2002,2002-06-07,Group stage,Sweden,Nigeria,2,1,H,true,Kobe,Japan
+2002,2002-06-08,Group stage,Brazil,China PR,4,0,H,true,Seogwipo,South Korea
+2002,2002-06-08,Group stage,Italy,Croatia,1,2,A,true,Kashima,Japan
+2002,2002-06-08,Group stage,South Africa,Slovenia,1,0,H,true,Daegu,South Korea
+2002,2002-06-09,Group stage,Costa Rica,Turkey,1,1,D,true,Incheon,South Korea
+2002,2002-06-09,Group stage,Japan,Russia,1,0,H,false,Yokohama,Japan
+2002,2002-06-09,Group stage,Mexico,Ecuador,2,1,H,true,Rifu,Japan
+2002,2002-06-10,Group stage,South Korea,United States,1,1,D,false,Daegu,South Korea
+2002,2002-06-10,Group stage,Portugal,Poland,4,0,H,true,Jeonju,South Korea
+2002,2002-06-10,Group stage,Tunisia,Belgium,1,1,D,true,Ōita,Japan
+2002,2002-06-11,Group stage,Cameroon,Germany,0,2,A,true,Fukuroi,Japan
+2002,2002-06-11,Group stage,Denmark,France,2,0,H,true,Incheon,South Korea
+2002,2002-06-11,Group stage,Saudi Arabia,Republic of Ireland,0,3,A,true,Yokohama,Japan
+2002,2002-06-11,Group stage,Senegal,Uruguay,3,3,D,true,Suwon,South Korea
+2002,2002-06-12,Group stage,Nigeria,England,0,0,D,true,Osaka,Japan
+2002,2002-06-12,Group stage,Slovenia,Paraguay,1,3,A,true,Seogwipo,South Korea
+2002,2002-06-12,Group stage,South Africa,Spain,2,3,A,true,Daejeon,South Korea
+2002,2002-06-12,Group stage,Sweden,Argentina,1,1,D,true,Rifu,Japan
+2002,2002-06-13,Group stage,Costa Rica,Brazil,2,5,A,true,Suwon,South Korea
+2002,2002-06-13,Group stage,Ecuador,Croatia,1,0,H,true,Yokohama,Japan
+2002,2002-06-13,Group stage,Mexico,Italy,1,1,D,true,Ōita,Japan
+2002,2002-06-13,Group stage,Turkey,China PR,3,0,H,true,Seoul,South Korea
+2002,2002-06-14,Group stage,Belgium,Russia,3,2,H,true,Fukuroi,Japan
+2002,2002-06-14,Group stage,Japan,Tunisia,2,0,H,false,Osaka,Japan
+2002,2002-06-14,Group stage,South Korea,Portugal,1,0,H,false,Incheon,South Korea
+2002,2002-06-14,Group stage,Poland,United States,3,1,H,true,Daejeon,South Korea
+2002,2002-06-15,Group stage,Denmark,England,0,3,A,true,Niigata,Japan
+2002,2002-06-15,Group stage,Germany,Paraguay,1,0,H,true,Seogwipo,South Korea
+2002,2002-06-16,Group stage,Spain,Republic of Ireland,1,1,D,true,Suwon,South Korea
+2002,2002-06-16,Group stage,Sweden,Senegal,1,2,A,true,Ōita,Japan
+2002,2002-06-17,Group stage,Brazil,Belgium,2,0,H,true,Kobe,Japan
+2002,2002-06-17,Group stage,Mexico,United States,0,2,A,true,Jeonju,South Korea
+2002,2002-06-18,Group stage,Japan,Turkey,0,1,A,false,Rifu,Japan
+2002,2002-06-18,Group stage,South Korea,Italy,2,1,H,false,Daejeon,South Korea
+2002,2002-06-21,Group stage,England,Brazil,1,2,A,true,Fukuroi,Japan
+2002,2002-06-21,Group stage,Germany,United States,1,0,H,true,Ulsan,South Korea
+2002,2002-06-22,Group stage,South Korea,Spain,0,0,D,false,Gwangju,South Korea
+2002,2002-06-22,Group stage,Senegal,Turkey,0,1,A,true,Osaka,Japan
+2002,2002-06-25,Group stage,South Korea,Germany,0,1,A,false,Seoul,South Korea
+2002,2002-06-26,Group stage,Brazil,Turkey,1,0,H,true,Saitama,Japan
+2002,2002-06-29,Group stage,South Korea,Turkey,2,3,A,false,Daegu,South Korea
+2002,2002-06-30,Group stage,Germany,Brazil,0,2,A,true,Yokohama,Japan
+2006,2006-06-09,Group stage,Germany,Costa Rica,4,2,H,false,Munich,Germany
+2006,2006-06-09,Group stage,Poland,Ecuador,0,2,A,true,Gelsenkirchen,Germany
+2006,2006-06-10,Group stage,Argentina,Ivory Coast,2,1,H,true,Hamburg,Germany
+2006,2006-06-10,Group stage,England,Paraguay,1,0,H,true,Frankfurt am Main,Germany
+2006,2006-06-10,Group stage,Trinidad and Tobago,Sweden,0,0,D,true,Dortmund,Germany
+2006,2006-06-11,Group stage,Angola,Portugal,0,1,A,true,Cologne,Germany
+2006,2006-06-11,Group stage,Mexico,Iran,3,1,H,true,Nuremberg,Germany
+2006,2006-06-11,Group stage,Serbia,Netherlands,0,1,A,true,Leipzig,Germany
+2006,2006-06-12,Group stage,Australia,Japan,3,1,H,true,Kaiserslautern,Germany
+2006,2006-06-12,Group stage,Italy,Ghana,2,0,H,true,Hanover,Germany
+2006,2006-06-12,Group stage,United States,Czech Republic,0,3,A,true,Gelsenkirchen,Germany
+2006,2006-06-13,Group stage,Brazil,Croatia,1,0,H,true,Berlin,Germany
+2006,2006-06-13,Group stage,France,Switzerland,0,0,D,true,Stuttgart,Germany
+2006,2006-06-13,Group stage,South Korea,Togo,2,1,H,true,Frankfurt am Main,Germany
+2006,2006-06-14,Group stage,Germany,Poland,1,0,H,false,Dortmund,Germany
+2006,2006-06-14,Group stage,Spain,Ukraine,4,0,H,true,Leipzig,Germany
+2006,2006-06-14,Group stage,Tunisia,Saudi Arabia,2,2,D,true,Munich,Germany
+2006,2006-06-15,Group stage,Ecuador,Costa Rica,3,0,H,true,Hamburg,Germany
+2006,2006-06-15,Group stage,England,Trinidad and Tobago,2,0,H,true,Nuremberg,Germany
+2006,2006-06-15,Group stage,Sweden,Paraguay,1,0,H,true,Berlin,Germany
+2006,2006-06-16,Group stage,Argentina,Serbia,6,0,H,true,Gelsenkirchen,Germany
+2006,2006-06-16,Group stage,Mexico,Angola,0,0,D,true,Hanover,Germany
+2006,2006-06-16,Group stage,Netherlands,Ivory Coast,2,1,H,true,Stuttgart,Germany
+2006,2006-06-17,Group stage,Czech Republic,Ghana,0,2,A,true,Cologne,Germany
+2006,2006-06-17,Group stage,Italy,United States,1,1,D,true,Kaiserslautern,Germany
+2006,2006-06-17,Group stage,Portugal,Iran,2,0,H,true,Frankfurt am Main,Germany
+2006,2006-06-18,Group stage,Brazil,Australia,2,0,H,true,Munich,Germany
+2006,2006-06-18,Group stage,France,South Korea,1,1,D,true,Leipzig,Germany
+2006,2006-06-18,Group stage,Japan,Croatia,0,0,D,true,Nuremberg,Germany
+2006,2006-06-19,Group stage,Saudi Arabia,Ukraine,0,4,A,true,Hamburg,Germany
+2006,2006-06-19,Group stage,Spain,Tunisia,3,1,H,true,Stuttgart,Germany
+2006,2006-06-19,Group stage,Togo,Switzerland,0,2,A,true,Dortmund,Germany
+2006,2006-06-20,Group stage,Costa Rica,Poland,1,2,A,true,Hanover,Germany
+2006,2006-06-20,Group stage,Germany,Ecuador,3,0,H,false,Berlin,Germany
+2006,2006-06-20,Group stage,Paraguay,Trinidad and Tobago,2,0,H,true,Kaiserslautern,Germany
+2006,2006-06-20,Group stage,Sweden,England,2,2,D,true,Cologne,Germany
+2006,2006-06-21,Group stage,Iran,Angola,1,1,D,true,Leipzig,Germany
+2006,2006-06-21,Group stage,Ivory Coast,Serbia,3,2,H,true,Munich,Germany
+2006,2006-06-21,Group stage,Netherlands,Argentina,0,0,D,true,Frankfurt am Main,Germany
+2006,2006-06-21,Group stage,Portugal,Mexico,2,1,H,true,Gelsenkirchen,Germany
+2006,2006-06-22,Group stage,Croatia,Australia,2,2,D,true,Stuttgart,Germany
+2006,2006-06-22,Group stage,Czech Republic,Italy,0,2,A,true,Hamburg,Germany
+2006,2006-06-22,Group stage,Ghana,United States,2,1,H,true,Nuremberg,Germany
+2006,2006-06-22,Group stage,Japan,Brazil,1,4,A,true,Dortmund,Germany
+2006,2006-06-23,Group stage,Saudi Arabia,Spain,0,1,A,true,Kaiserslautern,Germany
+2006,2006-06-23,Group stage,Switzerland,South Korea,2,0,H,true,Hanover,Germany
+2006,2006-06-23,Group stage,Togo,France,0,2,A,true,Cologne,Germany
+2006,2006-06-23,Group stage,Ukraine,Tunisia,1,0,H,true,Berlin,Germany
+2006,2006-06-24,Group stage,Argentina,Mexico,2,1,H,true,Leipzig,Germany
+2006,2006-06-24,Group stage,Germany,Sweden,2,0,H,false,Munich,Germany
+2006,2006-06-25,Group stage,England,Ecuador,1,0,H,true,Stuttgart,Germany
+2006,2006-06-25,Group stage,Portugal,Netherlands,1,0,H,true,Nuremberg,Germany
+2006,2006-06-26,Group stage,Italy,Australia,1,0,H,true,Kaiserslautern,Germany
+2006,2006-06-26,Group stage,Switzerland,Ukraine,0,0,D,true,Cologne,Germany
+2006,2006-06-27,Group stage,Brazil,Ghana,3,0,H,true,Dortmund,Germany
+2006,2006-06-27,Group stage,Spain,France,1,3,A,true,Hanover,Germany
+2006,2006-06-30,Group stage,Germany,Argentina,1,1,D,false,Berlin,Germany
+2006,2006-06-30,Group stage,Italy,Ukraine,3,0,H,true,Hamburg,Germany
+2006,2006-07-01,Group stage,Brazil,France,0,1,A,true,Frankfurt am Main,Germany
+2006,2006-07-01,Group stage,England,Portugal,0,0,D,true,Gelsenkirchen,Germany
+2006,2006-07-04,Group stage,Germany,Italy,0,2,A,false,Dortmund,Germany
+2006,2006-07-05,Group stage,Portugal,France,0,1,A,true,Munich,Germany
+2006,2006-07-08,Group stage,Germany,Portugal,3,1,H,false,Stuttgart,Germany
+2006,2006-07-09,Group stage,Italy,France,1,1,D,true,Berlin,Germany
+2010,2010-06-11,Group stage,South Africa,Mexico,1,1,D,false,Johannesburg,South Africa
+2010,2010-06-11,Group stage,Uruguay,France,0,0,D,true,Cape Town,South Africa
+2010,2010-06-12,Group stage,Argentina,Nigeria,1,0,H,true,Johannesburg,South Africa
+2010,2010-06-12,Group stage,England,United States,1,1,D,true,Rustenburg,South Africa
+2010,2010-06-12,Group stage,South Korea,Greece,2,0,H,true,Port Elizabeth,South Africa
+2010,2010-06-13,Group stage,Algeria,Slovenia,0,1,A,true,Polokwane,South Africa
+2010,2010-06-13,Group stage,Germany,Australia,4,0,H,true,Durban,South Africa
+2010,2010-06-13,Group stage,Serbia,Ghana,0,1,A,true,Pretoria,South Africa
+2010,2010-06-14,Group stage,Italy,Paraguay,1,1,D,true,Cape Town,South Africa
+2010,2010-06-14,Group stage,Japan,Cameroon,1,0,H,true,Bloemfontein,South Africa
+2010,2010-06-14,Group stage,Netherlands,Denmark,2,0,H,true,Johannesburg,South Africa
+2010,2010-06-15,Group stage,Brazil,North Korea,2,1,H,true,Johannesburg,South Africa
+2010,2010-06-15,Group stage,Ivory Coast,Portugal,0,0,D,true,Port Elizabeth,South Africa
+2010,2010-06-15,Group stage,New Zealand,Slovakia,1,1,D,true,Rustenburg,South Africa
+2010,2010-06-16,Group stage,Honduras,Chile,0,1,A,true,Nelspruit,South Africa
+2010,2010-06-16,Group stage,South Africa,Uruguay,0,3,A,false,Pretoria,South Africa
+2010,2010-06-16,Group stage,Spain,Switzerland,0,1,A,true,Durban,South Africa
+2010,2010-06-17,Group stage,Argentina,South Korea,4,1,H,true,Johannesburg,South Africa
+2010,2010-06-17,Group stage,France,Mexico,0,2,A,true,Polokwane,South Africa
+2010,2010-06-17,Group stage,Greece,Nigeria,2,1,H,true,Bloemfontein,South Africa
+2010,2010-06-18,Group stage,England,Algeria,0,0,D,true,Cape Town,South Africa
+2010,2010-06-18,Group stage,Germany,Serbia,0,1,A,true,Port Elizabeth,South Africa
+2010,2010-06-18,Group stage,Slovenia,United States,2,2,D,true,Johannesburg,South Africa
+2010,2010-06-19,Group stage,Cameroon,Denmark,1,2,A,true,Pretoria,South Africa
+2010,2010-06-19,Group stage,Ghana,Australia,1,1,D,true,Rustenburg,South Africa
+2010,2010-06-19,Group stage,Netherlands,Japan,1,0,H,true,Durban,South Africa
+2010,2010-06-20,Group stage,Brazil,Ivory Coast,3,1,H,true,Johannesburg,South Africa
+2010,2010-06-20,Group stage,Italy,New Zealand,1,1,D,true,Nelspruit,South Africa
+2010,2010-06-20,Group stage,Slovakia,Paraguay,0,2,A,true,Bloemfontein,South Africa
+2010,2010-06-21,Group stage,Chile,Switzerland,1,0,H,true,Port Elizabeth,South Africa
+2010,2010-06-21,Group stage,Portugal,North Korea,7,0,H,true,Cape Town,South Africa
+2010,2010-06-21,Group stage,Spain,Honduras,2,0,H,true,Johannesburg,South Africa
+2010,2010-06-22,Group stage,Greece,Argentina,0,2,A,true,Polokwane,South Africa
+2010,2010-06-22,Group stage,Mexico,Uruguay,0,1,A,true,Rustenburg,South Africa
+2010,2010-06-22,Group stage,Nigeria,South Korea,2,2,D,true,Durban,South Africa
+2010,2010-06-22,Group stage,South Africa,France,2,1,H,false,Bloemfontein,South Africa
+2010,2010-06-23,Group stage,Australia,Serbia,2,1,H,true,Nelspruit,South Africa
+2010,2010-06-23,Group stage,Ghana,Germany,0,1,A,true,Johannesburg,South Africa
+2010,2010-06-23,Group stage,Slovenia,England,0,1,A,true,Port Elizabeth,South Africa
+2010,2010-06-23,Group stage,United States,Algeria,1,0,H,true,Pretoria,South Africa
+2010,2010-06-24,Group stage,Cameroon,Netherlands,1,2,A,true,Cape Town,South Africa
+2010,2010-06-24,Group stage,Denmark,Japan,1,3,A,true,Rustenburg,South Africa
+2010,2010-06-24,Group stage,Paraguay,New Zealand,0,0,D,true,Polokwane,South Africa
+2010,2010-06-24,Group stage,Slovakia,Italy,3,2,H,true,Johannesburg,South Africa
+2010,2010-06-25,Group stage,Chile,Spain,1,2,A,true,Pretoria,South Africa
+2010,2010-06-25,Group stage,North Korea,Ivory Coast,0,3,A,true,Nelspruit,South Africa
+2010,2010-06-25,Group stage,Portugal,Brazil,0,0,D,true,Durban,South Africa
+2010,2010-06-25,Group stage,Switzerland,Honduras,0,0,D,true,Bloemfontein,South Africa
+2010,2010-06-26,Group stage,Uruguay,South Korea,2,1,H,true,Port Elizabeth,South Africa
+2010,2010-06-26,Group stage,United States,Ghana,1,2,A,true,Rustenburg,South Africa
+2010,2010-06-27,Group stage,Argentina,Mexico,3,1,H,true,Johannesburg,South Africa
+2010,2010-06-27,Group stage,Germany,England,4,1,H,true,Bloemfontein,South Africa
+2010,2010-06-28,Group stage,Brazil,Chile,3,0,H,true,Johannesburg,South Africa
+2010,2010-06-28,Group stage,Netherlands,Slovakia,2,1,H,true,Durban,South Africa
+2010,2010-06-29,Group stage,Paraguay,Japan,0,0,D,true,Pretoria,South Africa
+2010,2010-06-29,Group stage,Spain,Portugal,1,0,H,true,Cape Town,South Africa
+2010,2010-07-02,Group stage,Netherlands,Brazil,2,1,H,true,Port Elizabeth,South Africa
+2010,2010-07-02,Group stage,Uruguay,Ghana,1,1,D,true,Johannesburg,South Africa
+2010,2010-07-03,Group stage,Argentina,Germany,0,4,A,true,Cape Town,South Africa
+2010,2010-07-03,Group stage,Paraguay,Spain,0,1,A,true,Johannesburg,South Africa
+2010,2010-07-06,Group stage,Uruguay,Netherlands,2,3,A,true,Cape Town,South Africa
+2010,2010-07-07,Group stage,Germany,Spain,0,1,A,true,Durban,South Africa
+2010,2010-07-10,Group stage,Uruguay,Germany,2,3,A,true,Port Elizabeth,South Africa
+2010,2010-07-11,Group stage,Netherlands,Spain,0,1,A,true,Johannesburg,South Africa
+2014,2014-06-12,Group stage,Brazil,Croatia,3,1,H,false,São Paulo,Brazil
+2014,2014-06-13,Group stage,Chile,Australia,3,1,H,true,Cuiabá,Brazil
+2014,2014-06-13,Group stage,Mexico,Cameroon,1,0,H,true,Natal,Brazil
+2014,2014-06-13,Group stage,Spain,Netherlands,1,5,A,true,Salvador,Brazil
+2014,2014-06-14,Group stage,Colombia,Greece,3,0,H,true,Belo Horizonte,Brazil
+2014,2014-06-14,Group stage,England,Italy,1,2,A,true,Manaus,Brazil
+2014,2014-06-14,Group stage,Ivory Coast,Japan,2,1,H,true,Recife,Brazil
+2014,2014-06-14,Group stage,Uruguay,Costa Rica,1,3,A,true,Fortaleza,Brazil
+2014,2014-06-15,Group stage,Argentina,Bosnia and Herzegovina,2,1,H,true,Rio de Janeiro,Brazil
+2014,2014-06-15,Group stage,France,Honduras,3,0,H,true,Porto Alegre,Brazil
+2014,2014-06-15,Group stage,Switzerland,Ecuador,2,1,H,true,Brasília,Brazil
+2014,2014-06-16,Group stage,Germany,Portugal,4,0,H,true,Salvador,Brazil
+2014,2014-06-16,Group stage,Ghana,United States,1,2,A,true,Natal,Brazil
+2014,2014-06-16,Group stage,Iran,Nigeria,0,0,D,true,Curitiba,Brazil
+2014,2014-06-17,Group stage,Belgium,Algeria,2,1,H,true,Belo Horizonte,Brazil
+2014,2014-06-17,Group stage,Brazil,Mexico,0,0,D,false,Fortaleza,Brazil
+2014,2014-06-17,Group stage,Russia,South Korea,1,1,D,true,Cuiabá,Brazil
+2014,2014-06-18,Group stage,Australia,Netherlands,2,3,A,true,Curitiba,Brazil
+2014,2014-06-18,Group stage,Cameroon,Croatia,0,4,A,true,Manaus,Brazil
+2014,2014-06-18,Group stage,Spain,Chile,0,2,A,true,Rio de Janeiro,Brazil
+2014,2014-06-19,Group stage,Colombia,Ivory Coast,2,1,H,true,Brasília,Brazil
+2014,2014-06-19,Group stage,Japan,Greece,0,0,D,true,Natal,Brazil
+2014,2014-06-19,Group stage,Uruguay,England,2,1,H,true,São Paulo,Brazil
+2014,2014-06-20,Group stage,Honduras,Ecuador,1,2,A,true,Curitiba,Brazil
+2014,2014-06-20,Group stage,Italy,Costa Rica,0,1,A,true,Recife,Brazil
+2014,2014-06-20,Group stage,Switzerland,France,2,5,A,true,Salvador,Brazil
+2014,2014-06-21,Group stage,Argentina,Iran,1,0,H,true,Belo Horizonte,Brazil
+2014,2014-06-21,Group stage,Germany,Ghana,2,2,D,true,Fortaleza,Brazil
+2014,2014-06-21,Group stage,Nigeria,Bosnia and Herzegovina,1,0,H,true,Cuiabá,Brazil
+2014,2014-06-22,Group stage,Belgium,Russia,1,0,H,true,Rio de Janeiro,Brazil
+2014,2014-06-22,Group stage,South Korea,Algeria,2,4,A,true,Porto Alegre,Brazil
+2014,2014-06-22,Group stage,United States,Portugal,2,2,D,true,Manaus,Brazil
+2014,2014-06-23,Group stage,Australia,Spain,0,3,A,true,Curitiba,Brazil
+2014,2014-06-23,Group stage,Brazil,Cameroon,4,1,H,false,Brasília,Brazil
+2014,2014-06-23,Group stage,Croatia,Mexico,1,3,A,true,Recife,Brazil
+2014,2014-06-23,Group stage,Netherlands,Chile,2,0,H,true,São Paulo,Brazil
+2014,2014-06-24,Group stage,Costa Rica,England,0,0,D,true,Belo Horizonte,Brazil
+2014,2014-06-24,Group stage,Greece,Ivory Coast,2,1,H,true,Fortaleza,Brazil
+2014,2014-06-24,Group stage,Italy,Uruguay,0,1,A,true,Natal,Brazil
+2014,2014-06-24,Group stage,Japan,Colombia,1,4,A,true,Cuiabá,Brazil
+2014,2014-06-25,Group stage,Bosnia and Herzegovina,Iran,3,1,H,true,Salvador,Brazil
+2014,2014-06-25,Group stage,Ecuador,France,0,0,D,true,Rio de Janeiro,Brazil
+2014,2014-06-25,Group stage,Honduras,Switzerland,0,3,A,true,Manaus,Brazil
+2014,2014-06-25,Group stage,Nigeria,Argentina,2,3,A,true,Porto Alegre,Brazil
+2014,2014-06-26,Group stage,Algeria,Russia,1,1,D,true,Curitiba,Brazil
+2014,2014-06-26,Group stage,South Korea,Belgium,0,1,A,true,São Paulo,Brazil
+2014,2014-06-26,Group stage,Portugal,Ghana,2,1,H,true,Brasília,Brazil
+2014,2014-06-26,Group stage,United States,Germany,0,1,A,true,Recife,Brazil
+2014,2014-06-28,Group stage,Brazil,Chile,1,1,D,false,Belo Horizonte,Brazil
+2014,2014-06-28,Group stage,Colombia,Uruguay,2,0,H,true,Rio de Janeiro,Brazil
+2014,2014-06-29,Group stage,Costa Rica,Greece,1,1,D,true,Recife,Brazil
+2014,2014-06-29,Group stage,Netherlands,Mexico,2,1,H,true,Fortaleza,Brazil
+2014,2014-06-30,Group stage,France,Nigeria,2,0,H,true,Brasília,Brazil
+2014,2014-06-30,Group stage,Germany,Algeria,2,1,H,true,Porto Alegre,Brazil
+2014,2014-07-01,Group stage,Argentina,Switzerland,1,0,H,true,São Paulo,Brazil
+2014,2014-07-01,Group stage,Belgium,United States,2,1,H,true,Salvador,Brazil
+2014,2014-07-04,Group stage,Brazil,Colombia,2,1,H,false,Fortaleza,Brazil
+2014,2014-07-04,Group stage,France,Germany,0,1,A,true,Rio de Janeiro,Brazil
+2014,2014-07-05,Group stage,Argentina,Belgium,1,0,H,true,Brasília,Brazil
+2014,2014-07-05,Group stage,Netherlands,Costa Rica,0,0,D,true,Salvador,Brazil
+2014,2014-07-08,Group stage,Brazil,Germany,1,7,A,false,Belo Horizonte,Brazil
+2014,2014-07-09,Group stage,Netherlands,Argentina,0,0,D,true,São Paulo,Brazil
+2014,2014-07-12,Group stage,Brazil,Netherlands,0,3,A,false,Brasília,Brazil
+2014,2014-07-13,Group stage,Germany,Argentina,1,0,H,true,Rio de Janeiro,Brazil
+2018,2018-06-14,Group stage,Russia,Saudi Arabia,5,0,H,false,Moscow,Russia
+2018,2018-06-15,Group stage,Egypt,Uruguay,0,1,A,true,Ekaterinburg,Russia
+2018,2018-06-15,Group stage,Morocco,Iran,0,1,A,true,Saint Petersburg,Russia
+2018,2018-06-15,Group stage,Portugal,Spain,3,3,D,true,Sochi,Russia
+2018,2018-06-16,Group stage,France,Australia,2,1,H,true,Kazan,Russia
+2018,2018-06-16,Group stage,Argentina,Iceland,1,1,D,true,Moscow,Russia
+2018,2018-06-16,Group stage,Peru,Denmark,0,1,A,true,Saransk,Russia
+2018,2018-06-16,Group stage,Croatia,Nigeria,2,0,H,true,Kaliningrad,Russia
+2018,2018-06-17,Group stage,Costa Rica,Serbia,0,1,A,true,Samara,Russia
+2018,2018-06-17,Group stage,Germany,Mexico,0,1,A,true,Moscow,Russia
+2018,2018-06-17,Group stage,Brazil,Switzerland,1,1,D,true,Rostov-on-Don,Russia
+2018,2018-06-18,Group stage,Sweden,South Korea,1,0,H,true,Nizhny Novgorod,Russia
+2018,2018-06-18,Group stage,Belgium,Panama,3,0,H,true,Sochi,Russia
+2018,2018-06-18,Group stage,Tunisia,England,1,2,A,true,Volgograd,Russia
+2018,2018-06-19,Group stage,Colombia,Japan,1,2,A,true,Saransk,Russia
+2018,2018-06-19,Group stage,Poland,Senegal,1,2,A,true,Moscow,Russia
+2018,2018-06-19,Group stage,Russia,Egypt,3,1,H,false,Saint Petersburg,Russia
+2018,2018-06-20,Group stage,Portugal,Morocco,1,0,H,true,Moscow,Russia
+2018,2018-06-20,Group stage,Uruguay,Saudi Arabia,1,0,H,true,Rostov-on-Don,Russia
+2018,2018-06-20,Group stage,Iran,Spain,0,1,A,true,Kazan,Russia
+2018,2018-06-21,Group stage,Denmark,Australia,1,1,D,true,Samara,Russia
+2018,2018-06-21,Group stage,France,Peru,1,0,H,true,Ekaterinburg,Russia
+2018,2018-06-21,Group stage,Argentina,Croatia,0,3,A,true,Nizhny Novgorod,Russia
+2018,2018-06-22,Group stage,Brazil,Costa Rica,2,0,H,true,Saint Petersburg,Russia
+2018,2018-06-22,Group stage,Nigeria,Iceland,2,0,H,true,Volgograd,Russia
+2018,2018-06-22,Group stage,Serbia,Switzerland,1,2,A,true,Kaliningrad,Russia
+2018,2018-06-23,Group stage,Belgium,Tunisia,5,2,H,true,Moscow,Russia
+2018,2018-06-23,Group stage,South Korea,Mexico,1,2,A,true,Rostov-on-Don,Russia
+2018,2018-06-23,Group stage,Germany,Sweden,2,1,H,true,Sochi,Russia
+2018,2018-06-24,Group stage,England,Panama,6,1,H,true,Nizhny Novgorod,Russia
+2018,2018-06-24,Group stage,Japan,Senegal,2,2,D,true,Ekaterinburg,Russia
+2018,2018-06-24,Group stage,Poland,Colombia,0,3,A,true,Kazan,Russia
+2018,2018-06-25,Group stage,Russia,Uruguay,0,3,A,false,Samara,Russia
+2018,2018-06-25,Group stage,Saudi Arabia,Egypt,2,1,H,true,Volgograd,Russia
+2018,2018-06-25,Group stage,Spain,Morocco,2,2,D,true,Kaliningrad,Russia
+2018,2018-06-25,Group stage,Iran,Portugal,1,1,D,true,Saransk,Russia
+2018,2018-06-26,Group stage,Australia,Peru,0,2,A,true,Sochi,Russia
+2018,2018-06-26,Group stage,Denmark,France,0,0,D,true,Moscow,Russia
+2018,2018-06-26,Group stage,Nigeria,Argentina,1,2,A,true,Saint Petersburg,Russia
+2018,2018-06-26,Group stage,Iceland,Croatia,1,2,A,true,Rostov-on-Don,Russia
+2018,2018-06-27,Group stage,South Korea,Germany,2,0,H,true,Kazan,Russia
+2018,2018-06-27,Group stage,Mexico,Sweden,0,3,A,true,Ekaterinburg,Russia
+2018,2018-06-27,Group stage,Serbia,Brazil,0,2,A,true,Moscow,Russia
+2018,2018-06-27,Group stage,Switzerland,Costa Rica,2,2,D,true,Nizhny Novgorod,Russia
+2018,2018-06-28,Group stage,Japan,Poland,0,1,A,true,Volgograd,Russia
+2018,2018-06-28,Group stage,Senegal,Colombia,0,1,A,true,Samara,Russia
+2018,2018-06-28,Group stage,Panama,Tunisia,1,2,A,true,Saransk,Russia
+2018,2018-06-28,Group stage,England,Belgium,0,1,A,true,Kaliningrad,Russia
+2018,2018-06-30,Group stage,France,Argentina,4,3,H,true,Kazan,Russia
+2018,2018-06-30,Group stage,Uruguay,Portugal,2,1,H,true,Sochi,Russia
+2018,2018-07-01,Group stage,Russia,Spain,1,1,D,false,Moscow,Russia
+2018,2018-07-01,Group stage,Croatia,Denmark,1,1,D,true,Nizhny Novgorod,Russia
+2018,2018-07-02,Group stage,Brazil,Mexico,2,0,H,true,Samara,Russia
+2018,2018-07-02,Group stage,Belgium,Japan,3,2,H,true,Rostov-on-Don,Russia
+2018,2018-07-03,Group stage,Sweden,Switzerland,1,0,H,true,Saint Petersburg,Russia
+2018,2018-07-03,Group stage,Colombia,England,1,1,D,true,Moscow,Russia
+2018,2018-07-06,Group stage,Uruguay,France,0,2,A,true,Nizhny Novgorod,Russia
+2018,2018-07-06,Group stage,Brazil,Belgium,1,2,A,true,Kazan,Russia
+2018,2018-07-07,Group stage,Sweden,England,0,2,A,true,Samara,Russia
+2018,2018-07-07,Group stage,Russia,Croatia,2,2,D,false,Sochi,Russia
+2018,2018-07-10,Group stage,France,Belgium,1,0,H,true,Saint Petersburg,Russia
+2018,2018-07-11,Group stage,Croatia,England,2,1,H,true,Moscow,Russia
+2018,2018-07-14,Group stage,Belgium,England,2,0,H,true,Saint Petersburg,Russia
+2018,2018-07-15,Group stage,France,Croatia,4,2,H,true,Moscow,Russia

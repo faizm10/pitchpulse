@@ -1,65 +1,111 @@
-# ⚽ PitchPulse
+# PitchPulse
 
 > Your all-in-one FIFA World Cup 2026 intelligence dashboard.
 
-PitchPulse is a real-time, map-inspired dashboard that brings together live 
-scores, player stats, bracket tracking, AI match insights, and global news 
-coverage — all in one immersive interface. Built by football fans, for football fans.
+PitchPulse is a map-first dashboard for the 2026 World Cup: live scores, standings, news, match pages, and ML-powered win/draw/loss predictions — built by football fans, for football fans.
 
+## What's working today
 
-## 🚀 Features (Planned)
+| Area | Status |
+|------|--------|
+| Interactive map (MapLibre GL, 16 host venues) | Live |
+| Live scores & match list | ESPN |
+| Group standings | ESPN |
+| News feed | ESPN |
+| Match detail (teams, score, status, venue) | ESPN |
+| AI prediction bars + narrative | FastAPI Random Forest |
+| Knockout bracket | Mock UI |
+| Player stats | Mock UI |
+| Stadium / country detail pages | Mock UI |
+| Match timeline & possession | Hidden (not wired) |
 
-- 🗺️ **Interactive Map** — stadiums, host cities (Canada, Mexico, USA) with live match overlays
-- 📊 **Live Scores & Fixtures** — real-time match data, timelines, and events
-- 🏆 **Bracket Tracker** — group stage standings + knockout round bracket
-- 👤 **Player Stats** — goals, assists, cards, xG, heatmaps
-- 🤖 **AI Insights** — match predictions, post-match summaries, form analysis
-- 📰 **News Feed** — aggregated headlines from top sources
-- 🌐 **Multi-language support** (stretch goal)
+## Tech stack
 
----
+| Layer | Tools |
+|-------|--------|
+| Frontend | Next.js 14, TypeScript, plain CSS |
+| Map | MapLibre GL |
+| Live data | ESPN public API (Next.js API routes) |
+| Predictions | FastAPI, scikit-learn, pandas (Python 3.10+) |
+| ML model | Random Forest, 18 features, 3-class output (home / draw / away) |
 
-## 🛠️ Tech Stack (TBD)
+The prediction service is **stateless**: it loads a model trained offline from `backend/app/data/world_cup_matches.csv` (World Cup matches 1930–2018). No paid APIs required for the current pipeline.
 
-| Layer       | Tools (proposed)             |
-|-------------|------------------------------|
-| Frontend    | Next.js + TypeScript         |
-| Styling     | Tailwind CSS                 |
-| Map         | Mapbox GL / Leaflet.js       |
-| Data APIs   | BallDontLie WC2026 API, Sportmonks |
-| AI Layer    | OpenAI API / Gemini          |
-| Backend     | Node.js / Express or FastAPI |
-| Database    | PostgreSQL / Supabase        |
-| Deployment  | Vercel + Railway             |
+## Project structure
 
----
-
-## 📁 Project Structure (TBD)
-
+```
 pitchpulse/
-├── frontend/
-├── backend/
-├── ai/
-└── docs/
+├── frontend/                 # Next.js app → http://localhost:3000
+│   ├── app/api/              # ESPN proxies + /api/predict → FastAPI
+│   ├── components/             # UI (map, match detail, predictions, …)
+│   ├── data/venues.ts        # Stadium coordinates for the map
+│   └── lib/                  # ESPN parsers, mock data, predict client
+├── backend/                  # FastAPI → http://127.0.0.1:8001
+│   ├── app/services/         # Feature engineering + training
+│   ├── app/models/           # Predictor + saved .joblib artifact
+│   └── scripts/              # prepare_data.py, train_model.py
+└── AGENTS.md                 # Agent / contributor context
+```
 
-text
+## Run locally
 
-## 🗓️ Timeline
+You need **two terminals**.
 
-| Phase       | Goal                        | Target         |
-|-------------|-----------------------------|----------------|
-| Discovery   | Tech stack, APIs, design    | March 2026     |
-| Alpha       | Map + scores + bracket      | April 2026     |
-| Beta        | AI insights + news feed     | May 2026       |
-| Launch      | World Cup kickoff           | June 2026      |
+### 1. Prediction API (port 8001)
 
----
+```bash
+cd backend
+python -m venv .venv
+# Windows:  .venv\Scripts\activate
+# macOS/Linux:  source .venv/bin/activate
+pip install -r requirements.txt
+python scripts/train_model.py          # first time only
+uvicorn app.main:app --reload --port 8001
+```
 
-## 👥 Team
+### 2. Frontend (port 3000)
 
-- [Hamza](https://github.com/hamzaelmi068)  
+```bash
+cd frontend
+npm install
+```
+
+Create `frontend/.env.local`:
+
+```
+PREDICT_API_URL=http://127.0.0.1:8001
+```
+
+Then:
+
+```bash
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000). Click a match from the map or Matches page to see ESPN detail plus prediction bars.
+
+### Quick checks
+
+```bash
+curl http://127.0.0.1:8001/health
+curl -X POST http://127.0.0.1:8001/predict -H "Content-Type: application/json" -d "{\"home_team\":\"Brazil\",\"away_team\":\"Germany\"}"
+curl -X POST http://localhost:3000/api/predict -H "Content-Type: application/json" -d "{\"home_team\":\"Brazil\",\"away_team\":\"Germany\"}"
+```
+
+## ML pipeline (summary)
+
+- **Training data:** World Cup tournament matches 1930–2018 (`world_cup_matches.csv`)
+- **Features:** 18 (win rates, weighted goals, head-to-head, tournament stage weight, …)
+- **Output:** `home_win_probability`, `draw_probability`, `away_win_probability`
+- **Unknown teams:** Slight home lean (0.34 / 0.33 / 0.33) with `confidence: "low"`
+
+See `backend/README.md` for dataset sources, Kaggle setup, and CV metrics.
+
+## Team
+
+- [Hamza](https://github.com/hamzaelmi068)
 - [Faiz](https://github.com/faizm10)
 
----
+## License
 
-## 📌 Status: Discovery Phase 🔍
+See [LICENSE](LICENSE).

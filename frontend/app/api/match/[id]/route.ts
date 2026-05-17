@@ -19,6 +19,12 @@ export async function GET(
     return Response.json({ detail });
   } catch (err) {
     console.error("[/api/match/[id]]", err);
-    return Response.json({ error: "Internal error" }, { status: 500 });
+    return Response.json(
+      {
+        error: "Failed to parse match",
+        detail: err instanceof Error ? err.message : String(err),
+      },
+      { status: 500 }
+    );
   }
 }

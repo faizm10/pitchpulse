@@ -30,7 +30,7 @@ const CITY_TO_VENUE_ID: Record<string, string> = {
   Monterrey: "bbva",
 };
 
-function matchVenueId(city: string): string | undefined {
+export function matchVenueId(city: string): string | undefined {
   if (CITY_TO_VENUE_ID[city]) return CITY_TO_VENUE_ID[city];
   const found = Object.entries(CITY_TO_VENUE_ID).find(([key]) =>
     city.includes(key)
@@ -173,10 +173,91 @@ export function groupStandingsLabelFromSummary(
   return raw ? raw.trim().toUpperCase() : null;
 }
 
+function competitorScore(c: { score?: { displayValue?: string; value?: number } | null }): string {
+  if (c.score?.displayValue != null && c.score.displayValue !== "") {
+    return c.score.displayValue;
+  }
+  if (c.score?.value != null) {
+    return String(c.score.value);
+  }
+  return "–";
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function parseHeadToHeadGames(raw: any[] | undefined): H2HGame[] {
+  if (!raw?.length) return [];
+
+  // Legacy: each item is a match with competitors[]
+  if (raw[0]?.competitors?.length) {
+    const games: H2HGame[] = [];
+    for (const g of raw) {
+      try {
+        const h2hHome = g.competitors.find((c: { homeAway: string }) => c.homeAway === "home");
+        const h2hAway = g.competitors.find((c: { homeAway: string }) => c.homeAway === "away");
+        if (!h2hHome || !h2hAway) continue;
+        games.push({
+          id: g.id,
+          date: g.date,
+          season: g.season?.year ?? 0,
+          competition: g.competitions?.[0]?.notes?.[0]?.text ?? "",
+          homeTeam: {
+            abbreviation: h2hHome.team.abbreviation,
+            score: h2hHome.score?.displayValue ?? "–",
+          },
+          awayTeam: {
+            abbreviation: h2hAway.team.abbreviation,
+            score: h2hAway.score?.displayValue ?? "–",
+          },
+          completed: g.competitions?.[0]?.status?.type?.completed ?? true,
+        });
+      } catch {
+        /* skip malformed row */
+      }
+    }
+    return games;
+  }
+
+  // Current ESPN format: team blocks with nested events[]
+  const games: H2HGame[] = [];
+  for (const block of raw) {
+    const teamId = String(block.team?.id ?? "");
+    const teamAbbr = block.team?.abbreviation ?? "TBD";
+    for (const evt of block.events ?? []) {
+      try {
+        const yearMatch = String(evt.competitionName ?? "").match(/\d{4}/);
+        const homeIsBlockTeam = String(evt.homeTeamId) === teamId;
+        const homeAbbr = homeIsBlockTeam ? teamAbbr : evt.opponent?.abbreviation ?? "TBD";
+        const awayAbbr = homeIsBlockTeam ? evt.opponent?.abbreviation ?? "TBD" : teamAbbr;
+        games.push({
+          id: String(evt.id),
+          date: evt.gameDate ?? evt.date ?? "",
+          season: yearMatch ? Number(yearMatch[0]) : 0,
+          competition: evt.competitionName ?? evt.leagueName ?? "",
+          homeTeam: {
+            abbreviation: homeAbbr,
+            score: String(evt.homeTeamScore ?? "–"),
+          },
+          awayTeam: {
+            abbreviation: awayAbbr,
+            score: String(evt.awayTeamScore ?? "–"),
+          },
+          completed: true,
+        });
+      } catch {
+        /* skip */
+      }
+    }
+  }
+  return games;
+}
+
 export function parseSummary(data: ESPNSummaryResponse): MatchDetail {
   const competition = data.header.competitions[0];
-  const home = competition.competitors.find((c) => c.homeAway === "home")!;
-  const away = competition.competitors.find((c) => c.homeAway === "away")!;
+  const home = competition.competitors.find((c) => c.homeAway === "home");
+  const away = competition.competitors.find((c) => c.homeAway === "away");
+  if (!home || !away) {
+    throw new Error("Missing home or away competitor in summary");
+  }
 
   function summaryTeam(c: typeof home): MatchTeam {
     return {
@@ -184,9 +265,9 @@ export function parseSummary(data: ESPNSummaryResponse): MatchDetail {
       name: c.team.displayName,
       abbreviation: c.team.abbreviation,
       logo: c.team.logos?.[0]?.href ?? "",
-      score: c.score?.displayValue ?? "0",
+      score: competitorScore(c),
       color: c.team.color ? `#${c.team.color}` : "#ffffff",
-      winner: c.winner,
+      winner: c.winner ?? false,
     };
   }
 
@@ -212,21 +293,8 @@ export function parseSummary(data: ESPNSummaryResponse): MatchDetail {
       }
     : undefined;
 
-  const headToHead: H2HGame[] = (data.headToHeadGames ?? []).map((g) => {
-    const h2hHome = g.competitors.find((c) => c.homeAway === "home")!;
-    const h2hAway = g.competitors.find((c) => c.homeAway === "away")!;
-    const noteText = g.competitions?.[0]?.notes?.[0]?.text ?? "";
-    const completed = g.competitions?.[0]?.status?.type?.completed ?? true;
-    return {
-      id: g.id,
-      date: g.date,
-      season: g.season.year,
-      competition: noteText,
-      homeTeam: { abbreviation: h2hHome.team.abbreviation, score: h2hHome.score.displayValue },
-      awayTeam: { abbreviation: h2hAway.team.abbreviation, score: h2hAway.score.displayValue },
-      completed,
-    };
-  });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const headToHead = parseHeadToHeadGames(data.headToHeadGames as any[] | undefined);
 
   const groupStandings: GroupStandingEntry[] =
     data.standings?.groups?.[0]?.standings?.entries?.map(
@@ -243,13 +311,17 @@ export function parseSummary(data: ESPNSummaryResponse): MatchDetail {
     byline: a.byline,
   }));
 
+  const groups = competition.groups as
+    | { shortName?: string; name?: string; abbreviation?: string }
+    | undefined;
+
   return {
     id: competition.id,
-    group: competition.groups?.shortName,
+    group: groups?.shortName ?? groups?.abbreviation ?? groups?.name,
     date: competition.date,
-    state: competition.status.type.state,
-    statusDetail: competition.status.type.detail,
-    displayClock: competition.status.displayClock,
+    state: competition.status?.type?.state ?? "pre",
+    statusDetail: competition.status?.type?.detail ?? competition.status?.type?.description ?? "",
+    displayClock: competition.status?.displayClock ?? "",
     venue,
     homeTeam: summaryTeam(home),
     awayTeam: summaryTeam(away),

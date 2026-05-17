@@ -8,26 +8,38 @@ import { Flag, FormDots, ago } from './Shared';
 import { useTweaks, useMyTeam } from './Providers';
 import type { Match as LocalMatch } from '@/lib/types';
 import type { Match } from '@/types/espn';
-
-const fullAi = `Argentina lead Japan 3–2 with 89 minutes played — Messi's late header has the Azteca shaking. Brazil hold a one-goal edge over Portugal in New Jersey. France and Belgium remain level. Morocco's first-half strike is the surprise of the day.`;
+import { buildPredictionNarrative, fetchPrediction } from '@/lib/predict';
+import { useTypewriter } from '@/hooks/useTypewriter';
 
 export function Rail() {
   const { tweaks } = useTweaks();
   const { myTeam } = useMyTeam();
-  const [aiText, setAiText] = useState('');
   const [liveMatches, setLiveMatches] = useState<Match[]>([]);
+  const [railNarrative, setRailNarrative] = useState('');
 
   useEffect(() => {
-    if (!tweaks.aiSummary) return;
-    setAiText('');
-    let i = 0;
-    const t = setInterval(() => {
-      i += 2;
-      setAiText(fullAi.slice(0, i));
-      if (i >= fullAi.length) clearInterval(t);
-    }, 18);
-    return () => clearInterval(t);
-  }, [tweaks.aiSummary]);
+    if (!tweaks.aiSummary || liveMatches.length === 0) {
+      setRailNarrative('');
+      return;
+    }
+    const featured = liveMatches[0];
+    let cancelled = false;
+    fetchPrediction(featured.homeTeam.name, featured.awayTeam.name)
+      .then((p) => {
+        if (!cancelled) setRailNarrative(buildPredictionNarrative(p));
+      })
+      .catch(() => {
+        if (!cancelled) setRailNarrative('');
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [liveMatches, tweaks.aiSummary]);
+
+  const { display: aiText, isTyping } = useTypewriter(
+    railNarrative,
+    tweaks.aiSummary && railNarrative.length > 0
+  );
 
   useEffect(() => {
     async function loadLive() {
@@ -65,7 +77,7 @@ export function Rail() {
         )}
       </div>
 
-      {tweaks.aiSummary && (
+      {tweaks.aiSummary && railNarrative && (
         <div className="rail-section" style={{ background: 'var(--ink)', color: 'var(--paper)' }}>
           <div className="rail-h" style={{ color: 'rgba(242,238,227,0.65)' }}>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
@@ -76,7 +88,9 @@ export function Rail() {
           </div>
           <div className="serif" style={{ fontSize: 17, lineHeight: 1.35, fontStyle: 'italic' }}>
             {aiText}
-            <span style={{ display: 'inline-block', width: 8, height: 18, background: 'var(--pulse)', verticalAlign: 'text-bottom', marginLeft: 2, animation: 'blink 1s steps(2) infinite' }} />
+            {isTyping && (
+              <span style={{ display: 'inline-block', width: 8, height: 18, background: 'var(--pulse)', verticalAlign: 'text-bottom', marginLeft: 2, animation: 'blink 1s steps(2) infinite' }} />
+            )}
           </div>
         </div>
       )}
