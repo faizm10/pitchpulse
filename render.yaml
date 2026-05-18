@@ -5,7 +5,7 @@
 #   PREDICT_API_URL=https://your-service-name.onrender.com
 # Then redeploy the frontend on Vercel.
 #
-# Note: Render free tier sleeps after ~15 min idle; first request after sleep may take ~30s.
+# Important Note: Render free tier sleeps after ~15 min idle; first request after sleep may take ~30s.
 
 services:
   - type: web
