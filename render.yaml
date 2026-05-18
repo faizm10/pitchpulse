@@ -1,0 +1,26 @@
+# PitchPulse — FastAPI prediction API on Render
+#
+# After deploy, copy the Render service URL (e.g. https://pitchpulse-api.onrender.com)
+# and set it in Vercel → Settings → Environment Variables:
+#   PREDICT_API_URL=https://your-service-name.onrender.com
+# Then redeploy the frontend on Vercel.
+#
+# Note: Render free tier sleeps after ~15 min idle; first request after sleep may take ~30s.
+
+services:
+  - type: web
+    name: pitchpulse-api
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.10.13"
+      - key: TRAIN_ON_STARTUP
+        value: "0"
+      # Optional: allow browser calls (Next.js proxies server-side; CORS optional)
+      - key: CORS_ORIGINS
+        sync: false
