@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Map, MapMarker, MarkerContent, MarkerPopup, MapControls, useMap } from '@/components/ui/map';
+import { DEFAULT_MAP_VIEW } from '@/data/venues';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -336,7 +337,13 @@ function TestsMap({
         </div>
       )}
 
-      <Map center={[-1.8, 52.4]} zoom={isMobile ? 5.2 : 6} minZoom={4} maxZoom={14} theme="light">
+      <Map
+        center={DEFAULT_MAP_VIEW.center}
+        zoom={isMobile ? DEFAULT_MAP_VIEW.zoom - 0.2 : DEFAULT_MAP_VIEW.zoom}
+        minZoom={DEFAULT_MAP_VIEW.minZoom}
+        maxZoom={DEFAULT_MAP_VIEW.maxZoom}
+        theme="light"
+      >
         <MapLoadedObserver onLoad={handleLoad} />
         <EPLMarkers games={games} liveInfos={liveInfos} onSelectGame={onSelectGame} />
         <MapControls position="bottom-right" showZoom />
@@ -351,7 +358,7 @@ function TestsMap({
           background: 'rgba(255,255,255,0.85)', borderRadius: 4, padding: '3px 7px',
           backdropFilter: 'blur(4px)',
         }}>
-          ENGLAND · PREMIER LEAGUE
+          USA · TEST MATCHES
         </span>
       </div>
     </div>
@@ -594,7 +601,7 @@ export default function TestsIndexPage() {
         </p>
       </div>
 
-      {/* England map */}
+      {/* Match locations map */}
       <div style={{ marginBottom: isMobile ? 20 : 28 }}>
         <h2 className="mono" style={{ fontSize: 10, letterSpacing: '0.2em', color: 'var(--ink-3)', margin: '0 0 12px' }}>
           MATCH LOCATIONS
