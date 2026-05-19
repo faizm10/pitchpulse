@@ -14,8 +14,10 @@ PitchPulse is a map-first dashboard for the 2026 World Cup: live scores, standin
 | News feed | ESPN |
 | Match detail (teams, score, status, venue) | ESPN |
 | AI prediction bars + narrative | FastAPI Random Forest |
+| Team squads & fixtures (`/team/[code]`) | FotMob (league 77) |
+| Match FotMob extras (group, xG when available) | FotMob |
 | Knockout bracket | Mock UI |
-| Player stats | Mock UI |
+| Player stats leaderboard | Mock UI |
 | Stadium / country detail pages | Mock UI |
 | Match timeline & possession | Hidden (not wired) |
 
@@ -26,6 +28,7 @@ PitchPulse is a map-first dashboard for the 2026 World Cup: live scores, standin
 | Frontend | Next.js 14, TypeScript, plain CSS |
 | Map | MapLibre GL |
 | Live data | ESPN public API (Next.js API routes) |
+| Squads / fixtures | FotMob API via `/api/fotmob/*` (`FOTMOB_ENABLED=1`) |
 | Predictions | FastAPI, scikit-learn, pandas (Python 3.10+) |
 | ML model | Random Forest, 18 features, 3-class output (home / draw / away) |
 
