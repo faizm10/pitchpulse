@@ -51,7 +51,7 @@ const TEST_GAMES: TestGame[] = [
   },
   {
     slug: 'mls-atl-orl',
-    href: '/test-mls',
+    href: '/test-mls/atl-orl',
     source: 'espn',
     matchId: '401871128',
     apiPath: '/api/test-mls/401871128',
@@ -60,7 +60,7 @@ const TEST_GAMES: TestGame[] = [
   },
   {
     slug: 'mls-hou-stl',
-    href: '/test-mls',
+    href: '/test-mls/hou-stl',
     source: 'espn',
     matchId: '401871127',
     apiPath: '/api/test-mls/401871127',
