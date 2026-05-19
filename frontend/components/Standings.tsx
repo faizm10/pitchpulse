@@ -1,30 +1,15 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { Flag } from './Shared';
 import type { StandingsGroupBlock, GroupStandingEntry } from '@/types/espn';
-
-const NAME_TO_ABB: Record<string, string> = {
-    "Mexico": "MEX", "South Africa": "RSA", "South Korea": "KOR", "Czechia": "CZE",
-    "Canada": "CAN", "Bosnia-Herzegovina": "BIH", "Qatar": "QAT", "Switzerland": "SUI",
-    "Brazil": "BRA", "Morocco": "MAR", "Haiti": "HAI", "Scotland": "SCO",
-    "United States": "USA", "Paraguay": "PAR", "Australia": "AUS", "Türkiye": "TUR",
-    "Germany": "GER", "Curacao": "CUW", "Ivory Coast": "CIV", "Ecuador": "ECU",
-    "Netherlands": "NED", "Japan": "JPN", "Sweden": "SWE", "Tunisia": "TUN",
-    "Belgium": "BEL", "Egypt": "EGY", "Iran": "IRN", "New Zealand": "NZL",
-    "Spain": "ESP", "Cape Verde": "CPV", "Saudi Arabia": "KSA", "Uruguay": "URU",
-    "France": "FRA", "Senegal": "SEN", "Iraq": "IRQ", "Norway": "NOR",
-    "Argentina": "ARG", "Algeria": "ALG", "Austria": "AUT", "Jordan": "JOR",
-    "Portugal": "POR", "Congo DR": "COD", "Uzbekistan": "UZB", "Colombia": "COL",
-    "England": "ENG", "Croatia": "CRO", "Ghana": "GHA", "Panama": "PAN",
-  };
+import { teamCodeFromDisplayName } from '@/lib/team-codes';
 
 export function Standings() {
   const [groups, setGroups] = useState<StandingsGroupBlock[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
-
-  console.log(groups.flatMap(g => g.entries.map(e => `${e.name}: "${e.abbreviation}"`)));
 
   useEffect(() => {
     async function load() {
@@ -194,24 +179,11 @@ function GroupRow({
 
       {/* Flag */}
       <div style={{ display: 'flex', alignItems: 'center' }}>
-        <Flag code={entry.abbreviation || NAME_TO_ABB[entry.name] || ''} w={18} h={12} />
+        <Flag code={teamCodeFromDisplayName(entry.name, entry.abbreviation)} w={18} h={12} />
       </div>
 
       {/* Team name */}
-      <span
-        className="serif"
-        style={{
-          fontSize: 15,
-          paddingLeft: 10,
-          color: advances ? 'var(--ink)' : 'var(--ink-2)',
-          fontStyle: advances ? 'normal' : 'normal',
-          whiteSpace: 'nowrap',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-        }}
-      >
-        {entry.name}
-      </span>
+      <TeamNameLink entry={entry} advances={advances} />
 
       {/* Stats */}
       {[entry.played, entry.wins, entry.draws, entry.losses].map((v, i) => (
@@ -250,5 +222,38 @@ function GroupRow({
         {entry.points}
       </span>
     </div>
+  );
+}
+
+function TeamNameLink({
+  entry,
+  advances,
+}: {
+  entry: GroupStandingEntry;
+  advances: boolean;
+}) {
+  const code = teamCodeFromDisplayName(entry.name, entry.abbreviation);
+  const style = {
+    fontSize: 15,
+    paddingLeft: 10,
+    color: advances ? 'var(--ink)' : 'var(--ink-2)',
+    whiteSpace: 'nowrap' as const,
+    overflow: 'hidden' as const,
+    textOverflow: 'ellipsis' as const,
+    textDecoration: 'none' as const,
+  };
+
+  if (!code) {
+    return (
+      <span className="serif" style={style}>
+        {entry.name}
+      </span>
+    );
+  }
+
+  return (
+    <Link href={`/team/${code}`} className="serif" style={style}>
+      {entry.name}
+    </Link>
   );
 }
