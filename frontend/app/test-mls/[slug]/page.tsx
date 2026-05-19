@@ -3,7 +3,8 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { Toaster, toast } from 'sonner';
+import { PitchPulseToaster } from '@/components/PitchPulseToaster';
+import { showMatchEventToast } from '@/lib/match-toasts';
 
 // ── Game config ───────────────────────────────────────────────────────────────
 
@@ -80,6 +81,37 @@ interface NewsItem {
 interface LeaderCategory { category: string; value: string; athlete: { name: string; id: string }; }
 interface TeamLeader { teamId: string; teamName: string; teamLogo: string; categories: LeaderCategory[]; }
 
+interface BracketTeam {
+  id: string;
+  name: string;
+  abbreviation: string;
+  logo: string;
+  score: string | null;
+  winner: boolean;
+}
+
+interface BracketMatch {
+  id: string;
+  roundLabel: string;
+  homeTeam: BracketTeam;
+  awayTeam: BracketTeam;
+  state: 'pre' | 'in' | 'post';
+  statusDetail: string;
+  date: string;
+  isCurrentGame: boolean;
+}
+
+interface BracketRound {
+  label: string;
+  date: string;
+  matches: BracketMatch[];
+}
+
+interface OpenCupBracket {
+  rounds: BracketRound[];
+  upcomingRounds: { label: string; date: string }[];
+}
+
 interface MLSMatchData {
   id: string;
   league: string;
@@ -104,6 +136,7 @@ interface MLSMatchData {
   isMatchLeaders: boolean;
   standingsGroups: StandingsGroup[];
   standingsGroupsProjected: StandingsGroup[];
+  openCupBracket?: OpenCupBracket;
 }
 
 // ── Hooks ─────────────────────────────────────────────────────────────────────
@@ -166,25 +199,6 @@ function eventIcon(typeSlug: string): string {
     case 'substitution': return '🔄';
     case 'shot-on-target': return '🎯';
     default: return '•';
-  }
-}
-
-function toastForEvent(ev: KeyEvent, home: MLSTeam, away: MLSTeam) {
-  const icon = eventIcon(ev.typeSlug);
-  const athlete = ev.participants[0]?.athlete ?? '';
-  const clockStr = ev.clock ? `${ev.clock} —` : '';
-
-  if (ev.scoringPlay || ev.typeSlug === 'goal' || ev.typeSlug === 'penalty-scored') {
-    const scoreStr = ev.homeScore != null && ev.awayScore != null
-      ? ` (${home.abbreviation} ${ev.homeScore}–${ev.awayScore} ${away.abbreviation})`
-      : '';
-    toast.success(`${icon} GOAL! ${athlete}${scoreStr}`, { description: `${clockStr} ${ev.teamName}`, duration: 8000 });
-  } else if (ev.typeSlug === 'red-card' || ev.typeSlug === 'yellow-red-card') {
-    toast.error(`${icon} Red card — ${athlete}`, { description: `${clockStr} ${ev.teamName}`, duration: 6000 });
-  } else if (ev.typeSlug === 'yellow-card') {
-    toast(`${icon} Yellow card — ${athlete}`, { description: `${clockStr} ${ev.teamName}`, duration: 4000 });
-  } else if (ev.typeSlug === 'substitution') {
-    toast(`${icon} Sub — ${ev.text}`, { description: `${clockStr} ${ev.teamName}`, duration: 3500 });
   }
 }
 
@@ -392,7 +406,7 @@ function EventsFeed({
         KEY EVENTS
       </h2>
       <ol style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
-        {events.map((ev) => {
+        {[...events].reverse().map((ev) => {
           const isHome = ev.teamName === homeTeam.name;
           const isAway = ev.teamName === awayTeam.name;
           const icon = eventIcon(ev.typeSlug);
@@ -615,6 +629,199 @@ function NewsSection({ news, isMobile }: { news: NewsItem[]; isMobile: boolean }
   );
 }
 
+// ── Open Cup bracket ──────────────────────────────────────────────────────────
+
+function BracketMatchCard({
+  match, isMobile, compact,
+}: {
+  match: BracketMatch;
+  isMobile: boolean;
+  compact?: boolean;
+}) {
+  const isPost = match.state === 'post';
+  const isPre = match.state === 'pre';
+  const isLive = match.state === 'in';
+  const kickoff = match.date
+    ? new Date(match.date).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+    : '';
+
+  const accentColor = match.isCurrentGame ? 'var(--pulse)' : isPost ? 'var(--ink-3)' : 'var(--rule)';
+
+  return (
+    <div
+      style={{
+        border: `1px solid var(--rule)`,
+        borderLeft: match.isCurrentGame ? '3px solid var(--pulse)' : `1px solid var(--rule)`,
+        borderRadius: 7,
+        padding: compact ? '8px 10px' : '10px 14px',
+        background: match.isCurrentGame ? 'var(--paper-2)' : 'transparent',
+        position: 'relative',
+      }}
+    >
+      {match.isCurrentGame && (
+        <div className="mono" style={{
+          fontSize: 8, letterSpacing: '0.16em', color: 'var(--pulse)',
+          marginBottom: 6, display: 'flex', alignItems: 'center', gap: 4,
+        }}>
+          <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--pulse)', display: 'inline-block' }} />
+          THIS MATCH
+        </div>
+      )}
+      {[match.homeTeam, match.awayTeam].map((team, i) => (
+        <div key={i} style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          gap: 8, padding: '3px 0',
+          opacity: isPost && !team.winner ? 0.45 : 1,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: compact ? 6 : 8, minWidth: 0 }}>
+            <img src={team.logo} alt="" aria-hidden="true"
+              width={compact ? 16 : 20} height={compact ? 16 : 20}
+              style={{ width: compact ? 16 : 20, height: compact ? 16 : 20, objectFit: 'contain', flexShrink: 0 }}
+              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+            />
+            <span
+              className={team.winner ? 'serif' : 'mono'}
+              style={{
+                fontSize: compact ? 11 : (isMobile ? 12 : 13),
+                fontWeight: team.winner ? 600 : 400,
+                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+              }}
+            >
+              {team.abbreviation}
+            </span>
+            {isPost && team.winner && (
+              <span style={{ fontSize: 9, color: accentColor }}>✓</span>
+            )}
+          </div>
+          <span className="mono tnum" style={{
+            fontSize: compact ? 12 : 14,
+            fontWeight: team.winner ? 700 : 400,
+            flexShrink: 0,
+            color: team.score != null ? 'var(--ink)' : 'var(--ink-3)',
+          }}>
+            {team.score ?? '–'}
+          </span>
+        </div>
+      ))}
+      {isPre && !match.isCurrentGame && kickoff && (
+        <div className="mono" style={{ fontSize: 9, color: 'var(--ink-3)', marginTop: 5, letterSpacing: '0.08em' }}>
+          {kickoff}
+        </div>
+      )}
+      {isPost && match.statusDetail && (
+        <div className="mono" style={{ fontSize: 9, color: 'var(--ink-3)', marginTop: 4, letterSpacing: '0.08em' }}>
+          {match.statusDetail.includes('Final') ? match.statusDetail : `FT · ${match.statusDetail}`}
+        </div>
+      )}
+      {isLive && (
+        <div className="mono" style={{ fontSize: 9, color: 'var(--live)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
+          <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--live)', display: 'inline-block' }} />
+          LIVE
+        </div>
+      )}
+    </div>
+  );
+}
+
+function OpenCupBracketSection({
+  bracket, isMobile,
+}: {
+  bracket: OpenCupBracket;
+  isMobile: boolean;
+}) {
+  const qfRound = bracket.rounds.find(r => r.label === 'Quarterfinals');
+  const r16Round = bracket.rounds.find(r => r.label === 'Round of 16');
+  const [showR16, setShowR16] = React.useState(false);
+
+  if (!qfRound?.matches.length) return null;
+
+  return (
+    <section
+      aria-label="U.S. Open Cup bracket"
+      style={{ padding: isMobile ? '20px 16px' : '28px 40px', borderTop: '1px solid var(--rule)' }}
+    >
+      {/* Header */}
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        borderBottom: '1px solid var(--rule)', paddingBottom: 10, marginBottom: 20,
+        flexWrap: 'wrap', gap: 6,
+      }}>
+        <h2 className="mono" style={{ fontSize: 10, letterSpacing: '0.2em', color: 'var(--ink-3)', margin: 0 }}>
+          U.S. OPEN CUP · BRACKET
+        </h2>
+        <div className="mono" style={{ fontSize: 9, color: 'var(--ink-3)', letterSpacing: '0.1em' }}>
+          {qfRound.date}
+        </div>
+      </div>
+
+      {/* QF grid — current round */}
+      <div style={{ marginBottom: 20 }}>
+        <div className="mono" style={{ fontSize: 9, letterSpacing: '0.16em', color: 'var(--ink-3)', marginBottom: 10, textTransform: 'uppercase' }}>
+          Quarterfinals
+        </div>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
+          gap: 10,
+        }}>
+          {qfRound.matches.map(m => (
+            <BracketMatchCard key={m.id} match={m} isMobile={isMobile} />
+          ))}
+        </div>
+      </div>
+
+      {/* Future rounds */}
+      <div style={{ display: 'flex', gap: isMobile ? 10 : 16, marginBottom: 20, flexWrap: 'wrap' }}>
+        {bracket.upcomingRounds.map((r) => (
+          <div key={r.label} style={{
+            flex: 1, minWidth: isMobile ? 120 : 140,
+            border: '1px dashed var(--rule)',
+            borderRadius: 7,
+            padding: '10px 14px',
+            opacity: 0.6,
+          }}>
+            <div className="mono" style={{ fontSize: 9, letterSpacing: '0.14em', color: 'var(--ink-3)', marginBottom: 4, textTransform: 'uppercase' }}>
+              {r.label}
+            </div>
+            <div className="mono" style={{ fontSize: 9, color: 'var(--ink-3)' }}>{r.date}</div>
+            <div className="mono" style={{ fontSize: 11, color: 'var(--ink-3)', marginTop: 6 }}>TBD</div>
+          </div>
+        ))}
+      </div>
+
+      {/* R16 collapsible */}
+      {r16Round && r16Round.matches.length > 0 && (
+        <div>
+          <button
+            className="mono"
+            onClick={() => setShowR16(v => !v)}
+            style={{
+              fontSize: 9, letterSpacing: '0.14em', color: 'var(--ink-3)',
+              background: 'none', border: 'none', cursor: 'pointer',
+              padding: '4px 0', display: 'flex', alignItems: 'center', gap: 5,
+            }}
+          >
+            <span style={{ display: 'inline-block', transform: showR16 ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s' }}>▶</span>
+            {showR16 ? 'HIDE' : 'SHOW'} ROUND OF 16 RESULTS
+          </button>
+          {showR16 && (
+            <div style={{
+              marginTop: 12,
+              display: 'grid',
+              gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
+              gap: 8,
+            }}>
+              {r16Round.matches.map(m => (
+                <BracketMatchCard key={m.id} match={m} isMobile={isMobile} compact />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </section>
+  );
+}
+
 // ── Conference standings ──────────────────────────────────────────────────────
 
 function ConferenceTable({
@@ -785,7 +992,7 @@ export default function MLSGamePage({ params }: { params: { slug: string } }) {
         for (const ev of incoming.keyEvents) {
           if (!seenEventIds.current.has(ev.id)) {
             seenEventIds.current.add(ev.id);
-            if (!isInitialLoad) toastForEvent(ev, incoming.homeTeam, incoming.awayTeam);
+            if (!isInitialLoad) showMatchEventToast(ev, incoming.homeTeam, incoming.awayTeam);
           }
         }
       }
@@ -858,7 +1065,7 @@ export default function MLSGamePage({ params }: { params: { slug: string } }) {
 
   return (
     <div className="screen" style={{ minHeight: '100vh', maxWidth: '100vw', overflowX: 'hidden' }}>
-      <Toaster position={isMobile ? 'top-center' : 'bottom-right'} />
+      <PitchPulseToaster position={isMobile ? 'top-center' : 'bottom-right'} />
 
       {/* Header — matches Chelsea page layout exactly */}
       <header style={{
@@ -968,6 +1175,11 @@ export default function MLSGamePage({ params }: { params: { slug: string } }) {
       {/* News */}
       {match.news?.length > 0 && (
         <NewsSection news={match.news} isMobile={isMobile} />
+      )}
+
+      {/* Open Cup bracket */}
+      {match.openCupBracket && (
+        <OpenCupBracketSection bracket={match.openCupBracket} isMobile={isMobile} />
       )}
 
       {/* Conference standings */}
