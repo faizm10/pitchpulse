@@ -28,3 +28,4 @@ Use this file for durable decisions and active assumptions that should survive a
 - Keep reusable Codex prompts in `prompts/` and reusable review/run checklists in `checklists/`.
 - Keep temporary notes out of this file; consolidate only the parts that remain relevant after the current task ends.
 - When repo reality changes, update `project.md` first and then adjust this file if a decision or assumption also changed.
+- **Commits:** Conventional Commits only (`feat:`, `fix:`, etc.) — enforced by Husky/commitlint; see `AGENTS.md` § Git commits. Codex must use this format when suggesting or creating commits.
