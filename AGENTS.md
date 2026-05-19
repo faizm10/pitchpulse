@@ -94,6 +94,35 @@ Open http://localhost:3000
 - Hamza ([@hamzaelmi068](https://github.com/hamzaelmi068))
 - Faiz ([@faizm10](https://github.com/faizm10))
 
+## Git commits
+
+**Required.** Husky runs [commitlint](https://commitlint.js.org/) on every commit (`commitlint.config.js` at repo root). Messages that do not match are rejected.
+
+Use [Conventional Commits](https://www.conventionalcommits.org/):
+
+```
+<type>(<optional scope>): <short description>
+```
+
+**Types:** `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`
+
+**Rules when writing or suggesting commit messages:**
+
+- Lowercase type; imperative subject (`add` not `added`); no trailing period on the subject
+- `feat` = new capability; `fix` = bug fix; `chore` = tooling/deps; `docs` = documentation only
+- Optional scope: area of change (`frontend`, `backend`, `api`, etc.)
+
+**Examples:**
+
+```
+feat: add halftime HT display on test-match page
+fix(api): retry fotmob league fetch on cold start
+docs: document husky and commitlint setup
+chore: add root package.json for git hooks
+```
+
+When the user asks you to commit or draft a commit message, **always** use this format.
+
 ## Near-Term Backlog
 
 1. Regenerate CSV from Kaggle for real knockout `stage` labels (stage-weight feature)
