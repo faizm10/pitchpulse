@@ -49,6 +49,24 @@ const TEST_GAMES: TestGame[] = [
     league: 'Premier League',
     round: 'GW37',
   },
+  {
+    slug: 'mls-atl-orl',
+    href: '/test-mls',
+    source: 'espn',
+    matchId: '401871128',
+    apiPath: '/api/test-mls/401871128',
+    league: 'MLS',
+    round: 'R2',
+  },
+  {
+    slug: 'mls-hou-stl',
+    href: '/test-mls',
+    source: 'espn',
+    matchId: '401871127',
+    apiPath: '/api/test-mls/401871127',
+    league: 'MLS',
+    round: 'R2',
+  },
 ];
 
 // ── EPL venue coordinates ─────────────────────────────────────────────────────
@@ -65,6 +83,19 @@ const EPL_VENUES: Record<string, { name: string; city: string; longitude: number
     city: 'London',
     longitude: -0.1908,
     latitude: 51.4816,
+  },
+  // MLS venues (shown on /test-mls dedicated map)
+  'mls-atl-orl': {
+    name: 'Mercedes-Benz Stadium',
+    city: 'Atlanta, GA',
+    longitude: -84.4004,
+    latitude: 33.7553,
+  },
+  'mls-hou-stl': {
+    name: 'Shell Energy Stadium',
+    city: 'Houston, TX',
+    longitude: -95.3510,
+    latitude: 29.7522,
   },
 };
 
@@ -612,6 +643,9 @@ export default function TestsIndexPage() {
         </Link>
         <Link href="/test-fotmob" className="btn" style={{ fontSize: 11, minHeight: 40, padding: '0 16px', textDecoration: 'none' }}>
           FotMob Match →
+        </Link>
+        <Link href="/test-mls" className="btn" style={{ fontSize: 11, minHeight: 40, padding: '0 16px', textDecoration: 'none' }}>
+          MLS Round 2 →
         </Link>
         <Link href="/" className="btn" style={{ fontSize: 11, minHeight: 40, padding: '0 16px', textDecoration: 'none' }}>
           ← Home
