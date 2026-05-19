@@ -829,12 +829,13 @@ export default function TestFotmobPage() {
       if (!res.ok) throw new Error(data.error ?? `HTTP ${res.status}`);
       const incoming: MatchData = data.match;
 
-      // Toast new key events
+      // Toast new key events (skip on initial load — seed the seen set silently)
       if (incoming.keyEvents?.length) {
+        const isInitialLoad = seenEventIds.current.size === 0;
         for (const ev of incoming.keyEvents) {
           if (!seenEventIds.current.has(ev.id)) {
             seenEventIds.current.add(ev.id);
-            if (seenEventIds.current.size > 1) {
+            if (!isInitialLoad) {
               toastForEvent(ev, incoming.homeTeam, incoming.awayTeam);
             }
           }
