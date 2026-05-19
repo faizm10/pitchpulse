@@ -11,8 +11,8 @@ import { VENUES } from '@/data/venues';
 import { matchVenueId } from '@/lib/espn';
 import type { MatchDetail as EspnMatchDetail, MatchTeam } from '@/types/espn';
 import type { PredictResponse } from '@/types/predict';
-
-const SHOW_EXTENDED_STATS = false;
+import type { FotmobMatchExtras } from '@/types/fotmob';
+import { FotmobMatchExtrasBlock } from './FotmobMatchExtras';
 
 export function MatchDetail({ id }: { id: string }) {
   const { tweaks } = useTweaks();
@@ -23,6 +23,9 @@ export function MatchDetail({ id }: { id: string }) {
   const [prediction, setPrediction] = useState<PredictResponse | null>(null);
   const [predictionLoading, setPredictionLoading] = useState(false);
   const [predictionError, setPredictionError] = useState<string | null>(null);
+
+  const [fotmobExtras, setFotmobExtras] = useState<FotmobMatchExtras | null>(null);
+  const [fotmobLoading, setFotmobLoading] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -76,6 +79,37 @@ export function MatchDetail({ id }: { id: string }) {
       }
     }
     loadPrediction();
+    return () => {
+      cancelled = true;
+    };
+  }, [detail]);
+
+  useEffect(() => {
+    if (!detail) return;
+    const { homeTeam, awayTeam, date } = detail;
+    let cancelled = false;
+    async function loadFotmob() {
+      setFotmobLoading(true);
+      try {
+        const q = new URLSearchParams({
+          home: homeTeam.name,
+          away: awayTeam.name,
+          date,
+        });
+        const res = await fetch(`/api/fotmob/match/resolve?${q}`);
+        const data = await res.json();
+        if (!cancelled && res.ok && data.matched) {
+          setFotmobExtras(data.extras ?? null);
+        } else if (!cancelled) {
+          setFotmobExtras(null);
+        }
+      } catch {
+        if (!cancelled) setFotmobExtras(null);
+      } finally {
+        if (!cancelled) setFotmobLoading(false);
+      }
+    }
+    loadFotmob();
     return () => {
       cancelled = true;
     };
@@ -142,19 +176,11 @@ export function MatchDetail({ id }: { id: string }) {
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: SHOW_EXTENDED_STATS ? '1.2fr 1fr' : '1fr',
+          gridTemplateColumns: '1fr',
           flex: 1,
           borderBottom: '1px solid var(--rule)',
         }}
       >
-        {SHOW_EXTENDED_STATS && (
-          <div style={{ padding: '32px 48px', borderRight: '1px solid var(--rule)', display: 'none' }}>
-            <div className="eyebrow">Timeline</div>
-            <div className="serif" style={{ fontSize: 28, marginTop: 6, fontStyle: 'italic' }}>
-              How the match has unfolded
-            </div>
-          </div>
-        )}
 
         <div style={{ padding: '32px 48px', display: 'flex', flexDirection: 'column', gap: 32 }}>
           {tweaks.aiSummary && narrativeText && (
@@ -212,6 +238,10 @@ export function MatchDetail({ id }: { id: string }) {
             loading={predictionLoading}
             error={predictionError}
           />
+
+          {(fotmobLoading || fotmobExtras) && (
+            <FotmobMatchExtrasBlock extras={fotmobExtras} loading={fotmobLoading} />
+          )}
         </div>
       </div>
 
