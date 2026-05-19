@@ -1,0 +1,242 @@
+{
+  "CZE": {
+    "code": "CZE",
+    "name": "Czechia",
+    "fotmobId": 8496
+  },
+  "MEX": {
+    "code": "MEX",
+    "name": "Mexico",
+    "fotmobId": 6710
+  },
+  "RSA": {
+    "code": "RSA",
+    "name": "South Africa",
+    "fotmobId": 6316
+  },
+  "KOR": {
+    "code": "KOR",
+    "name": "South Korea",
+    "fotmobId": 7804
+  },
+  "CAN": {
+    "code": "CAN",
+    "name": "Canada",
+    "fotmobId": 5810
+  },
+  "BIH": {
+    "code": "BIH",
+    "name": "Bosnia and Herzegovina",
+    "fotmobId": 10106
+  },
+  "USA": {
+    "code": "USA",
+    "name": "USA",
+    "fotmobId": 6713
+  },
+  "TUR": {
+    "code": "TUR",
+    "name": "Turkiye",
+    "fotmobId": 6595
+  },
+  "COD": {
+    "code": "COD",
+    "name": "DR Congo",
+    "fotmobId": 6321
+  },
+  "QAT": {
+    "code": "QAT",
+    "name": "Qatar",
+    "fotmobId": 5902
+  },
+  "SUI": {
+    "code": "SUI",
+    "name": "Switzerland",
+    "fotmobId": 6717
+  },
+  "BRA": {
+    "code": "BRA",
+    "name": "Brazil",
+    "fotmobId": 8256
+  },
+  "HAI": {
+    "code": "HAI",
+    "name": "Haiti",
+    "fotmobId": 5934
+  },
+  "MAR": {
+    "code": "MAR",
+    "name": "Morocco",
+    "fotmobId": 6262
+  },
+  "SCO": {
+    "code": "SCO",
+    "name": "Scotland",
+    "fotmobId": 8498
+  },
+  "AUS": {
+    "code": "AUS",
+    "name": "Australia",
+    "fotmobId": 6716
+  },
+  "PAR": {
+    "code": "PAR",
+    "name": "Paraguay",
+    "fotmobId": 6724
+  },
+  "CUW": {
+    "code": "CUW",
+    "name": "Curacao",
+    "fotmobId": 287981
+  },
+  "ECU": {
+    "code": "ECU",
+    "name": "Ecuador",
+    "fotmobId": 6707
+  },
+  "GER": {
+    "code": "GER",
+    "name": "Germany",
+    "fotmobId": 8570
+  },
+  "CIV": {
+    "code": "CIV",
+    "name": "Ivory Coast",
+    "fotmobId": 6709
+  },
+  "JPN": {
+    "code": "JPN",
+    "name": "Japan",
+    "fotmobId": 6715
+  },
+  "NED": {
+    "code": "NED",
+    "name": "Netherlands",
+    "fotmobId": 6708
+  },
+  "SWE": {
+    "code": "SWE",
+    "name": "Sweden",
+    "fotmobId": 8520
+  },
+  "TUN": {
+    "code": "TUN",
+    "name": "Tunisia",
+    "fotmobId": 6719
+  },
+  "BEL": {
+    "code": "BEL",
+    "name": "Belgium",
+    "fotmobId": 8263
+  },
+  "EGY": {
+    "code": "EGY",
+    "name": "Egypt",
+    "fotmobId": 10255
+  },
+  "IRN": {
+    "code": "IRN",
+    "name": "Iran",
+    "fotmobId": 6711
+  },
+  "NZL": {
+    "code": "NZL",
+    "name": "New Zealand",
+    "fotmobId": 5820
+  },
+  "CPV": {
+    "code": "CPV",
+    "name": "Cape Verde",
+    "fotmobId": 5888
+  },
+  "KSA": {
+    "code": "KSA",
+    "name": "Saudi Arabia",
+    "fotmobId": 7795
+  },
+  "ESP": {
+    "code": "ESP",
+    "name": "Spain",
+    "fotmobId": 6720
+  },
+  "URU": {
+    "code": "URU",
+    "name": "Uruguay",
+    "fotmobId": 5796
+  },
+  "FRA": {
+    "code": "FRA",
+    "name": "France",
+    "fotmobId": 6723
+  },
+  "IRQ": {
+    "code": "IRQ",
+    "name": "Iraq",
+    "fotmobId": 5819
+  },
+  "NOR": {
+    "code": "NOR",
+    "name": "Norway",
+    "fotmobId": 8492
+  },
+  "SEN": {
+    "code": "SEN",
+    "name": "Senegal",
+    "fotmobId": 6395
+  },
+  "ALG": {
+    "code": "ALG",
+    "name": "Algeria",
+    "fotmobId": 6317
+  },
+  "ARG": {
+    "code": "ARG",
+    "name": "Argentina",
+    "fotmobId": 6706
+  },
+  "AUT": {
+    "code": "AUT",
+    "name": "Austria",
+    "fotmobId": 8255
+  },
+  "JOR": {
+    "code": "JOR",
+    "name": "Jordan",
+    "fotmobId": 5816
+  },
+  "COL": {
+    "code": "COL",
+    "name": "Colombia",
+    "fotmobId": 8258
+  },
+  "POR": {
+    "code": "POR",
+    "name": "Portugal",
+    "fotmobId": 8361
+  },
+  "UZB": {
+    "code": "UZB",
+    "name": "Uzbekistan",
+    "fotmobId": 8700
+  },
+  "CRO": {
+    "code": "CRO",
+    "name": "Croatia",
+    "fotmobId": 10155
+  },
+  "ENG": {
+    "code": "ENG",
+    "name": "England",
+    "fotmobId": 8491
+  },
+  "GHA": {
+    "code": "GHA",
+    "name": "Ghana",
+    "fotmobId": 6714
+  },
+  "PAN": {
+    "code": "PAN",
+    "name": "Panama",
+    "fotmobId": 5922
+  }
+}
