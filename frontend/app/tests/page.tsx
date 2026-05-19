@@ -33,15 +33,6 @@ interface LiveInfo {
 
 const TEST_GAMES: TestGame[] = [
   {
-    slug: 'espn-bournemouth-mancity',
-    href: '/test-match',
-    source: 'espn',
-    matchId: '740958',
-    apiPath: '/api/test-match/740958',
-    league: 'Premier League',
-    round: 'GW37',
-  },
-  {
     slug: 'fotmob-chelsea-spurs',
     href: '/test-fotmob',
     source: 'fotmob',
@@ -73,12 +64,6 @@ const TEST_GAMES: TestGame[] = [
 // ── EPL venue coordinates ─────────────────────────────────────────────────────
 
 const EPL_VENUES: Record<string, { name: string; city: string; longitude: number; latitude: number }> = {
-  'espn-bournemouth-mancity': {
-    name: 'Vitality Stadium',
-    city: 'Bournemouth',
-    longitude: -1.8380,
-    latitude: 50.7352,
-  },
   'fotmob-chelsea-spurs': {
     name: 'Stamford Bridge',
     city: 'London',
@@ -645,9 +630,6 @@ export default function TestsIndexPage() {
 
       {/* Quick nav to test pages */}
       <nav aria-label="Quick links" style={{ marginTop: isMobile ? 28 : 36, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-        <Link href="/test-match" className="btn" style={{ fontSize: 11, minHeight: 40, padding: '0 16px', textDecoration: 'none' }}>
-          ESPN Match →
-        </Link>
         <Link href="/test-fotmob" className="btn" style={{ fontSize: 11, minHeight: 40, padding: '0 16px', textDecoration: 'none' }}>
           FotMob Match →
         </Link>

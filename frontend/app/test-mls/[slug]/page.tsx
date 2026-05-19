@@ -3,7 +3,9 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { useGoalCelebration } from '@/components/LiveGoalCelebration';
 import { PitchPulseToaster } from '@/components/PitchPulseToaster';
+import { buildGoalDataFromKeyEvent, isScoringGoalEvent } from '@/lib/goal-notification';
 import { showMatchEventToast } from '@/lib/match-toasts';
 
 // ── Game config ───────────────────────────────────────────────────────────────
@@ -968,6 +970,7 @@ export default function MLSGamePage({ params }: { params: { slug: string } }) {
   const slug = params.slug;
 
   const isMobile = useIsMobile();
+  const { playGoal, celebration } = useGoalCelebration();
   const [match, setMatch] = useState<MLSMatchData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -992,7 +995,21 @@ export default function MLSGamePage({ params }: { params: { slug: string } }) {
         for (const ev of incoming.keyEvents) {
           if (!seenEventIds.current.has(ev.id)) {
             seenEventIds.current.add(ev.id);
-            if (!isInitialLoad) showMatchEventToast(ev, incoming.homeTeam, incoming.awayTeam);
+            if (!isInitialLoad) {
+              if (isScoringGoalEvent(ev)) {
+                playGoal(
+                  buildGoalDataFromKeyEvent(
+                    ev,
+                    incoming.homeTeam,
+                    incoming.awayTeam,
+                    incoming.league,
+                    slug
+                  )
+                );
+              } else {
+                showMatchEventToast(ev, incoming.homeTeam, incoming.awayTeam);
+              }
+            }
           }
         }
       }
@@ -1011,7 +1028,7 @@ export default function MLSGamePage({ params }: { params: { slug: string } }) {
     } finally {
       setLoading(false);
     }
-  }, [config]);
+  }, [config, slug, playGoal]);
 
   useEffect(() => { if (config) fetchMatch(); }, [fetchMatch, config]);
 
@@ -1065,6 +1082,7 @@ export default function MLSGamePage({ params }: { params: { slug: string } }) {
 
   return (
     <div className="screen" style={{ minHeight: '100vh', maxWidth: '100vw', overflowX: 'hidden' }}>
+      {celebration}
       <PitchPulseToaster position={isMobile ? 'top-center' : 'bottom-right'} />
 
       {/* Header — matches Chelsea page layout exactly */}
