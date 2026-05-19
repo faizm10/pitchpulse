@@ -93,6 +93,7 @@ interface MatchData {
   date: string;
   state: 'pre' | 'in' | 'post';
   statusDetail: string;
+  statusShort: string;
   displayClock: string;
   homeTeam: Team;
   awayTeam: Team;
@@ -105,6 +106,20 @@ interface MatchData {
   projectedStandings: StandingRow[];
   teamLeaders: TeamLeaders[];
   isMatchLeaders: boolean;
+}
+
+// ── Responsive hook ───────────────────────────────────────────────────────────
+
+function useIsMobile(breakpoint = 640) {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia(`(max-width: ${breakpoint - 1}px)`);
+    setIsMobile(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, [breakpoint]);
+  return isMobile;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -127,6 +142,18 @@ function eventIcon(typeSlug: string, scoringPlay: boolean): string {
   if (typeSlug === 'substitution') return '↔';
   if (typeSlug === 'shot-on-target') return '→';
   return '•';
+}
+
+function eventLabel(typeSlug: string, scoringPlay: boolean): string {
+  if (scoringPlay || typeSlug === 'goal') return 'Goal';
+  if (typeSlug === 'own-goal') return 'Own Goal';
+  if (typeSlug === 'penalty-scored') return 'Penalty Goal';
+  if (typeSlug === 'yellow-card') return 'Yellow Card';
+  if (typeSlug === 'red-card') return 'Red Card';
+  if (typeSlug === 'yellow-red-card') return 'Second Yellow / Red Card';
+  if (typeSlug === 'substitution') return 'Substitution';
+  if (typeSlug === 'shot-on-target') return 'Shot on Target';
+  return typeSlug;
 }
 
 function formatKickoff(dateStr: string): string {
@@ -156,104 +183,205 @@ function ago(ts: number): string {
 
 // ── Score hero ────────────────────────────────────────────────────────────────
 
-function ScoreHero({ match, liveClock }: { match: MatchData; liveClock: string }) {
+function ScoreHero({ match, liveClock, isMobile }: { match: MatchData; liveClock: string; isMobile: boolean }) {
   const { homeTeam, awayTeam, state, statusDetail, displayClock, date } = match;
-  // Use the locally-ticking clock when live, fall back to ESPN value
   const clockDisplay = state === 'in' ? (liveClock || displayClock) : displayClock;
+  const pad = isMobile ? '20px 16px' : '36px 32px';
+  const logoSize = isMobile ? 44 : 64;
+  const nameFontSize = isMobile ? 18 : 28;
+  const scoreFontSize = isMobile ? 44 : 64;
+
+  const scoreLabel = state !== 'pre'
+    ? `${homeTeam.name} ${homeTeam.score}, ${awayTeam.name} ${awayTeam.score}`
+    : `${homeTeam.name} vs ${awayTeam.name}`;
 
   return (
-    <div style={{
-      display: 'grid', gridTemplateColumns: 'minmax(0,1fr) auto minmax(0,1fr)', gap: 16,
-      alignItems: 'center', padding: '36px 32px',
-      borderBottom: '1px solid var(--rule)', width: '100%', boxSizing: 'border-box',
-    }}>
+    <div
+      role="region"
+      aria-label="Match score"
+      style={{
+        display: 'grid',
+        gridTemplateColumns: 'minmax(0,1fr) auto minmax(0,1fr)',
+        gap: isMobile ? 8 : 16,
+        alignItems: 'center',
+        padding: pad,
+        borderBottom: '1px solid var(--rule)',
+        width: '100%',
+        boxSizing: 'border-box',
+      }}
+    >
       {/* Home */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 14, minWidth: 0 }}>
-        {homeTeam.logo && <img src={homeTeam.logo} alt={homeTeam.name} style={{ width: 64, height: 64, objectFit: 'contain', flexShrink: 0 }} />}
+      <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 14, minWidth: 0 }}>
+        {homeTeam.logo && (
+          <img
+            src={homeTeam.logo}
+            alt={homeTeam.name}
+            width={logoSize}
+            height={logoSize}
+            style={{ width: logoSize, height: logoSize, objectFit: 'contain', flexShrink: 0 }}
+          />
+        )}
         <div style={{ minWidth: 0 }}>
-          <div className="serif" style={{ fontSize: 28, lineHeight: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{homeTeam.name}</div>
-          <div className="mono" style={{ fontSize: 10, color: 'var(--ink-3)', letterSpacing: '0.18em', marginTop: 5 }}>{homeTeam.abbreviation}</div>
+          <div
+            className="serif"
+            style={{ fontSize: nameFontSize, lineHeight: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+          >
+            {isMobile ? homeTeam.abbreviation : homeTeam.name}
+          </div>
+          {!isMobile && (
+            <div className="mono" style={{ fontSize: 10, color: 'var(--ink-3)', letterSpacing: '0.18em', marginTop: 5 }}>
+              {homeTeam.abbreviation}
+            </div>
+          )}
         </div>
         {state !== 'pre' && (
-          <div className="serif tnum" style={{ fontSize: 64, lineHeight: 1, marginLeft: 8, flexShrink: 0 }}>{homeTeam.score}</div>
+          <div
+            className="serif tnum"
+            aria-hidden="true"
+            style={{ fontSize: scoreFontSize, lineHeight: 1, marginLeft: isMobile ? 4 : 8, flexShrink: 0 }}
+          >
+            {homeTeam.score}
+          </div>
         )}
       </div>
 
       {/* Centre status */}
-      <div style={{ textAlign: 'center', minWidth: 80, flexShrink: 0 }}>
+      <div style={{ textAlign: 'center', minWidth: isMobile ? 60 : 80, flexShrink: 0 }}>
         {state === 'in' && (
           <>
-            <div className="mono" style={{ fontSize: 10, color: 'var(--live)', letterSpacing: '0.2em', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
-              <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--live)', display: 'inline-block' }} />
-              LIVE
+            <div
+              className="mono"
+              style={{ fontSize: 10, color: 'var(--live)', letterSpacing: '0.2em', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}
+            >
+              <span aria-hidden="true" style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--live)', display: 'inline-block' }} />
+              <span className="sr-only">Live match — </span>LIVE
             </div>
-            <div className="mono" style={{ fontSize: 22, marginTop: 5, fontVariantNumeric: 'tabular-nums' }}>
+            <div
+              className="mono"
+              aria-live="polite"
+              aria-atomic="true"
+              aria-label={`Match clock: ${clockDisplay}`}
+              style={{ fontSize: isMobile ? 18 : 22, marginTop: 5, fontVariantNumeric: 'tabular-nums' }}
+            >
               {clockDisplay || '–'}
             </div>
             {statusDetail && (
-              <div className="serif" style={{ fontSize: 11, fontStyle: 'italic', color: 'var(--ink-3)', marginTop: 3 }}>{statusDetail}</div>
+              <div className="serif" style={{ fontSize: isMobile ? 10 : 11, fontStyle: 'italic', color: 'var(--ink-3)', marginTop: 3 }}>{statusDetail}</div>
             )}
           </>
         )}
         {state === 'post' && (
-          <div className="mono" style={{ fontSize: 10, color: 'var(--ink-3)', letterSpacing: '0.16em' }}>{statusDetail || 'FULL TIME'}</div>
+          <div className="mono" style={{ fontSize: 10, color: 'var(--ink-3)', letterSpacing: '0.16em' }}>
+            {statusDetail || 'FULL TIME'}
+          </div>
         )}
         {state === 'pre' && (
           <>
-            <div className="mono" style={{ fontSize: 20, color: 'var(--ink)' }}>VS</div>
-            <div className="mono" style={{ fontSize: 9, color: 'var(--ink-3)', marginTop: 7, lineHeight: 1.6 }}>{formatKickoff(date)}</div>
+            <div className="mono" style={{ fontSize: isMobile ? 16 : 20, color: 'var(--ink)' }} aria-hidden="true">VS</div>
+            <div className="mono" style={{ fontSize: isMobile ? 8 : 9, color: 'var(--ink-3)', marginTop: 7, lineHeight: 1.6 }}>
+              {formatKickoff(date)}
+            </div>
           </>
         )}
       </div>
 
       {/* Away */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexDirection: 'row-reverse', minWidth: 0 }}>
-        {awayTeam.logo && <img src={awayTeam.logo} alt={awayTeam.name} style={{ width: 64, height: 64, objectFit: 'contain', flexShrink: 0 }} />}
+      <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 14, flexDirection: 'row-reverse', minWidth: 0 }}>
+        {awayTeam.logo && (
+          <img
+            src={awayTeam.logo}
+            alt={awayTeam.name}
+            width={logoSize}
+            height={logoSize}
+            style={{ width: logoSize, height: logoSize, objectFit: 'contain', flexShrink: 0 }}
+          />
+        )}
         <div style={{ textAlign: 'right', minWidth: 0 }}>
-          <div className="serif" style={{ fontSize: 28, lineHeight: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{awayTeam.name}</div>
-          <div className="mono" style={{ fontSize: 10, color: 'var(--ink-3)', letterSpacing: '0.18em', marginTop: 5 }}>{awayTeam.abbreviation}</div>
+          <div
+            className="serif"
+            style={{ fontSize: nameFontSize, lineHeight: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+          >
+            {isMobile ? awayTeam.abbreviation : awayTeam.name}
+          </div>
+          {!isMobile && (
+            <div className="mono" style={{ fontSize: 10, color: 'var(--ink-3)', letterSpacing: '0.18em', marginTop: 5 }}>
+              {awayTeam.abbreviation}
+            </div>
+          )}
         </div>
         {state !== 'pre' && (
-          <div className="serif tnum" style={{ fontSize: 64, lineHeight: 1, marginRight: 8, flexShrink: 0 }}>{awayTeam.score}</div>
+          <div
+            className="serif tnum"
+            aria-hidden="true"
+            style={{ fontSize: scoreFontSize, lineHeight: 1, marginRight: isMobile ? 4 : 8, flexShrink: 0 }}
+          >
+            {awayTeam.score}
+          </div>
         )}
       </div>
+
+      {/* Screen-reader score summary */}
+      <span className="sr-only">{scoreLabel}</span>
     </div>
   );
 }
 
 // ── Events feed ───────────────────────────────────────────────────────────────
 
-function EventsFeed({ events, homeId }: { events: KeyEvent[]; homeId: string }) {
+function EventsFeed({ events }: { events: KeyEvent[] }) {
   if (!events.length) {
-    return <div className="mono" style={{ fontSize: 11, color: 'var(--ink-3)', padding: '24px 0' }}>No key events yet.</div>;
+    return (
+      <p className="mono" style={{ fontSize: 11, color: 'var(--ink-3)', padding: '24px 0', margin: 0 }}>
+        No key events yet.
+      </p>
+    );
   }
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+    <ol
+      aria-label="Match events"
+      style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 0 }}
+    >
       {[...events].reverse().map((ev) => {
-        // home team events align left, away events align right — fall back to left
-        const isAway = ev.teamName && homeId ? false : false; // we'll check via teamName below
-        void isAway;
+        const icon = eventIcon(ev.typeSlug, ev.scoringPlay);
+        const label = eventLabel(ev.typeSlug, ev.scoringPlay);
+        const athlete = ev.participants?.[0]?.athlete || ev.text;
         return (
-          <div key={ev.id} style={{
-            display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 0',
-            borderBottom: '1px solid var(--rule-soft)',
-          }}>
-            <div className="mono" style={{ fontSize: 11, color: 'var(--ink-3)', minWidth: 36, flexShrink: 0, paddingTop: 2 }}>{ev.clock}</div>
-            <div style={{ fontSize: 16, flexShrink: 0, paddingTop: 1 }}>{eventIcon(ev.typeSlug, ev.scoringPlay)}</div>
+          <li
+            key={ev.id}
+            style={{
+              display: 'flex', alignItems: 'flex-start', gap: 10, padding: '11px 0',
+              borderBottom: '1px solid var(--rule-soft)',
+            }}
+          >
+            <div
+              className="mono"
+              aria-label={`${ev.clock} minute`}
+              style={{ fontSize: 11, color: 'var(--ink-3)', minWidth: 36, flexShrink: 0, paddingTop: 2 }}
+            >
+              {ev.clock}
+            </div>
+            <div aria-hidden="true" style={{ fontSize: 16, flexShrink: 0, paddingTop: 1 }}>{icon}</div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div className="serif" style={{ fontSize: 15 }}>{ev.participants?.[0]?.athlete || ev.text}</div>
+              <div className="serif" style={{ fontSize: 15 }}>{athlete || ev.text}</div>
               <div className="mono" style={{ fontSize: 10, color: 'var(--ink-3)', marginTop: 2 }}>
+                <span className="sr-only">{label} — </span>
                 {ev.typeText}
                 {ev.teamName ? ` · ${ev.teamName}` : ''}
               </div>
               {ev.scoringPlay && ev.homeScore != null && (
-                <div className="mono" style={{ fontSize: 10, color: 'var(--live)', marginTop: 3 }}>{ev.homeScore} – {ev.awayScore}</div>
+                <div
+                  className="mono"
+                  aria-label={`Score: ${ev.homeScore} – ${ev.awayScore}`}
+                  style={{ fontSize: 10, color: 'var(--live)', marginTop: 3 }}
+                >
+                  {ev.homeScore} – {ev.awayScore}
+                </div>
               )}
             </div>
-          </div>
+          </li>
         );
       })}
-    </div>
+    </ol>
   );
 }
 
@@ -262,15 +390,19 @@ function EventsFeed({ events, homeId }: { events: KeyEvent[]; homeId: string }) 
 function StatsPanel({ teamStats, homeTeam, awayTeam }: { teamStats: TeamStats[]; homeTeam: Team; awayTeam: Team }) {
   const homeStats = teamStats.find((t) => t.teamId === homeTeam.id);
   const awayStats = teamStats.find((t) => t.teamId === awayTeam.id);
-  if (!homeStats || !awayStats) return <div className="mono" style={{ fontSize: 11, color: 'var(--ink-3)' }}>Stats available once match begins.</div>;
+  if (!homeStats || !awayStats) {
+    return <p className="mono" style={{ fontSize: 11, color: 'var(--ink-3)', margin: 0 }}>Stats available once match begins.</p>;
+  }
 
   const homeMap = Object.fromEntries(homeStats.stats.map((s) => [s.name, s.displayValue]));
   const awayMap = Object.fromEntries(awayStats.stats.map((s) => [s.name, s.displayValue]));
   const available = STAT_KEYS.filter((k) => homeMap[k] !== undefined || awayMap[k] !== undefined);
-  if (!available.length) return <div className="mono" style={{ fontSize: 11, color: 'var(--ink-3)' }}>No stats yet.</div>;
+  if (!available.length) {
+    return <p className="mono" style={{ fontSize: 11, color: 'var(--ink-3)', margin: 0 }}>No stats yet.</p>;
+  }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+    <dl style={{ display: 'flex', flexDirection: 'column', gap: 14, margin: 0 }}>
       {available.map((key) => {
         const hVal = homeMap[key] ?? '–';
         const aVal = awayMap[key] ?? '–';
@@ -278,56 +410,73 @@ function StatsPanel({ teamStats, homeTeam, awayTeam }: { teamStats: TeamStats[];
         const aNum = parseFloat(aVal.replace('%', '')) || 0;
         const total = hNum + aNum || 1;
         const hPct = Math.round((hNum / total) * 100);
+        const statLabel = STAT_LABELS[key] ?? key;
         return (
           <div key={key}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
-              <span className="mono" style={{ fontSize: 13 }}>{hVal}</span>
-              <span className="mono" style={{ fontSize: 10, color: 'var(--ink-3)', letterSpacing: '0.12em' }}>{(STAT_LABELS[key] ?? key).toUpperCase()}</span>
-              <span className="mono" style={{ fontSize: 13 }}>{aVal}</span>
+              <dt className="sr-only">{statLabel}</dt>
+              <span className="mono" aria-label={`${homeTeam.name}: ${hVal}`} style={{ fontSize: 13 }}>{hVal}</span>
+              <span className="mono" style={{ fontSize: 10, color: 'var(--ink-3)', letterSpacing: '0.12em' }} aria-hidden="true">
+                {statLabel.toUpperCase()}
+              </span>
+              <span className="mono" aria-label={`${awayTeam.name}: ${aVal}`} style={{ fontSize: 13 }}>{aVal}</span>
             </div>
-            <div style={{ height: 4, borderRadius: 2, background: 'var(--rule)', overflow: 'hidden', display: 'flex' }}>
+            <div
+              role="img"
+              aria-label={`${statLabel}: ${homeTeam.abbreviation} ${hPct}%, ${awayTeam.abbreviation} ${100 - hPct}%`}
+              style={{ height: 4, borderRadius: 2, background: 'var(--rule)', overflow: 'hidden', display: 'flex' }}
+            >
               <div style={{ width: `${hPct}%`, background: homeTeam.color || 'var(--ink)', transition: 'width 0.6s ease' }} />
               <div style={{ flex: 1, background: awayTeam.color || 'var(--ink-3)' }} />
             </div>
           </div>
         );
       })}
-    </div>
+    </dl>
   );
 }
 
 // ── Team leaders ──────────────────────────────────────────────────────────────
 
-function LeadersSection({ teamLeaders, homeId, isMatchLeaders }: {
+function LeadersSection({ teamLeaders, homeId, isMatchLeaders, isMobile }: {
   teamLeaders: TeamLeaders[];
   homeId: string;
   isMatchLeaders: boolean;
+  isMobile: boolean;
 }) {
   if (!teamLeaders.length) return null;
   const label = isMatchLeaders ? 'MATCH LEADERS' : 'SEASON LEADERS';
   const sorted = [...teamLeaders].sort((a) => (a.teamId === homeId ? -1 : 1));
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, background: 'var(--rule)' }}>
+    <section
+      aria-label={label}
+      style={{
+        display: 'grid',
+        gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+        gap: 1,
+        background: 'var(--rule)',
+      }}
+    >
       {sorted.map((team) => {
         const cats = team.categories.filter((c) => c.athlete.name && c.value);
         if (!cats.length) return null;
         return (
-          <div key={team.teamId} style={{ background: 'var(--paper)', padding: '24px 32px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
+          <div key={team.teamId} style={{ background: 'var(--paper)', padding: isMobile ? '20px 16px' : '24px 32px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
               {team.teamLogo && (
-                <img src={team.teamLogo} alt={team.teamName} style={{ width: 28, height: 28, objectFit: 'contain' }} />
+                <img src={team.teamLogo} alt="" aria-hidden="true" width={28} height={28}
+                  style={{ width: 28, height: 28, objectFit: 'contain', flexShrink: 0 }} />
               )}
-              <div className="mono" style={{ fontSize: 10, letterSpacing: '0.18em', color: 'var(--ink-3)' }}>
+              <h3 className="mono" style={{ fontSize: 10, letterSpacing: '0.18em', color: 'var(--ink-3)', margin: 0 }}>
                 {team.teamName.toUpperCase()} · {label}
-              </div>
+              </h3>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+            <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
               {cats.map((cat, i) => {
-                // Value may be "Goals: 12" (season) or plain "25" (match) — take the last number
                 const num = cat.value.match(/\d+(?:\.\d+)?/g)?.slice(-1)?.[0] ?? cat.value;
                 return (
-                  <div
+                  <li
                     key={cat.category}
                     style={{
                       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -341,15 +490,21 @@ function LeadersSection({ teamLeaders, homeId, isMatchLeaders }: {
                       </div>
                       <div className="serif" style={{ fontSize: 17 }}>{cat.athlete.name}</div>
                     </div>
-                    <div className="serif tnum" style={{ fontSize: 28, color: 'var(--ink)' }}>{num}</div>
-                  </div>
+                    <div
+                      className="serif tnum"
+                      aria-label={`${num} ${cat.category}`}
+                      style={{ fontSize: 28, color: 'var(--ink)', flexShrink: 0, marginLeft: 12 }}
+                    >
+                      {num}
+                    </div>
+                  </li>
                 );
               })}
-            </div>
+            </ul>
           </div>
         );
       })}
-    </div>
+    </section>
   );
 }
 
@@ -361,36 +516,73 @@ function StandingsTable({
   homeId,
   awayId,
   isLive,
+  isMobile,
 }: {
   standings: StandingRow[];
   projectedStandings: StandingRow[];
   homeId: string;
   awayId: string;
   isLive: boolean;
+  isMobile: boolean;
 }) {
   const rows = isLive && projectedStandings.length ? projectedStandings : standings;
   if (!rows.length) return null;
 
+  // On mobile: hide W / D / L to fit within viewport
+  const showWDL = !isMobile;
+  const pad = isMobile ? '20px 16px' : '28px 32px';
+
+  // Column template changes with viewport
+  const cols = showWDL
+    ? '20px 16px 1fr 32px 32px 32px 32px 32px 44px'
+    : '20px 16px 1fr 28px 32px 44px';
+  const headers = showWDL
+    ? ['', '', 'Team', 'P', 'W', 'D', 'L', 'GD', 'Pts']
+    : ['', '', 'Team', 'P', 'GD', 'Pts'];
+
   return (
-    <div style={{ padding: '28px 32px' }}>
-      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', borderBottom: '1px solid var(--rule)', paddingBottom: 10, marginBottom: 16 }}>
-        <div className="mono" style={{ fontSize: 10, letterSpacing: '0.2em', color: 'var(--ink-3)' }}>
+    <section aria-label="League standings" style={{ padding: pad }}>
+      <div
+        style={{
+          display: 'flex', alignItems: 'baseline', justifyContent: 'space-between',
+          borderBottom: '1px solid var(--rule)', paddingBottom: 10, marginBottom: 16,
+          flexWrap: 'wrap', gap: 6,
+        }}
+      >
+        <h2 className="mono" style={{ fontSize: 10, letterSpacing: '0.2em', color: 'var(--ink-3)', margin: 0 }}>
           PREMIER LEAGUE TABLE
-        </div>
+        </h2>
         {isLive && (
-          <div className="mono" style={{ fontSize: 9, letterSpacing: '0.14em', color: 'var(--live)', display: 'flex', alignItems: 'center', gap: 5 }}>
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--live)', display: 'inline-block' }} />
+          <div
+            className="mono"
+            aria-live="polite"
+            style={{ fontSize: 9, letterSpacing: '0.14em', color: 'var(--live)', display: 'flex', alignItems: 'center', gap: 5 }}
+          >
+            <span aria-hidden="true" style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--live)', display: 'inline-block' }} />
             IF RESULT STANDS
           </div>
         )}
       </div>
-      <div style={{ overflowX: 'auto' }}>
+
+      {/* Table */}
+      <div role="table" aria-label="Premier League standings">
         {/* Header */}
-        <div style={{ display: 'grid', gridTemplateColumns: '20px 16px 1fr 32px 32px 32px 32px 32px 44px', gap: 6, padding: '6px 8px', borderBottom: '1px solid var(--rule)', marginBottom: 4 }}>
-          {['', '', 'Team', 'P', 'W', 'D', 'L', 'GD', 'Pts'].map((h, i) => (
-            <div key={i} className="mono" style={{ fontSize: 9, color: 'var(--ink-3)', letterSpacing: '0.14em', textAlign: h === 'Team' || h === '' ? 'left' : 'right' }}>{h}</div>
+        <div
+          role="row"
+          style={{ display: 'grid', gridTemplateColumns: cols, gap: 6, padding: '6px 8px', borderBottom: '1px solid var(--rule)', marginBottom: 4 }}
+        >
+          {headers.map((h, i) => (
+            <div
+              key={i}
+              role="columnheader"
+              className="mono"
+              style={{ fontSize: 9, color: 'var(--ink-3)', letterSpacing: '0.14em', textAlign: (h === 'Team' || h === '') ? 'left' : 'right' }}
+            >
+              {h}
+            </div>
           ))}
         </div>
+
         {rows.map((row) => {
           const isHighlighted = row.teamId === homeId || row.teamId === awayId;
           const rank = isLive ? row.projectedRank : row.rank;
@@ -399,95 +591,133 @@ function StandingsTable({
           const change = isLive ? row.rankChange : 0;
 
           let changeEl: React.ReactNode = null;
+          let changeDesc = '';
           if (isHighlighted && isLive) {
-            if (change > 0) changeEl = <span style={{ color: '#22c55e', fontSize: 10 }}>↑{change}</span>;
-            else if (change < 0) changeEl = <span style={{ color: '#ef4444', fontSize: 10 }}>↓{Math.abs(change)}</span>;
-            else changeEl = <span style={{ color: 'var(--ink-3)', fontSize: 10 }}>–</span>;
+            if (change > 0) {
+              changeEl = <span aria-hidden="true" style={{ color: '#22c55e', fontSize: 10 }}>↑{change}</span>;
+              changeDesc = `up ${change} place${change !== 1 ? 's' : ''}`;
+            } else if (change < 0) {
+              changeEl = <span aria-hidden="true" style={{ color: '#ef4444', fontSize: 10 }}>↓{Math.abs(change)}</span>;
+              changeDesc = `down ${Math.abs(change)} place${Math.abs(change) !== 1 ? 's' : ''}`;
+            } else {
+              changeEl = <span aria-hidden="true" style={{ color: 'var(--ink-3)', fontSize: 10 }}>–</span>;
+              changeDesc = 'no change';
+            }
           }
 
+          const gdStr = gd >= 0 ? `+${gd}` : String(gd);
+          const rowLabel = [
+            `${rank}. ${row.name}`,
+            `${row.played} played`,
+            showWDL ? `${row.wins}W ${row.draws}D ${row.losses}L` : '',
+            `GD ${gdStr}`,
+            `${pts} points`,
+            isHighlighted && isLive ? changeDesc : '',
+          ].filter(Boolean).join(', ');
+
           return (
-            <div key={row.teamId} style={{
-              display: 'grid', gridTemplateColumns: '20px 16px 1fr 32px 32px 32px 32px 32px 44px', gap: 6,
-              padding: '7px 8px', borderRadius: 4, alignItems: 'center',
-              background: isHighlighted ? 'var(--paper-2)' : 'transparent',
-              borderLeft: isHighlighted ? '2px solid var(--pulse)' : '2px solid transparent',
-            }}>
-              <div className="mono" style={{ fontSize: 11, color: 'var(--ink-3)', textAlign: 'right' }}>{rank || '–'}</div>
-              <div className="mono" style={{ fontSize: 10, textAlign: 'center', minWidth: 16 }}>{changeEl}</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-                {row.logo && <img src={row.logo} alt={row.name} style={{ width: 18, height: 18, objectFit: 'contain', flexShrink: 0 }} />}
+            <div
+              key={row.teamId}
+              role="row"
+              aria-label={rowLabel}
+              style={{
+                display: 'grid', gridTemplateColumns: cols, gap: 6,
+                padding: '7px 8px', borderRadius: 4, alignItems: 'center',
+                background: isHighlighted ? 'var(--paper-2)' : 'transparent',
+                borderLeft: isHighlighted ? '2px solid var(--pulse)' : '2px solid transparent',
+              }}
+            >
+              <div role="cell" className="mono" style={{ fontSize: 11, color: 'var(--ink-3)', textAlign: 'right' }} aria-hidden="true">{rank || '–'}</div>
+              <div role="cell" className="mono" style={{ fontSize: 10, textAlign: 'center', minWidth: 14 }} aria-hidden="true">{changeEl}</div>
+              <div role="cell" style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 6 : 8, minWidth: 0 }}>
+                {row.logo && <img src={row.logo} alt="" aria-hidden="true" width={18} height={18} style={{ width: 18, height: 18, objectFit: 'contain', flexShrink: 0 }} />}
                 <span className={isHighlighted ? 'serif' : 'mono'} style={{ fontSize: isHighlighted ? 14 : 12, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {row.abbreviation || row.name}
                 </span>
               </div>
-              {[row.played, row.wins, row.draws, row.losses, gd >= 0 ? `+${gd}` : gd].map((val, i) => (
-                <div key={i} className="mono" style={{ fontSize: 11, textAlign: 'right', color: 'var(--ink-3)' }}>{val}</div>
-              ))}
-              <div className="mono" style={{ fontSize: 12, textAlign: 'right', fontWeight: isHighlighted ? 700 : 400 }}>{pts}</div>
+              {showWDL ? (
+                <>
+                  {[row.played, row.wins, row.draws, row.losses, gdStr].map((val, i) => (
+                    <div key={i} role="cell" className="mono" style={{ fontSize: 11, textAlign: 'right', color: 'var(--ink-3)' }} aria-hidden="true">{val}</div>
+                  ))}
+                </>
+              ) : (
+                <>
+                  <div role="cell" className="mono" style={{ fontSize: 11, textAlign: 'right', color: 'var(--ink-3)' }} aria-hidden="true">{row.played}</div>
+                  <div role="cell" className="mono" style={{ fontSize: 11, textAlign: 'right', color: 'var(--ink-3)' }} aria-hidden="true">{gdStr}</div>
+                </>
+              )}
+              <div role="cell" className="mono" style={{ fontSize: 12, textAlign: 'right', fontWeight: isHighlighted ? 700 : 400 }} aria-hidden="true">{pts}</div>
             </div>
           );
         })}
       </div>
-    </div>
+    </section>
   );
 }
 
 // ── News ──────────────────────────────────────────────────────────────────────
 
-function NewsSection({ news }: { news: NewsItem[] }) {
+function NewsSection({ news, isMobile }: { news: NewsItem[]; isMobile: boolean }) {
   if (!news.length) return null;
+  const cardWidth = isMobile ? 220 : 260;
   return (
-    <div style={{ padding: '28px 32px', borderTop: '1px solid var(--rule)' }}>
-      <div className="mono" style={{ fontSize: 10, letterSpacing: '0.2em', color: 'var(--ink-3)', marginBottom: 20 }}>
+    <section aria-label="Latest news" style={{ padding: isMobile ? '20px 16px' : '28px 32px', borderTop: '1px solid var(--rule)' }}>
+      <h2 className="mono" style={{ fontSize: 10, letterSpacing: '0.2em', color: 'var(--ink-3)', marginBottom: 16, marginTop: 0 }}>
         LATEST NEWS
-      </div>
-      <div style={{ display: 'flex', gap: 16, overflowX: 'auto', paddingBottom: 8 }}>
+      </h2>
+      <div
+        role="list"
+        style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 8, WebkitOverflowScrolling: 'touch' as React.CSSProperties['WebkitOverflowScrolling'] }}
+      >
         {news.map((item) => (
           <a
             key={item.id}
+            role="listitem"
             href={item.link}
             target="_blank"
             rel="noopener noreferrer"
+            aria-label={`${item.headline} — ${timeAgo(item.published)}`}
             style={{
-              flexShrink: 0, width: 260, textDecoration: 'none', color: 'inherit',
+              flexShrink: 0, width: cardWidth, textDecoration: 'none', color: 'inherit',
               border: '1px solid var(--rule)', borderRadius: 8, overflow: 'hidden',
               background: 'var(--paper)', display: 'flex', flexDirection: 'column',
-              transition: 'border-color 0.15s',
             }}
           >
             {item.image && (
-              <div style={{ height: 140, overflow: 'hidden', background: 'var(--paper-2)' }}>
+              <div style={{ height: isMobile ? 110 : 140, overflow: 'hidden', background: 'var(--paper-2)', flexShrink: 0 }}>
                 <img
                   src={item.image}
-                  alt={item.headline}
+                  alt=""
+                  aria-hidden="true"
                   style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                   onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                 />
               </div>
             )}
-            <div style={{ padding: '14px 16px', flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <div className="serif" style={{ fontSize: 14, lineHeight: 1.4 }}>{item.headline}</div>
+            <div style={{ padding: '12px 14px', flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <p className="serif" style={{ fontSize: isMobile ? 13 : 14, lineHeight: 1.4, margin: 0 }}>{item.headline}</p>
               {item.description && (
-                <div className="mono" style={{ fontSize: 10, color: 'var(--ink-3)', lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                <p className="mono" style={{
+                  fontSize: 10, color: 'var(--ink-3)', lineHeight: 1.5, margin: 0,
+                  display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+                }}>
                   {item.description}
-                </div>
+                </p>
               )}
-              <div className="mono" style={{ fontSize: 9, color: 'var(--ink-3)', marginTop: 'auto', letterSpacing: '0.1em' }}>
+              <p className="mono" style={{ fontSize: 9, color: 'var(--ink-3)', marginTop: 'auto', marginBottom: 0, letterSpacing: '0.1em' }}>
                 ESPN · {timeAgo(item.published)}
-              </div>
+              </p>
             </div>
           </a>
         ))}
       </div>
-    </div>
+    </section>
   );
 }
 
-// ── Main page ─────────────────────────────────────────────────────────────────
+// ── Toast helpers ─────────────────────────────────────────────────────────────
 
-// ── Event toast helpers ───────────────────────────────────────────────────────
-
-// Shared base style — monospace, paper-toned, consistent sizing
 const BASE_TOAST: React.CSSProperties = {
   fontFamily: 'var(--font-mono, ui-monospace, monospace)',
   fontSize: 12,
@@ -495,7 +725,7 @@ const BASE_TOAST: React.CSSProperties = {
   borderRadius: 8,
   padding: '14px 16px',
   boxShadow: '0 4px 24px rgba(0,0,0,0.18)',
-  minWidth: 280,
+  minWidth: 260,
   maxWidth: 340,
 };
 
@@ -547,35 +777,50 @@ function toastForEvent(ev: KeyEvent, home: Team, away: Team) {
   }
 }
 
-// ── Clock ticker helpers ──────────────────────────────────────────────────────
+// ── Clock helpers ─────────────────────────────────────────────────────────────
 
-// Parse "45+2'" or "7'" into total seconds
 function parseClockToSeconds(clock: string): number {
   const m = clock.match(/^(\d+)(?:\+(\d+))?/);
   if (!m) return 0;
-  const base = parseInt(m[1], 10);
-  const added = m[2] ? parseInt(m[2], 10) : 0;
-  return (base + added) * 60;
+  return (parseInt(m[1], 10) + (m[2] ? parseInt(m[2], 10) : 0)) * 60;
 }
 
-// Render total seconds back to "MM:SS" display
 function secondsToClock(s: number): string {
   const m = Math.floor(s / 60);
   const sec = s % 60;
   return `${m}:${String(sec).padStart(2, '0')}`;
 }
 
+// ── Section wrapper ───────────────────────────────────────────────────────────
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <h2 className="mono" style={{
+      fontSize: 10, letterSpacing: '0.2em', color: 'var(--ink-3)',
+      margin: 0, marginBottom: 16, paddingBottom: 10,
+      borderBottom: '1px solid var(--rule)',
+    }}>
+      {children}
+    </h2>
+  );
+}
+
+// ── Page ──────────────────────────────────────────────────────────────────────
+
 export default function TestMatchPage() {
+  const isMobile = useIsMobile();
+
   const [match, setMatch] = useState<MatchData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [lastFetched, setLastFetched] = useState<number | null>(null);
-  const [tick, setTick] = useState(0);
+  const [, setTick] = useState(0);
   const [liveClock, setLiveClock] = useState<string>('');
-  // { seconds: number at fetch time, fetchedAt: ms timestamp }
   const clockBase = useRef<{ seconds: number; fetchedAt: number } | null>(null);
   const seenEventIds = useRef<Set<string>>(new Set());
   const isFirstLoad = useRef(true);
+
+  const pad = isMobile ? '0 16px' : '0 32px';
 
   const fetchMatch = useCallback(async () => {
     try {
@@ -584,31 +829,24 @@ export default function TestMatchPage() {
       if (!res.ok) throw new Error(data.error ?? `HTTP ${res.status}`);
       const incoming: MatchData = data.match;
 
-      // On first load, seed seen IDs without toasting
       if (isFirstLoad.current) {
         incoming.keyEvents.forEach((ev) => seenEventIds.current.add(ev.id));
         isFirstLoad.current = false;
       } else {
-        // Find events we haven't seen yet
-        const newEvents = incoming.keyEvents.filter(
-          (ev) => !seenEventIds.current.has(ev.id)
-        );
-        newEvents.forEach((ev) => {
-          seenEventIds.current.add(ev.id);
-          toastForEvent(ev, incoming.homeTeam, incoming.awayTeam);
-        });
+        incoming.keyEvents
+          .filter((ev) => !seenEventIds.current.has(ev.id))
+          .forEach((ev) => {
+            seenEventIds.current.add(ev.id);
+            toastForEvent(ev, incoming.homeTeam, incoming.awayTeam);
+          });
       }
 
       setMatch(incoming);
       setError(null);
       setLastFetched(Date.now());
 
-      // Seed the live clock base so the ticker can count up between polls
       if (incoming.state === 'in' && incoming.displayClock) {
-        clockBase.current = {
-          seconds: parseClockToSeconds(incoming.displayClock),
-          fetchedAt: Date.now(),
-        };
+        clockBase.current = { seconds: parseClockToSeconds(incoming.displayClock), fetchedAt: Date.now() };
       } else {
         clockBase.current = null;
       }
@@ -627,7 +865,6 @@ export default function TestMatchPage() {
     return () => clearInterval(id);
   }, [fetchMatch, match?.state]);
 
-  // 1-second ticker: drives live clock AND the "X ago" counter
   useEffect(() => {
     const id = setInterval(() => {
       setTick((t) => t + 1);
@@ -641,114 +878,162 @@ export default function TestMatchPage() {
 
   if (loading) {
     return (
-      <div className="screen" style={{ padding: 60 }}>
-        <div className="serif it" style={{ fontSize: 28, color: 'var(--ink-3)' }}>Loading match…</div>
-        <div className="mono" style={{ fontSize: 11, color: 'var(--ink-3)', marginTop: 12 }}>Fetching game {GAME_ID} from ESPN</div>
+      <div className="screen" style={{ padding: isMobile ? 24 : 60 }} role="status" aria-live="polite">
+        <p className="serif it" style={{ fontSize: 24, color: 'var(--ink-3)', margin: 0 }}>Loading match…</p>
+        <p className="mono" style={{ fontSize: 11, color: 'var(--ink-3)', marginTop: 10 }}>Fetching game {GAME_ID} from ESPN</p>
       </div>
     );
   }
 
   if (error || !match) {
     return (
-      <div className="screen" style={{ padding: 60 }}>
-        <div className="serif" style={{ fontSize: 28 }}>Match not found</div>
-        <div className="mono" style={{ fontSize: 12, color: 'var(--ink-3)', marginTop: 12 }}>{error}</div>
-        <button className="btn" onClick={fetchMatch} style={{ marginTop: 24 }}>Retry</button>
+      <div className="screen" style={{ padding: isMobile ? 24 : 60 }} role="alert">
+        <p className="serif" style={{ fontSize: 24, margin: 0 }}>Match not found</p>
+        <p className="mono" style={{ fontSize: 12, color: 'var(--ink-3)', marginTop: 10 }}>{error}</p>
+        <button
+          className="btn"
+          onClick={fetchMatch}
+          style={{ marginTop: 20, minHeight: 44, padding: '0 20px' }}
+        >
+          Retry
+        </button>
       </div>
     );
   }
 
   return (
     <div className="screen" style={{ minHeight: '100vh', maxWidth: '100vw', overflowX: 'hidden' }}>
+      <Toaster position={isMobile ? 'top-center' : 'bottom-right'} expand={!isMobile} gap={8} />
 
-      <Toaster position="bottom-right" expand gap={10} />
-
-      {/* Header bar */}
-      <div style={{ padding: '12px 32px', borderBottom: '1px solid var(--rule)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--paper-2)', flexWrap: 'wrap', gap: 8 }}>
-        <div className="mono" style={{ fontSize: 10, letterSpacing: '0.2em', color: 'var(--ink-3)' }}>
-          ESPN TEST · GAME {GAME_ID} · {match.league.toUpperCase()}
+      {/* ── Header ── */}
+      <header
+        style={{
+          padding: isMobile ? '10px 16px' : '12px 32px',
+          borderBottom: '1px solid var(--rule)',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          background: 'var(--paper-2)', flexWrap: 'wrap', gap: 8,
+        }}
+      >
+        <div className="mono" style={{ fontSize: 10, letterSpacing: '0.18em', color: 'var(--ink-3)' }}>
+          ESPN · {match.league.toUpperCase()}
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-          <div className="mono" style={{ fontSize: 10, color: 'var(--ink-3)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          <div
+            className="mono"
+            role="status"
+            aria-live="polite"
+            style={{ fontSize: 10, color: 'var(--ink-3)' }}
+          >
             {lastFetched ? `Updated ${ago(lastFetched)}` : 'Fetching…'}
           </div>
-          <div className="mono" style={{ fontSize: 10, color: 'var(--ink-3)' }}>
-            Polls every {match.state === 'in' ? '15s' : '30s'}
-          </div>
-          <button className="btn" onClick={fetchMatch} style={{ fontSize: 10, padding: '4px 12px' }}>Refresh</button>
+          {!isMobile && (
+            <div className="mono" style={{ fontSize: 10, color: 'var(--ink-3)' }}>
+              Polls every {match.state === 'in' ? '15s' : '30s'}
+            </div>
+          )}
           <button
             className="btn"
-            style={{ fontSize: 10, padding: '4px 12px', background: 'var(--pulse)', color: '#fff', border: 'none' }}
-            onClick={() => {
-              const fakeEvents: KeyEvent[] = [
-                { id: 'demo-goal', clock: "23'", period: 1, typeSlug: 'goal', typeText: 'Goal', text: 'Goal scored!', fullText: 'Goal scored!', scoringPlay: true, teamName: match.awayTeam.name, homeScore: 1, awayScore: 0, participants: [{ athlete: 'Erling Haaland', team: match.awayTeam.name }] },
-                { id: 'demo-yellow', clock: "45+2'", period: 1, typeSlug: 'yellow-card', typeText: 'Yellow Card', text: 'Foul', fullText: 'Foul', scoringPlay: false, teamName: match.homeTeam.name, homeScore: null, awayScore: null, participants: [{ athlete: 'Lewis Cook', team: match.homeTeam.name }] },
-                { id: 'demo-red', clock: "78'", period: 2, typeSlug: 'red-card', typeText: 'Red Card', text: 'Serious foul', fullText: 'Serious foul', scoringPlay: false, teamName: match.homeTeam.name, homeScore: null, awayScore: null, participants: [{ athlete: 'Marcos Senesi', team: match.homeTeam.name }] },
-              ];
-              if (!match) return;
-              fakeEvents.forEach((ev, i) => {
-                setTimeout(() => toastForEvent(ev, match.homeTeam, match.awayTeam), i * 800);
-              });
-            }}
+            onClick={fetchMatch}
+            aria-label="Refresh match data"
+            style={{ fontSize: 10, padding: '0 12px', minHeight: 36 }}
           >
-            Test Toasts
+            Refresh
           </button>
+          {!isMobile && (
+            <button
+              className="btn"
+              aria-label="Test toast notifications"
+              style={{ fontSize: 10, padding: '0 12px', minHeight: 36, background: 'var(--pulse)', color: '#fff', border: 'none' }}
+              onClick={() => {
+                const fakeEvents: KeyEvent[] = [
+                  { id: 'demo-goal', clock: "23'", period: 1, typeSlug: 'goal', typeText: 'Goal', text: 'Goal!', fullText: 'Goal!', scoringPlay: true, teamName: match.awayTeam.name, homeScore: 1, awayScore: 0, participants: [{ athlete: 'Erling Haaland', team: match.awayTeam.name }] },
+                  { id: 'demo-yellow', clock: "45+2'", period: 1, typeSlug: 'yellow-card', typeText: 'Yellow Card', text: 'Foul', fullText: 'Foul', scoringPlay: false, teamName: match.homeTeam.name, homeScore: null, awayScore: null, participants: [{ athlete: 'Lewis Cook', team: match.homeTeam.name }] },
+                  { id: 'demo-red', clock: "78'", period: 2, typeSlug: 'red-card', typeText: 'Red Card', text: 'Serious foul', fullText: 'Serious foul', scoringPlay: false, teamName: match.homeTeam.name, homeScore: null, awayScore: null, participants: [{ athlete: 'Marcos Senesi', team: match.homeTeam.name }] },
+                ];
+                fakeEvents.forEach((ev, i) => setTimeout(() => toastForEvent(ev, match.homeTeam, match.awayTeam), i * 800));
+              }}
+            >
+              Test Toasts
+            </button>
+          )}
         </div>
-      </div>
+      </header>
 
-      {/* Score */}
-      <ScoreHero match={match} liveClock={liveClock} />
+      {/* ── Score hero ── */}
+      <ScoreHero match={match} liveClock={liveClock} isMobile={isMobile} />
 
-      {/* Venue */}
-      <div style={{ padding: '10px 32px', borderBottom: '1px solid var(--rule)', background: 'var(--paper-2)' }}>
-        <div className="mono" style={{ fontSize: 10, color: 'var(--ink-3)', letterSpacing: '0.14em' }}>
+      {/* ── Venue / broadcast ── */}
+      <div
+        style={{
+          padding: isMobile ? '8px 16px' : '10px 32px',
+          borderBottom: '1px solid var(--rule)',
+          background: 'var(--paper-2)',
+        }}
+      >
+        <p
+          className="mono"
+          style={{ fontSize: 10, color: 'var(--ink-3)', letterSpacing: '0.12em', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+        >
           {[match.venue.name, match.venue.city, match.venue.country].filter(Boolean).join(' · ').toUpperCase()}
           {match.broadcast ? ` · ${match.broadcast.toUpperCase()}` : ''}
-        </div>
+        </p>
       </div>
 
-      {/* Events + Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', borderBottom: '1px solid var(--rule)' }}>
-        <div style={{ padding: '28px 32px', borderRight: '1px solid var(--rule)' }}>
-          <div className="mono" style={{ fontSize: 10, letterSpacing: '0.2em', color: 'var(--ink-3)', marginBottom: 16, borderBottom: '1px solid var(--rule)', paddingBottom: 10 }}>
-            KEY EVENTS ({match.keyEvents.length})
-          </div>
-          <EventsFeed events={match.keyEvents} homeId={match.homeTeam.id} />
-        </div>
-        <div style={{ padding: '28px 32px' }}>
-          <div className="mono" style={{ fontSize: 10, letterSpacing: '0.2em', color: 'var(--ink-3)', marginBottom: 16, borderBottom: '1px solid var(--rule)', paddingBottom: 10 }}>
-            MATCH STATS
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 18 }}>
+      {/* ── Events + Stats ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', borderBottom: '1px solid var(--rule)' }}>
+        <section
+          aria-label="Key events"
+          style={{ padding: isMobile ? '20px 16px' : '28px 32px', borderRight: isMobile ? 'none' : '1px solid var(--rule)', borderBottom: isMobile ? '1px solid var(--rule)' : 'none' }}
+        >
+          <SectionLabel>KEY EVENTS ({match.keyEvents.length})</SectionLabel>
+          <EventsFeed events={match.keyEvents} />
+        </section>
+        <section
+          aria-label="Match statistics"
+          style={{ padding: isMobile ? '20px 16px' : '28px 32px' }}
+        >
+          <SectionLabel>MATCH STATS</SectionLabel>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 14 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-              <div style={{ width: 11, height: 11, borderRadius: 2, background: match.homeTeam.color }} />
+              <div aria-hidden="true" style={{ width: 11, height: 11, borderRadius: 2, background: match.homeTeam.color, flexShrink: 0 }} />
               <span className="mono" style={{ fontSize: 11 }}>{match.homeTeam.abbreviation}</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
               <span className="mono" style={{ fontSize: 11 }}>{match.awayTeam.abbreviation}</span>
-              <div style={{ width: 11, height: 11, borderRadius: 2, background: match.awayTeam.color }} />
+              <div aria-hidden="true" style={{ width: 11, height: 11, borderRadius: 2, background: match.awayTeam.color, flexShrink: 0 }} />
             </div>
           </div>
           <StatsPanel teamStats={match.teamStats} homeTeam={match.homeTeam} awayTeam={match.awayTeam} />
-        </div>
+        </section>
       </div>
 
-      {/* Team leaders */}
+      {/* ── Leaders ── */}
       {match.teamLeaders.length > 0 && (
         <div style={{ borderBottom: '1px solid var(--rule)' }}>
-          <LeadersSection teamLeaders={match.teamLeaders} homeId={match.homeTeam.id} isMatchLeaders={match.isMatchLeaders} />
+          <LeadersSection
+            teamLeaders={match.teamLeaders}
+            homeId={match.homeTeam.id}
+            isMatchLeaders={match.isMatchLeaders}
+            isMobile={isMobile}
+          />
         </div>
       )}
 
-      {/* News */}
+      {/* ── News ── */}
       {match.news.length > 0 && (
         <div style={{ borderBottom: '1px solid var(--rule)' }}>
-          <NewsSection news={match.news} />
+          <NewsSection news={match.news} isMobile={isMobile} />
         </div>
       )}
 
-      {/* Standings + raw response */}
-      <div style={{ display: 'grid', gridTemplateColumns: match.standings.length ? '1fr 1fr' : '1fr', borderBottom: '1px solid var(--rule)' }}>
+      {/* ── Standings ── */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: isMobile ? '1fr' : match.standings.length ? '1fr 1fr' : '1fr',
+          borderBottom: '1px solid var(--rule)',
+        }}
+      >
         {match.standings.length > 0 && (
           <StandingsTable
             standings={match.standings}
@@ -756,20 +1041,34 @@ export default function TestMatchPage() {
             homeId={match.homeTeam.id}
             awayId={match.awayTeam.id}
             isLive={match.state === 'in'}
+            isMobile={isMobile}
           />
         )}
-        <div style={{ padding: '28px 32px', borderLeft: match.standings.length ? '1px solid var(--rule)' : 'none' }}>
+        <div
+          style={{
+            padding: isMobile ? '20px 16px' : '28px 32px',
+            borderLeft: !isMobile && match.standings.length ? '1px solid var(--rule)' : 'none',
+            borderTop: isMobile && match.standings.length ? '1px solid var(--rule)' : 'none',
+          }}
+        >
           <details>
-            <summary className="mono" style={{ fontSize: 10, color: 'var(--ink-3)', cursor: 'pointer', letterSpacing: '0.16em', marginBottom: 12 }}>
+            <summary
+              className="mono"
+              style={{ fontSize: 10, color: 'var(--ink-3)', cursor: 'pointer', letterSpacing: '0.16em', marginBottom: 12, userSelect: 'none', minHeight: 36, display: 'flex', alignItems: 'center' }}
+            >
               RAW API RESPONSE
             </summary>
-            <pre style={{ padding: 16, background: 'var(--paper-2)', borderRadius: 8, fontSize: 10, overflow: 'auto', maxHeight: 480, color: 'var(--ink)' }}>
+            <pre
+              style={{ padding: 12, background: 'var(--paper-2)', borderRadius: 8, fontSize: 9, overflow: 'auto', maxHeight: 400, color: 'var(--ink)', tabSize: 2 }}
+            >
               {JSON.stringify(match, null, 2)}
             </pre>
           </details>
         </div>
       </div>
 
+      {/* Spacer so last section isn't right at the bottom on mobile */}
+      <div style={{ height: isMobile ? 32 : 0 }} aria-hidden="true" />
     </div>
   );
 }
