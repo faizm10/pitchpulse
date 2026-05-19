@@ -166,6 +166,14 @@ export const VENUES: VenueData[] = [
   },
 ];
 
+/** Default home-map view — continental USA (World Cup 2026 host focus). */
+export const DEFAULT_MAP_VIEW = {
+  center: [-96.5, 39.0] as [number, number],
+  zoom: 4,
+  minZoom: 2.5,
+  maxZoom: 12,
+} as const;
+
 export const COUNTRY_COLORS: Record<Country, string> = {
   USA: "#3B82F6",
   Canada: "#EF4444",
