@@ -451,6 +451,17 @@ body {
   to { transform: rotate(360deg); }
 }
 
+/* content skeleton loaders */
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 0.38; }
+  50% { opacity: 0.82; }
+}
+.skeleton-bone {
+  background: var(--rule-soft);
+  border-radius: 8px;
+  animation: skeleton-pulse 1.4s ease-in-out infinite;
+}
+
 /* scrollbars */
 .rail::-webkit-scrollbar { width: 6px; }
 .rail::-webkit-scrollbar-thumb { background: var(--rule-soft); border-radius: 3px; }

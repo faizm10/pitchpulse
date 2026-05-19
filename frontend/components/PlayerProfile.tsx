@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { BackBar, Flag } from "./Shared";
 import type { FotmobPlayerDetail } from "@/types/fotmob";
+import { PlayerProfileSkeleton } from "@/components/skeleton/TeamPagesSkeleton";
 
 export function PlayerProfile({ playerId, teamCode }: { playerId: string; teamCode: string }) {
   const upper = teamCode.toUpperCase();
@@ -51,15 +52,19 @@ export function PlayerProfile({ playerId, teamCode }: { playerId: string; teamCo
     <div className="screen">
       <BackBar label={player ? `PLAYER · ${upper}` : `PLAYER`} />
 
-      <div style={{ padding: "40px 56px 72px", maxWidth: 1100 }}>
-        {loading && (
-          <div className="serif it" style={{ fontSize: 24, color: "var(--ink-3)" }}>
-            Loading player…
-          </div>
-        )}
+      <div
+        style={{
+          padding: "40px 24px 72px",
+          maxWidth: 1040,
+          width: "100%",
+          margin: "0 auto",
+          boxSizing: "border-box",
+        }}
+      >
+        {loading && <PlayerProfileSkeleton />}
 
         {!loading && error && (
-          <div>
+          <div style={{ textAlign: "center", maxWidth: 520, margin: "0 auto" }}>
             <p className="serif" style={{ fontSize: 24 }}>
               {error}
             </p>

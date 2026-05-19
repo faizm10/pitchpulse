@@ -301,15 +301,23 @@ export function parseSummary(data: ESPNSummaryResponse): MatchDetail {
       standingEntryFromEspnEntry
     ) ?? [];
 
-  const news: NewsArticle[] = (data.news?.articles ?? []).map((a) => ({
-    id: a.dataSourceIdentifier,
-    headline: a.headline,
-    description: a.description ?? "",
-    published: a.published,
-    url: a.links?.web?.href ?? "#",
-    image: a.images?.[0]?.url,
-    byline: a.byline,
-  }));
+  const news: NewsArticle[] = (data.news?.articles ?? []).map((a) => {
+    const link = newsArticleLink(a);
+    const image = a.images?.[0]?.url;
+    return {
+      id: a.dataSourceIdentifier,
+      headline: a.headline,
+      description: a.description ?? "",
+      published: a.published,
+      url: link,
+      link,
+      image,
+      imageUrl: image,
+      source: a.byline ?? "ESPN",
+      category: newsCategory(a),
+      byline: a.byline,
+    };
+  });
 
   const groups = competition.groups as
     | { shortName?: string; name?: string; abbreviation?: string }
@@ -333,15 +341,43 @@ export function parseSummary(data: ESPNSummaryResponse): MatchDetail {
   };
 }
 
+function newsArticleLink(article: ESPNNewsResponse["articles"][number]): string {
+  const web = article.links?.web?.href;
+  if (web && web !== "#") return web;
+  const mobile = article.links?.mobile?.href;
+  if (mobile && mobile !== "#") return mobile;
+  const storyId = article.id ?? article.dataSourceIdentifier;
+  if (storyId) {
+    return `https://www.espn.com/soccer/story/_/id/${storyId}`;
+  }
+  return "#";
+}
+
+function newsCategory(article: ESPNNewsResponse["articles"][number]): string | undefined {
+  const cats = article.categories ?? [];
+  const wc = cats.find((c) => c.description === "FIFA World Cup");
+  if (wc) return "World Cup";
+  const team = cats.find((c) => c.type === "team");
+  if (team?.description) return team.description;
+  return cats[0]?.description;
+}
+
 export function parseNews(data: ESPNNewsResponse): NewsArticle[] {
-  console.log(data.articles[0]);
-  return data.articles.map((article) => ({
-    id: article.dataSourceIdentifier,
-    headline: article.headline,
-    description: article.description ?? "",
-    published: article.published,
-    url: article.links?.web?.href ?? "#",
-    image: article.images?.[0]?.url,
-    byline: article.byline,
-  }));
+  return (data.articles ?? []).map((article) => {
+    const link = newsArticleLink(article);
+    const image = article.images?.[0]?.url;
+    return {
+      id: article.dataSourceIdentifier,
+      headline: article.headline,
+      description: article.description ?? "",
+      published: article.published,
+      url: link,
+      link,
+      image,
+      imageUrl: image,
+      source: article.byline ?? "ESPN",
+      category: newsCategory(article),
+      byline: article.byline,
+    };
+  });
 }

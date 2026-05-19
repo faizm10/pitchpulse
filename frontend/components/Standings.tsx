@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Flag } from './Shared';
 import type { StandingsGroupBlock, GroupStandingEntry } from '@/types/espn';
 import { teamCodeFromDisplayName } from '@/lib/team-codes';
+import { StandingsSkeleton } from '@/components/skeleton/TeamPagesSkeleton';
 
 export function Standings() {
   const [groups, setGroups] = useState<StandingsGroupBlock[]>([]);
@@ -44,11 +45,7 @@ export function Standings() {
 
       {/* Body */}
       <div style={{ padding: '40px 56px 80px' }}>
-        {loading && (
-          <div className="serif it" style={{ fontSize: 28, color: 'var(--ink-3)' }}>
-            Loading standings...
-          </div>
-        )}
+        {loading && <StandingsSkeleton />}
 
         {!loading && error && (
           <div className="serif it" style={{ fontSize: 28, color: 'var(--ink-3)' }}>

@@ -87,14 +87,17 @@ export interface ESPNNewsResponse {
 }
 
 export interface ESPNArticle {
+  id?: string;
   dataSourceIdentifier: string;
   headline: string;
   description: string;
   published: string;
-  links: {
-    web: { href: string };
+  links?: {
+    web?: { href?: string };
+    mobile?: { href?: string };
   };
   images?: { url: string; alt?: string }[];
+  categories?: { type?: string; description?: string }[];
   byline?: string;
 }
 
@@ -136,8 +139,13 @@ export interface NewsArticle {
   headline: string;
   description: string;
   published: string;
+  /** @deprecated prefer link */
   url: string;
+  link?: string;
+  image?: string;
   imageUrl?: string;
+  source?: string;
+  category?: string;
   byline?: string;
 }
 

@@ -8,8 +8,10 @@ interface Article {
   description: string;
   published: string;
   image?: string;
-  source: string;
+  source?: string;
   link?: string;
+  url?: string;
+  byline?: string;
   category?: string;
 }
 
@@ -25,6 +27,46 @@ function readTime(text: string) {
   return `${Math.max(1, Math.round(words / 200))} min read`;
 }
 
+function articleHref(article: Article): string | undefined {
+  const href = article.link ?? article.url;
+  if (!href || href === '#') return undefined;
+  return href;
+}
+
+function ArticleLink({
+  article,
+  style,
+  children,
+}: {
+  article: Article;
+  style?: React.CSSProperties;
+  children: React.ReactNode;
+}) {
+  const href = articleHref(article);
+  if (href) {
+    return (
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{ textDecoration: 'none', color: 'inherit', ...style }}
+      >
+        {children}
+      </a>
+    );
+  }
+  return <div style={style}>{children}</div>;
+}
+
+function ReadLink({ article }: { article: Article }) {
+  if (!articleHref(article)) return null;
+  return (
+    <span className="mono" style={{ fontSize: 10, letterSpacing: '0.12em', color: 'var(--ink-1)' }}>
+      Read on ESPN →
+    </span>
+  );
+}
+
 export function News() {
   const [news, setNews] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
@@ -34,7 +76,12 @@ export function News() {
       try {
         const res = await fetch('/api/news');
         const data = await res.json();
-        setNews(data.articles || []);
+        const articles: Article[] = (data.articles || []).map((a: Article) => ({
+          ...a,
+          link: a.link ?? a.url,
+          source: a.source ?? a.byline ?? 'ESPN',
+        }));
+        setNews(articles);
       } catch (err) {
         console.error(err);
       } finally {
@@ -219,8 +266,10 @@ function ArticleImage({ src, alt }: { src?: string; alt: string }) {
 
 function HeroMain({ article: n }: { article: Article }) {
   return (
-    <a href={n.link} target="_blank" rel="noopener noreferrer"
-      style={{ textDecoration: 'none', color: 'inherit', borderRight: '1px solid var(--rule)', display: 'flex', flexDirection: 'column' }}>
+    <ArticleLink
+      article={n}
+      style={{ borderRight: '1px solid var(--rule)', display: 'flex', flexDirection: 'column' }}
+    >
       <div style={{ width: '100%', aspectRatio: '16/9', background: 'var(--paper-3)', overflow: 'hidden' }}>
         <ArticleImage src={n.image} alt={n.headline} />
       </div>
@@ -244,9 +293,15 @@ function HeroMain({ article: n }: { article: Article }) {
           <span>{relativeTime(n.published)}</span>
           <Dot />
           <span>{readTime(n.description)}</span>
+          {articleHref(n) && (
+            <>
+              <Dot />
+              <ReadLink article={n} />
+            </>
+          )}
         </div>
       </div>
-    </a>
+    </ArticleLink>
   );
 }
 
@@ -254,8 +309,16 @@ function HeroSidebar({ feature, dispatches }: { feature?: Article; dispatches: A
   return (
     <div style={{ display: 'flex', flexDirection: 'column' }}>
       {feature && (
-        <a href={feature.link} target="_blank" rel="noopener noreferrer"
-          style={{ textDecoration: 'none', color: 'inherit', padding: 24, borderBottom: '1px solid var(--rule)', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <ArticleLink
+          article={feature}
+          style={{
+            padding: 24,
+            borderBottom: '1px solid var(--rule)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 10,
+          }}
+        >
           <div style={{ width: '100%', aspectRatio: '16/9', overflow: 'hidden', background: 'var(--paper-3)', marginBottom: 4 }}>
             <ArticleImage src={feature.image} alt={feature.headline} />
           </div>
@@ -264,21 +327,28 @@ function HeroSidebar({ feature, dispatches }: { feature?: Article; dispatches: A
           <div style={{ fontSize: 13, color: 'var(--ink-2)', lineHeight: 1.5 }}>{feature.description}</div>
           <div className="mono" style={{ fontSize: 9, letterSpacing: '0.12em', color: 'var(--ink-3)', textTransform: 'uppercase' }}>
             {(feature.source || 'ESPN').toUpperCase()} · {relativeTime(feature.published)}
+            {articleHref(feature) && <> · <ReadLink article={feature} /></>}
           </div>
-        </a>
+        </ArticleLink>
       )}
       <div style={{ padding: 20, flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 6 }}>
         <div className="mono" style={{ fontSize: 9, letterSpacing: '0.2em', color: 'var(--pulse)', textTransform: 'uppercase', marginBottom: 8 }}>
           Quick Dispatches
         </div>
         {dispatches.map((n) => (
-          <a key={n.id} href={n.link} target="_blank" rel="noopener noreferrer"
-            style={{ textDecoration: 'none', color: 'inherit', display: 'block', padding: '12px 0', borderTop: '1px solid var(--rule-soft)' }}>
+          <ArticleLink
+            key={n.id}
+            article={n}
+            style={{ display: 'block', padding: '12px 0', borderTop: '1px solid var(--rule-soft)' }}
+          >
             <div className="mono" style={{ fontSize: 9, letterSpacing: '0.14em', color: 'var(--ink-3)', textTransform: 'uppercase', marginBottom: 4 }}>
               {n.category || 'News'} · {relativeTime(n.published)}
             </div>
             <div className="serif" style={{ fontSize: 15, lineHeight: 1.25 }}>{n.headline}</div>
-          </a>
+            <div style={{ marginTop: 6 }}>
+              <ReadLink article={n} />
+            </div>
+          </ArticleLink>
         ))}
       </div>
     </div>
@@ -287,19 +357,25 @@ function HeroSidebar({ feature, dispatches }: { feature?: Article; dispatches: A
 
 function ShortCard({ article: n }: { article: Article }) {
   return (
-    <a href={n.link} target="_blank" rel="noopener noreferrer"
+    <ArticleLink
+      article={n}
       style={{
-        textDecoration: 'none', color: 'inherit', padding: 20,
-        borderRight: '1px solid var(--rule-soft)', borderBottom: '1px solid var(--rule-soft)',
-        display: 'flex', flexDirection: 'column', gap: 8,
-      }}>
+        padding: 20,
+        borderRight: '1px solid var(--rule-soft)',
+        borderBottom: '1px solid var(--rule-soft)',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 8,
+      }}
+    >
       <Tag label={n.category || 'News'} variant="outline" />
       <div className="serif" style={{ fontSize: 18, lineHeight: 1.2 }}>{n.headline}</div>
       <div style={{ fontSize: 13, color: 'var(--ink-2)', lineHeight: 1.45, flex: 1 }}>{n.description}</div>
       <div className="mono" style={{ fontSize: 9, letterSpacing: '0.12em', color: 'var(--ink-3)', textTransform: 'uppercase', marginTop: 4 }}>
         {(n.source || 'ESPN').toUpperCase()} · {relativeTime(n.published)} · {readTime(n.description)}
       </div>
-    </a>
+      <ReadLink article={n} />
+    </ArticleLink>
   );
 }
 

@@ -1,6 +1,7 @@
 "use client";
 
 import type { FotmobMatchExtras } from "@/types/fotmob";
+import { FotmobExtrasSkeleton } from "@/components/skeleton/TeamPagesSkeleton";
 
 interface FotmobMatchExtrasProps {
   extras: FotmobMatchExtras | null;
@@ -16,14 +17,7 @@ const blockStyle: React.CSSProperties = {
 
 export function FotmobMatchExtrasBlock({ extras, loading }: FotmobMatchExtrasProps) {
   if (loading) {
-    return (
-      <div style={blockStyle}>
-        <p className="eyebrow">Match intelligence</p>
-        <p className="mono" style={{ fontSize: 11, color: "var(--ink-3)", marginTop: 8 }}>
-          Loading FotMob data…
-        </p>
-      </div>
-    );
+    return <FotmobExtrasSkeleton />;
   }
 
   if (!extras) return null;

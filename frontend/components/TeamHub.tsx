@@ -5,6 +5,7 @@ import Link from "next/link";
 import { BackBar, Flag } from "./Shared";
 import type { FotmobFixture, FotmobTeamProfile } from "@/types/fotmob";
 import { getTeamMapEntry } from "@/lib/fotmob/team-map";
+import { TeamHubHeaderSkeleton, TeamHubSkeleton } from "@/components/skeleton/TeamPagesSkeleton";
 
 export function TeamHub({ code }: { code: string }) {
   const upper = code.toUpperCase();
@@ -71,6 +72,9 @@ export function TeamHub({ code }: { code: string }) {
         }}
       >
         <Flag code={upper} w={72} h={48} />
+        {loading ? (
+          <TeamHubHeaderSkeleton />
+        ) : (
         <div>
           <div className="eyebrow">Squad & fixtures</div>
           <div className="headline" style={{ fontSize: 56, marginTop: 8 }}>
@@ -83,14 +87,11 @@ export function TeamHub({ code }: { code: string }) {
             FOTMOB · WORLD CUP 2026
           </div>
         </div>
+        )}
       </div>
 
       <div style={{ padding: "40px 56px 80px" }}>
-        {loading && (
-          <div className="serif it" style={{ fontSize: 24, color: "var(--ink-3)" }}>
-            Loading squad…
-          </div>
-        )}
+        {loading && <TeamHubSkeleton />}
         {!loading && error && (
           <div className="serif it" style={{ fontSize: 24, color: "var(--ink-3)" }}>
             {error}
