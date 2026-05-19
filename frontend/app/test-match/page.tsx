@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { Toaster, toast } from 'sonner';
+import { TestMatchSkeleton } from '@/components/skeleton/TestMatchSkeleton';
 
 const GAME_ID = '740958';
 const POLL_LIVE = 15_000;
@@ -921,12 +922,7 @@ export default function TestMatchPage() {
   }, [match?.statusTypeName, match?.statusDetail, match?.statusShort]);
 
   if (loading) {
-    return (
-      <div className="screen" style={{ padding: isMobile ? 24 : 60 }} role="status" aria-live="polite">
-        <p className="serif it" style={{ fontSize: 24, color: 'var(--ink-3)', margin: 0 }}>Loading match…</p>
-        <p className="mono" style={{ fontSize: 11, color: 'var(--ink-3)', marginTop: 10 }}>Fetching game {GAME_ID} from ESPN</p>
-      </div>
-    );
+    return <TestMatchSkeleton isMobile={isMobile} />;
   }
 
   if (error || !match) {
