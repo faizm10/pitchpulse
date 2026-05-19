@@ -137,6 +137,49 @@ function fotmobTeamLogo(id: string | number): string {
   return `https://images.fotmob.com/image_resources/logo/teamlogo/${id}.png`;
 }
 
+// ── Open Cup bracket helpers ──────────────────────────────────────────────────
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function parseScoreboardRound(data: any, currentGameId: string, label: string) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const events: any[] = data?.events ?? [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return events.map((evt: any) => {
+    const comp = evt.competitions?.[0] ?? {};
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const home = comp.competitors?.find((c: any) => c.homeAway === "home") ?? comp.competitors?.[0];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const away = comp.competitors?.find((c: any) => c.homeAway === "away") ?? comp.competitors?.[1];
+    const statusObj = comp.status ?? {};
+    const state: "pre" | "in" | "post" = statusObj?.type?.state ?? "pre";
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    function bt(c: any) {
+      const t = c?.team ?? {};
+      const id = String(t.id ?? "");
+      return {
+        id,
+        name: t.displayName ?? t.name ?? "TBD",
+        abbreviation: t.abbreviation ?? "TBD",
+        logo: `https://a.espncdn.com/i/teamlogos/soccer/500/${id}.png`,
+        score: state !== "pre" ? (c?.score != null ? String(c.score) : "0") : null,
+        winner: c?.winner ?? false,
+      };
+    }
+
+    return {
+      id: String(evt.id ?? ""),
+      roundLabel: label,
+      homeTeam: bt(home),
+      awayTeam: bt(away),
+      state,
+      statusDetail: statusObj?.type?.detail ?? statusObj?.type?.description ?? "",
+      date: comp.date ?? evt.date ?? "",
+      isCurrentGame: String(evt.id) === currentGameId,
+    };
+  });
+}
+
 // ── Route handler ─────────────────────────────────────────────────────────────
 
 export async function GET(
@@ -145,14 +188,22 @@ export async function GET(
 ) {
   const { gameId } = await params;
 
-  const [espnRes, fotmobRes] = await Promise.allSettled([
+  const [espnRes, fotmobRes, qfRes, r16Res] = await Promise.allSettled([
     fetch(
-      `https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=${gameId}`,
+      `https://site.api.espn.com/apis/site/v2/sports/soccer/usa.open/summary?event=${gameId}`,
       { next: { revalidate: 0 } }
     ),
     fetch(
       `https://www.fotmob.com/api/data/leagues?id=${MLS_FOTMOB_ID}`,
       { headers: FOTMOB_HEADERS, next: { revalidate: 0 } }
+    ),
+    fetch(
+      `https://site.api.espn.com/apis/site/v2/sports/soccer/usa.open/scoreboard?dates=20260519-20260520`,
+      { next: { revalidate: 60 } }
+    ),
+    fetch(
+      `https://site.api.espn.com/apis/site/v2/sports/soccer/usa.open/scoreboard?dates=20260428-20260430`,
+      { next: { revalidate: 3600 } }
     ),
   ]);
 
@@ -371,6 +422,39 @@ export async function GET(
     }
   }
 
+  // ── Open Cup bracket ─────────────────────────────────────────────────────
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let qfMatches: any[] = [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let r16Matches: any[] = [];
+
+  if (qfRes.status === "fulfilled" && qfRes.value.ok) {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const qfData: any = await qfRes.value.json();
+      qfMatches = parseScoreboardRound(qfData, gameId, "Quarterfinals");
+    } catch { /* non-fatal */ }
+  }
+
+  if (r16Res.status === "fulfilled" && r16Res.value.ok) {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const r16Data: any = await r16Res.value.json();
+      r16Matches = parseScoreboardRound(r16Data, gameId, "Round of 16");
+    } catch { /* non-fatal */ }
+  }
+
+  const openCupBracket = {
+    rounds: [
+      { label: "Quarterfinals", date: "May 19–20, 2026", matches: qfMatches },
+      { label: "Round of 16", date: "Apr 28–29, 2026", matches: r16Matches },
+    ],
+    upcomingRounds: [
+      { label: "Semifinals", date: "June 2026" },
+      { label: "Final", date: "Oct 1, 2026" },
+    ],
+  };
+
   return Response.json({
     match: {
       id: gameId,
@@ -396,6 +480,7 @@ export async function GET(
       isMatchLeaders: state === "in",
       standingsGroups,
       standingsGroupsProjected,
+      openCupBracket,
     },
   });
 }
