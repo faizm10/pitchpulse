@@ -146,6 +146,139 @@ function MapLoadedObserver({ onLoad }: { onLoad: () => void }) {
   return null;
 }
 
+// Separate component so it lives inside Map's context tree — same pattern as StadiumMarkers
+function EPLMarkers({
+  games,
+  liveInfos,
+  onSelectGame,
+}: {
+  games: TestGame[];
+  liveInfos: Record<string, LiveInfo | null>;
+  onSelectGame: (href: string) => void;
+}) {
+  return (
+    <>
+      {games.map((game) => {
+        const venue = EPL_VENUES[game.slug];
+        if (!venue) return null;
+        const info = liveInfos[game.slug];
+        const isLive = info?.state === 'in';
+        const color = game.source === 'fotmob' ? '#0078ff' : '#e63c3c';
+
+        return (
+          <MapMarker key={game.slug} longitude={venue.longitude} latitude={venue.latitude}>
+            <MarkerContent>
+              {/* Explicit 20×20 wrapper so MapLibre can measure the element */}
+              <div style={{ position: 'relative', width: 20, height: 20 }}>
+                {isLive && (
+                  <span style={{
+                    position: 'absolute', inset: 0, borderRadius: '50%',
+                    backgroundColor: color,
+                    animation: 'pulse-ring 1.8s ease-out infinite',
+                  }} />
+                )}
+                {/* glow */}
+                <div style={{
+                  position: 'absolute', top: -5, left: -5, right: -5, bottom: -5,
+                  borderRadius: '50%',
+                  filter: 'blur(7px)', opacity: 0.75,
+                  backgroundColor: color,
+                  pointerEvents: 'none',
+                }} />
+                {/* dot */}
+                <button
+                  type="button"
+                  aria-label={`${venue.name} — view match`}
+                  style={{
+                    display: 'block',
+                    width: 20, height: 20,
+                    borderRadius: '50%',
+                    border: '3px solid white',
+                    backgroundColor: color,
+                    cursor: 'pointer',
+                    padding: 0,
+                    boxShadow: `0 2px 8px ${color}99, 0 0 0 1px rgba(0,0,0,0.1)`,
+                    transition: 'transform 180ms',
+                  }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1.35)'; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)'; }}
+                />
+              </div>
+            </MarkerContent>
+
+            <MarkerPopup>
+              <div style={{ minWidth: 210, borderRadius: 12, overflow: 'hidden', background: 'var(--paper)' }}>
+                <div style={{ height: 4, background: color }} />
+                <div style={{ padding: 12, background: 'var(--paper-2)' }}>
+                  <p style={{ margin: 0, fontWeight: 600, fontSize: 14, color: 'var(--ink)', lineHeight: 1.3 }}>
+                    {venue.name}
+                  </p>
+                  <p style={{ margin: '2px 0 0', fontSize: 12, color: 'var(--ink-3)' }}>
+                    {venue.city} · {game.league}
+                  </p>
+
+                  <div style={{ borderTop: '1px solid var(--rule-soft)', paddingTop: 8, marginTop: 8 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                      <span style={{ fontSize: 10, fontFamily: 'var(--mono)', letterSpacing: '0.1em', color: info ? stateColor(info.state) : 'var(--ink-3)' }}>
+                        {info
+                          ? isLive
+                            ? <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--live)', display: 'inline-block' }} />
+                                LIVE{info.liveClock ? ` · ${info.liveClock}` : ''}
+                              </span>
+                            : stateLabel(info.state)
+                          : '…'}
+                      </span>
+                      <span style={{ fontSize: 9, fontFamily: 'var(--mono)', color: 'var(--ink-3)', letterSpacing: '0.1em' }}>
+                        {game.round ?? ''}
+                      </span>
+                    </div>
+
+                    {info && [info.homeTeam, info.awayTeam].map((team, i) => (
+                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
+                        <img src={team.logo} alt="" aria-hidden="true" width={16} height={16}
+                          style={{ width: 16, height: 16, objectFit: 'contain', flexShrink: 0 }}
+                          onError={(e) => { (e.target as HTMLImageElement).style.opacity = '0.2'; }} />
+                        <span style={{ flex: 1, fontSize: 12, color: 'var(--ink)', fontWeight: 500 }}>
+                          {team.shortName ?? team.name}
+                        </span>
+                        <span style={{ fontSize: 13, fontFamily: 'var(--mono)', fontWeight: 700, color: 'var(--ink)' }}>
+                          {info.state !== 'pre' ? team.score : '–'}
+                        </span>
+                      </div>
+                    ))}
+
+                    {!info && (
+                      <div style={{ fontSize: 11, color: 'var(--ink-3)', fontFamily: 'var(--mono)', textAlign: 'center', padding: '8px 0' }}>
+                        Loading…
+                      </div>
+                    )}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => onSelectGame(game.href)}
+                    style={{
+                      marginTop: 10, width: '100%',
+                      borderRadius: 8, border: '1px solid var(--rule)',
+                      background: 'var(--paper)', padding: '8px 12px',
+                      fontSize: 11, fontWeight: 500, color: 'var(--ink)',
+                      cursor: 'pointer', fontFamily: 'var(--mono)',
+                      letterSpacing: '0.08em',
+                    }}
+                  >
+                    VIEW MATCH DETAILS →
+                  </button>
+                </div>
+              </div>
+            </MarkerPopup>
+          </MapMarker>
+        );
+      })}
+    </>
+  );
+}
+
 function TestsMap({
   games,
   liveInfos,
@@ -164,7 +297,7 @@ function TestsMap({
     <div style={{ position: 'relative', height: isMobile ? 300 : 440, borderRadius: 12, overflow: 'hidden', border: '1px solid var(--rule)' }}>
       {!isMapLoaded && (
         <div style={{
-          position: 'absolute', inset: 0, zIndex: 5,
+          position: 'absolute', inset: 0, zIndex: 20,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           background: 'var(--paper-2)',
         }}>
@@ -172,146 +305,12 @@ function TestsMap({
         </div>
       )}
 
-      <Map
-        center={[-1.8, 52.4]}
-        zoom={isMobile ? 5.2 : 6}
-        minZoom={4}
-        maxZoom={14}
-        theme="light"
-      >
+      <Map center={[-1.8, 52.4]} zoom={isMobile ? 5.2 : 6} minZoom={4} maxZoom={14} theme="light">
         <MapLoadedObserver onLoad={handleLoad} />
-
-        {games.map((game) => {
-          const venue = EPL_VENUES[game.slug];
-          if (!venue) return null;
-          const info = liveInfos[game.slug];
-          const isLive = info?.state === 'in';
-          const color = game.source === 'fotmob' ? '#0078ff' : '#e63c3c';
-
-          return (
-            <MapMarker key={game.slug} longitude={venue.longitude} latitude={venue.latitude}>
-              <MarkerContent>
-                <div style={{ position: 'relative' }}>
-                  {isLive && (
-                    <span style={{
-                      position: 'absolute', inset: 0, borderRadius: '50%',
-                      backgroundColor: color,
-                      animation: 'pulse-ring 1.8s ease-out infinite',
-                    }} />
-                  )}
-                  {/* glow */}
-                  <div style={{
-                    position: 'absolute', inset: -4, borderRadius: '50%',
-                    filter: 'blur(6px)', opacity: 0.65,
-                    backgroundColor: color,
-                  }} />
-                  {/* dot */}
-                  <button
-                    type="button"
-                    aria-label={`${venue.name} — click to view match`}
-                    style={{
-                      position: 'relative',
-                      width: 14, height: 14, borderRadius: '50%',
-                      border: '2px solid white',
-                      backgroundColor: color,
-                      cursor: 'pointer',
-                      boxShadow: '0 0 12px rgba(255,255,255,0.15)',
-                      transition: 'transform 180ms',
-                      padding: 0,
-                    }}
-                    onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1.4)'; }}
-                    onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)'; }}
-                  />
-                </div>
-              </MarkerContent>
-
-              <MarkerPopup>
-                <div style={{ minWidth: 210, borderRadius: 12, overflow: 'hidden', background: 'var(--paper)' }}>
-                  {/* color stripe */}
-                  <div style={{ height: 4, background: color }} />
-                  <div style={{ padding: 12, background: 'var(--paper-2)' }}>
-                    {/* Venue info */}
-                    <p style={{ margin: 0, fontWeight: 600, fontSize: 14, color: 'var(--ink)', lineHeight: 1.3 }}>
-                      {venue.name}
-                    </p>
-                    <p style={{ margin: '2px 0 0', fontSize: 12, color: 'var(--ink-3)' }}>
-                      {venue.city} · {game.league}
-                    </p>
-
-                    {/* Match state */}
-                    <div style={{ borderTop: '1px solid var(--rule-soft)', paddingTop: 8, marginTop: 8 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                        <span style={{
-                          fontSize: 10, fontFamily: 'var(--mono)', letterSpacing: '0.1em',
-                          color: info ? stateColor(info.state) : 'var(--ink-3)',
-                        }}>
-                          {info ? (
-                            isLive
-                              ? <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--live)', display: 'inline-block' }} />
-                                  LIVE{info.liveClock ? ` · ${info.liveClock}` : ''}
-                                </span>
-                              : stateLabel(info.state)
-                          ) : '…'}
-                        </span>
-                        <span className="mono" style={{ fontSize: 9, color: 'var(--ink-3)', letterSpacing: '0.1em' }}>
-                          {game.round ?? ''}
-                        </span>
-                      </div>
-
-                      {/* Teams */}
-                      {info && [info.homeTeam, info.awayTeam].map((team, i) => (
-                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
-                          <img
-                            src={team.logo}
-                            alt=""
-                            aria-hidden="true"
-                            width={16}
-                            height={16}
-                            style={{ width: 16, height: 16, objectFit: 'contain', flexShrink: 0 }}
-                            onError={(e) => { (e.target as HTMLImageElement).style.opacity = '0.2'; }}
-                          />
-                          <span style={{ flex: 1, fontSize: 12, color: 'var(--ink)', fontWeight: 500 }}>
-                            {team.shortName ?? team.name}
-                          </span>
-                          <span style={{ fontSize: 13, fontFamily: 'var(--mono)', fontWeight: 700, color: 'var(--ink)' }}>
-                            {info.state !== 'pre' ? team.score : '–'}
-                          </span>
-                        </div>
-                      ))}
-
-                      {!info && (
-                        <div style={{ fontSize: 11, color: 'var(--ink-3)', fontFamily: 'var(--mono)', textAlign: 'center', padding: '8px 0' }}>
-                          Loading…
-                        </div>
-                      )}
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => onSelectGame(game.href)}
-                      style={{
-                        marginTop: 10, width: '100%',
-                        borderRadius: 8, border: '1px solid var(--rule)',
-                        background: 'var(--paper)', padding: '8px 12px',
-                        fontSize: 11, fontWeight: 500, color: 'var(--ink)',
-                        cursor: 'pointer', fontFamily: 'var(--mono)',
-                        letterSpacing: '0.08em',
-                      }}
-                    >
-                      VIEW MATCH DETAILS →
-                    </button>
-                  </div>
-                </div>
-              </MarkerPopup>
-            </MapMarker>
-          );
-        })}
-
+        <EPLMarkers games={games} liveInfos={liveInfos} onSelectGame={onSelectGame} />
         <MapControls position="bottom-right" showZoom />
       </Map>
 
-      {/* Map label */}
       <div style={{
         position: 'absolute', bottom: 12, left: 14, zIndex: 10,
         pointerEvents: 'none',
