@@ -757,12 +757,8 @@ function ConferenceStandings({
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
-export default function MLSGamePage({ params }: { params: Promise<{ slug: string }> }) {
-  const [slug, setSlug] = useState<string | null>(null);
-
-  useEffect(() => {
-    params.then(p => setSlug(p.slug));
-  }, [params]);
+export default function MLSGamePage({ params }: { params: { slug: string } }) {
+  const slug = params.slug;
 
   const isMobile = useIsMobile();
   const [match, setMatch] = useState<MLSMatchData | null>(null);
@@ -829,15 +825,6 @@ export default function MLSGamePage({ params }: { params: Promise<{ slug: string
     }, 1000);
     return () => clearInterval(id);
   }, []);
-
-  // Wait for params to resolve
-  if (slug === null) {
-    return (
-      <div className="screen" style={{ padding: 60, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <p className="mono" style={{ fontSize: 11, color: 'var(--ink-3)' }}>Loading…</p>
-      </div>
-    );
-  }
 
   if (!config) {
     notFound();
