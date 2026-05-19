@@ -71,8 +71,7 @@ interface StandingRow {
 interface LeaderCategory {
   category: string;
   value: string;
-  shortValue: string;
-  athlete: { name: string; id: string; headshot: string | null };
+  athlete: { name: string; id: string };
 }
 
 interface TeamLeaders {
@@ -98,6 +97,7 @@ interface MatchData {
   news: NewsItem[];
   standings: StandingRow[];
   teamLeaders: TeamLeaders[];
+  isMatchLeaders: boolean;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -289,34 +289,57 @@ function StatsPanel({ teamStats, homeTeam, awayTeam }: { teamStats: TeamStats[];
 
 // ── Team leaders ──────────────────────────────────────────────────────────────
 
-function LeadersSection({ teamLeaders, homeId }: { teamLeaders: TeamLeaders[]; homeId: string }) {
+function LeadersSection({ teamLeaders, homeId, isMatchLeaders }: {
+  teamLeaders: TeamLeaders[];
+  homeId: string;
+  isMatchLeaders: boolean;
+}) {
   if (!teamLeaders.length) return null;
-  // home first
+  const label = isMatchLeaders ? 'MATCH LEADERS' : 'SEASON LEADERS';
   const sorted = [...teamLeaders].sort((a) => (a.teamId === homeId ? -1 : 1));
+
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, background: 'var(--rule)' }}>
-      {sorted.map((team) => (
-        <div key={team.teamId} style={{ background: 'var(--paper)', padding: '24px 32px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
-            {team.teamLogo && <img src={team.teamLogo} alt={team.teamName} style={{ width: 28, height: 28, objectFit: 'contain' }} />}
-            <div className="mono" style={{ fontSize: 10, letterSpacing: '0.18em', color: 'var(--ink-3)' }}>{team.teamName.toUpperCase()} · SEASON LEADERS</div>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            {team.categories.map((cat) => (
-              <div key={cat.category} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 14, borderBottom: '1px solid var(--rule-soft)' }}>
-                <div>
-                  <div className="mono" style={{ fontSize: 9, letterSpacing: '0.16em', color: 'var(--ink-3)', marginBottom: 3 }}>{cat.category.toUpperCase()}</div>
-                  <div className="serif" style={{ fontSize: 17 }}>{cat.athlete.name || '–'}</div>
-                </div>
-                <div className="serif tnum" style={{ fontSize: 28, color: 'var(--ink)' }}>
-                  {/* extract just the key number from displayValue e.g. "Goals: 12" */}
-                  {cat.value.match(/\d+/g)?.slice(-1)?.[0] ?? cat.shortValue}
-                </div>
+      {sorted.map((team) => {
+        const cats = team.categories.filter((c) => c.athlete.name && c.value);
+        if (!cats.length) return null;
+        return (
+          <div key={team.teamId} style={{ background: 'var(--paper)', padding: '24px 32px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
+              {team.teamLogo && (
+                <img src={team.teamLogo} alt={team.teamName} style={{ width: 28, height: 28, objectFit: 'contain' }} />
+              )}
+              <div className="mono" style={{ fontSize: 10, letterSpacing: '0.18em', color: 'var(--ink-3)' }}>
+                {team.teamName.toUpperCase()} · {label}
               </div>
-            ))}
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+              {cats.map((cat, i) => {
+                // Value may be "Goals: 12" (season) or plain "25" (match) — take the last number
+                const num = cat.value.match(/\d+(?:\.\d+)?/g)?.slice(-1)?.[0] ?? cat.value;
+                return (
+                  <div
+                    key={cat.category}
+                    style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      padding: '12px 0',
+                      borderBottom: i < cats.length - 1 ? '1px solid var(--rule-soft)' : 'none',
+                    }}
+                  >
+                    <div>
+                      <div className="mono" style={{ fontSize: 9, letterSpacing: '0.16em', color: 'var(--ink-3)', marginBottom: 3 }}>
+                        {cat.category.toUpperCase()}
+                      </div>
+                      <div className="serif" style={{ fontSize: 17 }}>{cat.athlete.name}</div>
+                    </div>
+                    <div className="serif tnum" style={{ fontSize: 28, color: 'var(--ink)' }}>{num}</div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -690,7 +713,7 @@ export default function TestMatchPage() {
       {/* Team leaders */}
       {match.teamLeaders.length > 0 && (
         <div style={{ borderBottom: '1px solid var(--rule)' }}>
-          <LeadersSection teamLeaders={match.teamLeaders} homeId={match.homeTeam.id} />
+          <LeadersSection teamLeaders={match.teamLeaders} homeId={match.homeTeam.id} isMatchLeaders={match.isMatchLeaders} />
         </div>
       )}
 

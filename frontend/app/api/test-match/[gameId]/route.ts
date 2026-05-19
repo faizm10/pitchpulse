@@ -172,25 +172,45 @@ function parseMatchData(data: any, gameId: string, league: string) {
   }).sort((a: any, b: any) => a.rank - b.rank || b.points - a.points);
 
   // ── Team leaders ──────────────────────────────────────────────────────────
+  // During a live match ESPN returns match leaders (shots, passes, saves in
+  // this game). Pre/post it returns season leaders (goals, assists, etc.).
   const leadersRaw: any[] = data.leaders ?? [];
-  const teamLeaders = leadersRaw.map((block: any) => ({
-    teamId: String(block.team?.id ?? ""),
-    teamName: block.team?.displayName ?? "",
-    teamLogo: block.team?.logos?.[0]?.href ?? block.team?.logo ?? "",
-    categories: (block.leaders ?? []).slice(0, 3).map((cat: any) => {
-      const top = cat.leaders?.[0] ?? {};
-      return {
-        category: cat.displayName ?? cat.name ?? "",
-        value: top.displayValue ?? "",
-        shortValue: top.shortDisplayValue ?? top.displayValue ?? "",
-        athlete: {
-          name: top.athlete?.fullName ?? top.athlete?.lastName ?? "",
-          id: String(top.athlete?.id ?? ""),
-          headshot: top.athlete?.headshot?.href ?? top.athlete?.headshot ?? null,
-        },
-      };
-    }),
-  }));
+  const isMatchLeaders = state === "in";
+
+  const teamLeaders = leadersRaw.map((block: any) => {
+    const categories = (block.leaders ?? [])
+      .map((cat: any) => {
+        const top = cat.leaders?.[0] ?? {};
+        // Skip entries with no numeric value
+        const rawValue = top.displayValue;
+        if (rawValue == null || rawValue === "" || rawValue === "null") return null;
+        // fullName can be null (e.g. Rodri) — fall through all name fields
+        const athleteName: string =
+          top.athlete?.fullName ??
+          top.athlete?.displayName ??
+          top.athlete?.shortName ??
+          top.athlete?.lastName ??
+          "";
+        if (!athleteName) return null; // skip completely anonymous entries
+        return {
+          category: cat.displayName ?? cat.name ?? "",
+          value: String(rawValue),
+          athlete: {
+            name: athleteName,
+            id: String(top.athlete?.id ?? ""),
+          },
+        };
+      })
+      .filter(Boolean)
+      .slice(0, 4);
+
+    return {
+      teamId: String(block.team?.id ?? ""),
+      teamName: block.team?.displayName ?? "",
+      teamLogo: block.team?.logos?.[0]?.href ?? block.team?.logo ?? "",
+      categories,
+    };
+  });
 
   return {
     id: gameId,
@@ -210,5 +230,6 @@ function parseMatchData(data: any, gameId: string, league: string) {
     news,
     standings,
     teamLeaders,
+    isMatchLeaders,
   };
 }
