@@ -33,6 +33,21 @@ pitchpulse/
 - Hamza ([@hamzaelmi068](https://github.com/hamzaelmi068))
 - Faiz ([@faizm10](https://github.com/faizm10))
 
+## Git commits
+
+**Required.** Husky + commitlint at the repo root reject non-conventional messages. See root `AGENTS.md` for full project context.
+
+Format: `<type>(<optional scope>): <description>`
+
+**Types:** `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`
+
+- Lowercase type; imperative subject; no period at end of subject
+- `feat` = new feature; `fix` = bug fix; `chore` = tooling/deps
+
+**Examples:** `feat: add team hub skeleton`, `fix(fotmob): retry test card on first load`, `docs: update README`
+
+When generating or suggesting commit messages, **always** use this format.
+
 ## Key Features to Build
 1. Interactive map of stadiums/host cities (Canada, Mexico, USA)
 2. Live scores & match timelines
