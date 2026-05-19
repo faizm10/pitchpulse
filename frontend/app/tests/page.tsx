@@ -85,7 +85,7 @@ const EPL_VENUES: Record<string, { name: string; city: string; longitude: number
     longitude: -0.1908,
     latitude: 51.4816,
   },
-  // MLS venues (shown on /test-mls dedicated map)
+  // MLS venues
   'mls-atl-orl': {
     name: 'Mercedes-Benz Stadium',
     city: 'Atlanta, GA',
@@ -650,9 +650,6 @@ export default function TestsIndexPage() {
         </Link>
         <Link href="/test-fotmob" className="btn" style={{ fontSize: 11, minHeight: 40, padding: '0 16px', textDecoration: 'none' }}>
           FotMob Match →
-        </Link>
-        <Link href="/test-mls" className="btn" style={{ fontSize: 11, minHeight: 40, padding: '0 16px', textDecoration: 'none' }}>
-          MLS Round 2 →
         </Link>
         <Link href="/" className="btn" style={{ fontSize: 11, minHeight: 40, padding: '0 16px', textDecoration: 'none' }}>
           ← Home
