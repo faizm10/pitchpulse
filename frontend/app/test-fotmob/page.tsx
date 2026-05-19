@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { Toaster, toast } from 'sonner';
+import { PitchPulseToaster } from '@/components/PitchPulseToaster';
+import { showMatchEventToast } from '@/lib/match-toasts';
 
 const MATCH_ID = '4813739';
 const POLL_LIVE = 12_000;
@@ -157,37 +158,6 @@ function eventIcon(typeSlug: string): string {
     case 'substitution': return '🔄';
     case 'shot-on-target': return '🎯';
     default: return '•';
-  }
-}
-
-function toastForEvent(ev: KeyEvent, homeTeam: FotmobTeam, awayTeam: FotmobTeam) {
-  const icon = eventIcon(ev.typeSlug);
-  const athlete = ev.participants[0]?.athlete ?? '';
-  const clockStr = ev.clock ? `${ev.clock} —` : '';
-
-  if (ev.scoringPlay || ev.typeSlug === 'goal' || ev.typeSlug === 'penalty-scored') {
-    const scoreStr = ev.homeScore != null && ev.awayScore != null
-      ? ` (${homeTeam.abbreviation} ${ev.homeScore}–${ev.awayScore} ${awayTeam.abbreviation})`
-      : '';
-    toast.success(`${icon} GOAL! ${athlete}${scoreStr}`, {
-      description: `${clockStr} ${ev.teamName}`,
-      duration: 8000,
-    });
-  } else if (ev.typeSlug === 'red-card' || ev.typeSlug === 'yellow-red-card') {
-    toast.error(`${icon} Red card — ${athlete}`, {
-      description: `${clockStr} ${ev.teamName}`,
-      duration: 6000,
-    });
-  } else if (ev.typeSlug === 'yellow-card') {
-    toast(`${icon} Yellow card — ${athlete}`, {
-      description: `${clockStr} ${ev.teamName}`,
-      duration: 4000,
-    });
-  } else if (ev.typeSlug === 'substitution') {
-    toast(`${icon} Sub — ${ev.text}`, {
-      description: `${clockStr} ${ev.teamName}`,
-      duration: 3500,
-    });
   }
 }
 
@@ -383,7 +353,7 @@ function EventsFeed({
         KEY EVENTS
       </h2>
       <ol style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
-        {events.map((ev) => {
+        {[...events].reverse().map((ev) => {
           const isHome = ev.teamName === homeTeam.name;
           const isAway = ev.teamName === awayTeam.name;
           const icon = eventIcon(ev.typeSlug);
@@ -847,7 +817,7 @@ export default function TestFotmobPage() {
           if (!seenEventIds.current.has(ev.id)) {
             seenEventIds.current.add(ev.id);
             if (!isInitialLoad) {
-              toastForEvent(ev, incoming.homeTeam, incoming.awayTeam);
+              showMatchEventToast(ev, incoming.homeTeam, incoming.awayTeam);
             }
           }
         }
@@ -913,7 +883,7 @@ export default function TestFotmobPage() {
 
   return (
     <div className="screen" style={{ minHeight: '100vh', maxWidth: '100vw', overflowX: 'hidden' }}>
-      <Toaster position={isMobile ? 'top-center' : 'bottom-right'} />
+      <PitchPulseToaster position={isMobile ? 'top-center' : 'bottom-right'} />
 
       {/* Header */}
       <header style={{
