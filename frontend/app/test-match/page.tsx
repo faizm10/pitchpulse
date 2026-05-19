@@ -23,13 +23,15 @@ interface KeyEvent {
   id: string;
   clock: string;
   period: number;
-  type: string;
-  typeId: string;
+  typeSlug: string;
+  typeText: string;
   text: string;
+  fullText: string;
   scoringPlay: boolean;
+  teamName: string;
   homeScore: number | null;
   awayScore: number | null;
-  participants: { athlete: string; type: string }[];
+  participants: { athlete: string; team: string }[];
 }
 
 interface StatLine {
@@ -66,6 +68,10 @@ interface StandingRow {
   losses: number;
   points: number;
   gd: number;
+  projectedPoints: number;
+  projectedGd: number;
+  projectedRank: number;
+  rankChange: number;
 }
 
 interface LeaderCategory {
@@ -96,6 +102,7 @@ interface MatchData {
   teamStats: TeamStats[];
   news: NewsItem[];
   standings: StandingRow[];
+  projectedStandings: StandingRow[];
   teamLeaders: TeamLeaders[];
   isMatchLeaders: boolean;
 }
@@ -113,11 +120,12 @@ const STAT_LABELS: Record<string, string> = {
   yellowCards: 'Yellow Cards', redCards: 'Red Cards', saves: 'Saves',
 };
 
-function eventIcon(typeId: string, scoringPlay: boolean): string {
-  if (scoringPlay) return '⚽';
-  if (typeId === '28' || typeId === '27') return '🟨';
-  if (typeId === '52' || typeId === '51') return '🟥';
-  if (typeId === '1') return '↔';
+function eventIcon(typeSlug: string, scoringPlay: boolean): string {
+  if (scoringPlay || typeSlug === 'goal' || typeSlug === 'own-goal' || typeSlug === 'penalty-scored') return '⚽';
+  if (typeSlug === 'yellow-card') return '🟨';
+  if (typeSlug === 'red-card' || typeSlug === 'yellow-red-card') return '🟥';
+  if (typeSlug === 'substitution') return '↔';
+  if (typeSlug === 'shot-on-target') return '→';
   return '•';
 }
 
@@ -215,32 +223,33 @@ function ScoreHero({ match, liveClock }: { match: MatchData; liveClock: string }
 
 // ── Events feed ───────────────────────────────────────────────────────────────
 
-function EventsFeed({ events }: { events: KeyEvent[] }) {
+function EventsFeed({ events, homeId }: { events: KeyEvent[]; homeId: string }) {
   if (!events.length) {
     return <div className="mono" style={{ fontSize: 11, color: 'var(--ink-3)', padding: '24px 0' }}>No key events yet.</div>;
   }
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       {[...events].reverse().map((ev) => {
-        const alignRight = ev.participants?.[0]?.type?.toLowerCase().includes('away');
+        // home team events align left, away events align right — fall back to left
+        const isAway = ev.teamName && homeId ? false : false; // we'll check via teamName below
+        void isAway;
         return (
           <div key={ev.id} style={{
-            display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0',
+            display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 0',
             borderBottom: '1px solid var(--rule-soft)',
-            justifyContent: alignRight ? 'flex-end' : 'flex-start',
           }}>
-            {!alignRight && <div className="mono" style={{ fontSize: 11, color: 'var(--ink-3)', minWidth: 36 }}>{ev.clock}</div>}
-            <div style={{ fontSize: 18 }}>{eventIcon(ev.typeId, ev.scoringPlay)}</div>
-            <div style={{ textAlign: alignRight ? 'right' : 'left' }}>
+            <div className="mono" style={{ fontSize: 11, color: 'var(--ink-3)', minWidth: 36, flexShrink: 0, paddingTop: 2 }}>{ev.clock}</div>
+            <div style={{ fontSize: 16, flexShrink: 0, paddingTop: 1 }}>{eventIcon(ev.typeSlug, ev.scoringPlay)}</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
               <div className="serif" style={{ fontSize: 15 }}>{ev.participants?.[0]?.athlete || ev.text}</div>
-              {ev.text && ev.participants?.[0]?.athlete && (
-                <div className="mono" style={{ fontSize: 10, color: 'var(--ink-3)' }}>{ev.text}</div>
-              )}
+              <div className="mono" style={{ fontSize: 10, color: 'var(--ink-3)', marginTop: 2 }}>
+                {ev.typeText}
+                {ev.teamName ? ` · ${ev.teamName}` : ''}
+              </div>
               {ev.scoringPlay && ev.homeScore != null && (
-                <div className="mono" style={{ fontSize: 10, color: 'var(--live)', marginTop: 2 }}>{ev.homeScore} – {ev.awayScore}</div>
+                <div className="mono" style={{ fontSize: 10, color: 'var(--live)', marginTop: 3 }}>{ev.homeScore} – {ev.awayScore}</div>
               )}
             </div>
-            {alignRight && <div className="mono" style={{ fontSize: 11, color: 'var(--ink-3)', minWidth: 36, textAlign: 'right' }}>{ev.clock}</div>}
           </div>
         );
       })}
@@ -346,40 +355,75 @@ function LeadersSection({ teamLeaders, homeId, isMatchLeaders }: {
 
 // ── Standings ─────────────────────────────────────────────────────────────────
 
-function StandingsTable({ standings, homeId, awayId }: { standings: StandingRow[]; homeId: string; awayId: string }) {
-  if (!standings.length) return null;
+function StandingsTable({
+  standings,
+  projectedStandings,
+  homeId,
+  awayId,
+  isLive,
+}: {
+  standings: StandingRow[];
+  projectedStandings: StandingRow[];
+  homeId: string;
+  awayId: string;
+  isLive: boolean;
+}) {
+  const rows = isLive && projectedStandings.length ? projectedStandings : standings;
+  if (!rows.length) return null;
+
   return (
     <div style={{ padding: '28px 32px' }}>
-      <div className="mono" style={{ fontSize: 10, letterSpacing: '0.2em', color: 'var(--ink-3)', marginBottom: 20, borderBottom: '1px solid var(--rule)', paddingBottom: 10 }}>
-        PREMIER LEAGUE TABLE
+      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', borderBottom: '1px solid var(--rule)', paddingBottom: 10, marginBottom: 16 }}>
+        <div className="mono" style={{ fontSize: 10, letterSpacing: '0.2em', color: 'var(--ink-3)' }}>
+          PREMIER LEAGUE TABLE
+        </div>
+        {isLive && (
+          <div className="mono" style={{ fontSize: 9, letterSpacing: '0.14em', color: 'var(--live)', display: 'flex', alignItems: 'center', gap: 5 }}>
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--live)', display: 'inline-block' }} />
+            IF RESULT STANDS
+          </div>
+        )}
       </div>
       <div style={{ overflowX: 'auto' }}>
         {/* Header */}
-        <div style={{ display: 'grid', gridTemplateColumns: '24px 1fr 32px 32px 32px 32px 32px 40px', gap: 8, padding: '6px 8px', borderBottom: '1px solid var(--rule)', marginBottom: 4 }}>
-          {['#', 'Team', 'P', 'W', 'D', 'L', 'GD', 'Pts'].map((h) => (
-            <div key={h} className="mono" style={{ fontSize: 9, color: 'var(--ink-3)', letterSpacing: '0.14em', textAlign: h === 'Team' ? 'left' : 'right' }}>{h}</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '20px 16px 1fr 32px 32px 32px 32px 32px 44px', gap: 6, padding: '6px 8px', borderBottom: '1px solid var(--rule)', marginBottom: 4 }}>
+          {['', '', 'Team', 'P', 'W', 'D', 'L', 'GD', 'Pts'].map((h, i) => (
+            <div key={i} className="mono" style={{ fontSize: 9, color: 'var(--ink-3)', letterSpacing: '0.14em', textAlign: h === 'Team' || h === '' ? 'left' : 'right' }}>{h}</div>
           ))}
         </div>
-        {standings.map((row) => {
+        {rows.map((row) => {
           const isHighlighted = row.teamId === homeId || row.teamId === awayId;
+          const rank = isLive ? row.projectedRank : row.rank;
+          const pts = isLive ? row.projectedPoints : row.points;
+          const gd = isLive ? row.projectedGd : row.gd;
+          const change = isLive ? row.rankChange : 0;
+
+          let changeEl: React.ReactNode = null;
+          if (isHighlighted && isLive) {
+            if (change > 0) changeEl = <span style={{ color: '#22c55e', fontSize: 10 }}>↑{change}</span>;
+            else if (change < 0) changeEl = <span style={{ color: '#ef4444', fontSize: 10 }}>↓{Math.abs(change)}</span>;
+            else changeEl = <span style={{ color: 'var(--ink-3)', fontSize: 10 }}>–</span>;
+          }
+
           return (
             <div key={row.teamId} style={{
-              display: 'grid', gridTemplateColumns: '24px 1fr 32px 32px 32px 32px 32px 40px', gap: 8,
+              display: 'grid', gridTemplateColumns: '20px 16px 1fr 32px 32px 32px 32px 32px 44px', gap: 6,
               padding: '7px 8px', borderRadius: 4, alignItems: 'center',
               background: isHighlighted ? 'var(--paper-2)' : 'transparent',
               borderLeft: isHighlighted ? '2px solid var(--pulse)' : '2px solid transparent',
             }}>
-              <div className="mono" style={{ fontSize: 11, color: 'var(--ink-3)', textAlign: 'right' }}>{row.rank || '–'}</div>
+              <div className="mono" style={{ fontSize: 11, color: 'var(--ink-3)', textAlign: 'right' }}>{rank || '–'}</div>
+              <div className="mono" style={{ fontSize: 10, textAlign: 'center', minWidth: 16 }}>{changeEl}</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
                 {row.logo && <img src={row.logo} alt={row.name} style={{ width: 18, height: 18, objectFit: 'contain', flexShrink: 0 }} />}
                 <span className={isHighlighted ? 'serif' : 'mono'} style={{ fontSize: isHighlighted ? 14 : 12, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {row.abbreviation || row.name}
                 </span>
               </div>
-              {[row.played, row.wins, row.draws, row.losses, row.gd >= 0 ? `+${row.gd}` : row.gd].map((val, i) => (
+              {[row.played, row.wins, row.draws, row.losses, gd >= 0 ? `+${gd}` : gd].map((val, i) => (
                 <div key={i} className="mono" style={{ fontSize: 11, textAlign: 'right', color: 'var(--ink-3)' }}>{val}</div>
               ))}
-              <div className="mono" style={{ fontSize: 12, textAlign: 'right', fontWeight: isHighlighted ? 700 : 400 }}>{row.points}</div>
+              <div className="mono" style={{ fontSize: 12, textAlign: 'right', fontWeight: isHighlighted ? 700 : 400 }}>{pts}</div>
             </div>
           );
         })}
@@ -456,70 +500,49 @@ const BASE_TOAST: React.CSSProperties = {
 };
 
 function toastForEvent(ev: KeyEvent, home: Team, away: Team) {
-  const typeId = ev.typeId;
+  const slug = ev.typeSlug;
   const athlete = ev.participants?.[0]?.athlete || ev.text || 'Unknown';
-  const isHome = !ev.participants?.[0]?.type?.toLowerCase().includes('away');
-  const team = isHome ? home : away;
+  const teamName = ev.teamName || '';
   const clock = ev.clock ? `${ev.clock}` : '';
-  // Always show home – away order regardless of scorer
   const scoreStr = ev.homeScore != null
     ? `${home.name}  ${ev.homeScore} – ${ev.awayScore}  ${away.name}`
     : '';
 
-  if (ev.scoringPlay) {
+  if (ev.scoringPlay || slug === 'goal' || slug === 'penalty-scored') {
     toast(`⚽  GOAL!  ${athlete}`, {
       description: scoreStr ? `${clock ? clock + '  ·  ' : ''}${scoreStr}` : clock,
       duration: 8000,
-      style: {
-        ...BASE_TOAST,
-        background: '#111',
-        color: '#f2ede3',
-        border: '1.5px solid #e63c3c',
-      },
+      style: { ...BASE_TOAST, background: '#111', color: '#f2ede3', border: '1.5px solid #e63c3c' },
     });
-  } else if (typeId === '28' || typeId === '27') {
+  } else if (slug === 'own-goal') {
+    toast(`⚽  Own Goal  —  ${athlete}`, {
+      description: scoreStr ? `${clock ? clock + '  ·  ' : ''}${scoreStr}` : clock,
+      duration: 8000,
+      style: { ...BASE_TOAST, background: '#111', color: '#f2ede3', border: '1.5px solid #e63c3c' },
+    });
+  } else if (slug === 'yellow-card') {
     toast(`🟨  Yellow Card  —  ${athlete}`, {
-      description: `${clock ? clock + '  ·  ' : ''}${team.name}`,
+      description: `${clock ? clock + '  ·  ' : ''}${teamName}`,
       duration: 5000,
-      style: {
-        ...BASE_TOAST,
-        background: '#fffbea',
-        color: '#1a1a1a',
-        border: '1.5px solid #e6b800',
-      },
+      style: { ...BASE_TOAST, background: '#fffbea', color: '#1a1a1a', border: '1.5px solid #e6b800' },
     });
-  } else if (typeId === '52' || typeId === '51') {
+  } else if (slug === 'red-card' || slug === 'yellow-red-card') {
     toast(`🟥  Red Card  —  ${athlete}`, {
-      description: `${clock ? clock + '  ·  ' : ''}${team.name}`,
+      description: `${clock ? clock + '  ·  ' : ''}${teamName}`,
       duration: 7000,
-      style: {
-        ...BASE_TOAST,
-        background: '#1e0505',
-        color: '#f2ede3',
-        border: '1.5px solid #c0392b',
-      },
+      style: { ...BASE_TOAST, background: '#1e0505', color: '#f2ede3', border: '1.5px solid #c0392b' },
     });
-  } else if (typeId === '1') {
+  } else if (slug === 'substitution') {
     toast(`↔  Substitution  —  ${athlete}`, {
-      description: `${clock ? clock + '  ·  ' : ''}${team.name}`,
+      description: `${clock ? clock + '  ·  ' : ''}${teamName}`,
       duration: 4000,
-      style: {
-        ...BASE_TOAST,
-        background: 'var(--paper, #f2ede3)',
-        color: 'var(--ink, #1a1a1a)',
-        border: '1px solid #ccc',
-      },
+      style: { ...BASE_TOAST, background: 'var(--paper, #f2ede3)', color: 'var(--ink, #1a1a1a)', border: '1px solid #ccc' },
     });
   } else {
-    toast(ev.text || ev.type, {
-      description: `${clock ? clock + '  ·  ' : ''}${team.name}`,
+    toast(ev.text || ev.typeText, {
+      description: `${clock ? clock + '  ·  ' : ''}${teamName}`,
       duration: 4000,
-      style: {
-        ...BASE_TOAST,
-        background: 'var(--paper, #f2ede3)',
-        color: 'var(--ink, #1a1a1a)',
-        border: '1px solid #ccc',
-      },
+      style: { ...BASE_TOAST, background: 'var(--paper, #f2ede3)', color: 'var(--ink, #1a1a1a)', border: '1px solid #ccc' },
     });
   }
 }
@@ -658,9 +681,9 @@ export default function TestMatchPage() {
             style={{ fontSize: 10, padding: '4px 12px', background: 'var(--pulse)', color: '#fff', border: 'none' }}
             onClick={() => {
               const fakeEvents: KeyEvent[] = [
-                { id: 'demo-goal', clock: "23'", period: 1, type: 'Goal', typeId: 'goal', text: 'Goal scored!', scoringPlay: true, homeScore: 1, awayScore: 0, participants: [{ athlete: 'Erling Haaland', type: 'away' }] },
-                { id: 'demo-yellow', clock: "45+2'", period: 1, type: 'Yellow Card', typeId: '27', text: 'Foul', scoringPlay: false, homeScore: null, awayScore: null, participants: [{ athlete: 'Lewis Cook', type: 'home' }] },
-                { id: 'demo-red', clock: "78'", period: 2, type: 'Red Card', typeId: '52', text: 'Serious foul', scoringPlay: false, homeScore: null, awayScore: null, participants: [{ athlete: 'Marcos Senesi', type: 'home' }] },
+                { id: 'demo-goal', clock: "23'", period: 1, typeSlug: 'goal', typeText: 'Goal', text: 'Goal scored!', fullText: 'Goal scored!', scoringPlay: true, teamName: match.awayTeam.name, homeScore: 1, awayScore: 0, participants: [{ athlete: 'Erling Haaland', team: match.awayTeam.name }] },
+                { id: 'demo-yellow', clock: "45+2'", period: 1, typeSlug: 'yellow-card', typeText: 'Yellow Card', text: 'Foul', fullText: 'Foul', scoringPlay: false, teamName: match.homeTeam.name, homeScore: null, awayScore: null, participants: [{ athlete: 'Lewis Cook', team: match.homeTeam.name }] },
+                { id: 'demo-red', clock: "78'", period: 2, typeSlug: 'red-card', typeText: 'Red Card', text: 'Serious foul', fullText: 'Serious foul', scoringPlay: false, teamName: match.homeTeam.name, homeScore: null, awayScore: null, participants: [{ athlete: 'Marcos Senesi', team: match.homeTeam.name }] },
               ];
               if (!match) return;
               fakeEvents.forEach((ev, i) => {
@@ -690,7 +713,7 @@ export default function TestMatchPage() {
           <div className="mono" style={{ fontSize: 10, letterSpacing: '0.2em', color: 'var(--ink-3)', marginBottom: 16, borderBottom: '1px solid var(--rule)', paddingBottom: 10 }}>
             KEY EVENTS ({match.keyEvents.length})
           </div>
-          <EventsFeed events={match.keyEvents} />
+          <EventsFeed events={match.keyEvents} homeId={match.homeTeam.id} />
         </div>
         <div style={{ padding: '28px 32px' }}>
           <div className="mono" style={{ fontSize: 10, letterSpacing: '0.2em', color: 'var(--ink-3)', marginBottom: 16, borderBottom: '1px solid var(--rule)', paddingBottom: 10 }}>
@@ -727,7 +750,13 @@ export default function TestMatchPage() {
       {/* Standings + raw response */}
       <div style={{ display: 'grid', gridTemplateColumns: match.standings.length ? '1fr 1fr' : '1fr', borderBottom: '1px solid var(--rule)' }}>
         {match.standings.length > 0 && (
-          <StandingsTable standings={match.standings} homeId={match.homeTeam.id} awayId={match.awayTeam.id} />
+          <StandingsTable
+            standings={match.standings}
+            projectedStandings={match.projectedStandings ?? []}
+            homeId={match.homeTeam.id}
+            awayId={match.awayTeam.id}
+            isLive={match.state === 'in'}
+          />
         )}
         <div style={{ padding: '28px 32px', borderLeft: match.standings.length ? '1px solid var(--rule)' : 'none' }}>
           <details>

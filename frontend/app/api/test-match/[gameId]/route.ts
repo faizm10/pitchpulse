@@ -77,25 +77,47 @@ function parseMatchData(data: any, gameId: string, league: string) {
     };
   }
 
-  // ── Match events ──────────────────────────────────────────────────────────
-  const plays: any[] = data.plays ?? [];
-  const keyEvents = plays
-    .filter((p: any) => p.scoringPlay || ["28", "27", "52", "51", "1"].includes(String(p.type?.id ?? "")))
-    .map((p: any) => ({
-      id: String(p.id ?? Math.random()),
+  // ── Match events (from commentary[].play — ESPN soccer uses this, not plays[]) ──
+  const NOTABLE_TYPES = new Set([
+    "goal", "own-goal", "penalty-scored", "penalty-missed",
+    "yellow-card", "red-card", "yellow-red-card",
+    "substitution",
+    "shot-on-target",
+  ]);
+
+  // Deduplicate by play id (ESPN sends duplicate commentary lines for the same play)
+  const seenPlayIds = new Set<string>();
+  const keyEvents: any[] = [];
+
+  for (const item of (data.commentary ?? []) as any[]) {
+    const p = item.play;
+    if (!p?.id) continue;
+    const typeSlug: string = p.type?.type ?? "";
+    const isNotable = p.scoringPlay || NOTABLE_TYPES.has(typeSlug);
+    if (!isNotable) continue;
+    if (seenPlayIds.has(String(p.id))) continue;
+    seenPlayIds.add(String(p.id));
+
+    const participants: any[] = (p.participants ?? []).map((pt: any) => ({
+      athlete: pt.athlete?.displayName ?? pt.athlete?.shortName ?? "",
+      team: p.team?.displayName ?? "",
+    }));
+
+    keyEvents.push({
+      id: String(p.id),
       clock: p.clock?.displayValue ?? "",
       period: p.period?.number ?? 1,
-      type: p.type?.text ?? p.type?.id ?? "event",
-      typeId: String(p.type?.id ?? ""),
-      text: p.text ?? p.shortText ?? "",
+      typeSlug,
+      typeText: p.type?.text ?? typeSlug,
+      text: p.shortText ?? p.text ?? "",
+      fullText: item.text ?? p.text ?? "",
       scoringPlay: p.scoringPlay ?? false,
+      teamName: p.team?.displayName ?? "",
       homeScore: p.homeScore ?? null,
       awayScore: p.awayScore ?? null,
-      participants: (p.participants ?? []).map((pt: any) => ({
-        athlete: pt.athlete?.displayName ?? pt.athlete?.shortName ?? "",
-        type: pt.type ?? "",
-      })),
-    }));
+      participants,
+    });
+  }
 
   // ── Boxscore stats ────────────────────────────────────────────────────────
   const boxTeams: any[] = data.boxscore?.teams ?? [];
@@ -171,6 +193,37 @@ function parseMatchData(data: any, gameId: string, league: string) {
     };
   }).sort((a: any, b: any) => a.rank - b.rank || b.points - a.points);
 
+  // ── Projected standings (what table looks like if result stands now) ──────────
+  const homeScoreInt = parseInt(home?.score?.displayValue ?? home?.score?.value ?? home?.score ?? "0", 10);
+  const awayScoreInt = parseInt(away?.score?.displayValue ?? away?.score?.value ?? away?.score ?? "0", 10);
+  const homeTeamId = String(home?.team?.id ?? "");
+  const awayTeamId = String(away?.team?.id ?? "");
+  const canProject = state !== "pre" && standings.length > 0 && !isNaN(homeScoreInt) && !isNaN(awayScoreInt);
+
+  const projectedStandings = canProject
+    ? standings
+        .map((row: any) => {
+          let ptsDelta = 0, gdDelta = 0;
+          if (row.teamId === homeTeamId) {
+            if (homeScoreInt > awayScoreInt) { ptsDelta = 3; gdDelta = homeScoreInt - awayScoreInt; }
+            else if (homeScoreInt === awayScoreInt) { ptsDelta = 1; }
+            else { gdDelta = homeScoreInt - awayScoreInt; }
+          } else if (row.teamId === awayTeamId) {
+            if (awayScoreInt > homeScoreInt) { ptsDelta = 3; gdDelta = awayScoreInt - homeScoreInt; }
+            else if (awayScoreInt === homeScoreInt) { ptsDelta = 1; }
+            else { gdDelta = awayScoreInt - homeScoreInt; }
+          }
+          return { ...row, projectedPoints: row.points + ptsDelta, projectedGd: row.gd + gdDelta };
+        })
+        .sort((a: any, b: any) => b.projectedPoints - a.projectedPoints || b.projectedGd - a.projectedGd)
+        .map((row: any, i: number) => ({
+          ...row,
+          projectedRank: i + 1,
+          // positive = moved up, negative = moved down, 0 = same
+          rankChange: row.rank - (i + 1),
+        }))
+    : standings.map((row: any) => ({ ...row, projectedPoints: row.points, projectedGd: row.gd, projectedRank: row.rank, rankChange: 0 }));
+
   // ── Team leaders ──────────────────────────────────────────────────────────
   // During a live match ESPN returns match leaders (shots, passes, saves in
   // this game). Pre/post it returns season leaders (goals, assists, etc.).
@@ -229,6 +282,7 @@ function parseMatchData(data: any, gameId: string, league: string) {
     teamStats,
     news,
     standings,
+    projectedStandings,
     teamLeaders,
     isMatchLeaders,
   };
