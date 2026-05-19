@@ -49,3 +49,17 @@ pitchpulse/
 - Use this file for stable facts, not day-to-day notes.
 - Record mutable decisions, open questions, and implementation assumptions in `memory.md`.
 - Prefer changes that preserve the existing frontend direction unless the team explicitly decides to rework it.
+
+## Git commits
+
+Husky + commitlint enforce [Conventional Commits](https://www.conventionalcommits.org/) at the repo root. When Codex drafts or runs `git commit`, use:
+
+```
+<type>(<optional scope>): <description>
+```
+
+**Types:** `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`
+
+Examples: `feat: wire standings to ESPN`, `fix(api): handle missing match id`, `chore: add husky hooks`
+
+Full rules and examples are in root `AGENTS.md` § Git commits.
