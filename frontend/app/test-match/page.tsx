@@ -148,8 +148,11 @@ function ago(ts: number): string {
 
 // ── Score hero ────────────────────────────────────────────────────────────────
 
-function ScoreHero({ match }: { match: MatchData }) {
+function ScoreHero({ match, liveClock }: { match: MatchData; liveClock: string }) {
   const { homeTeam, awayTeam, state, statusDetail, displayClock, date } = match;
+  // Use the locally-ticking clock when live, fall back to ESPN value
+  const clockDisplay = state === 'in' ? (liveClock || displayClock) : displayClock;
+
   return (
     <div style={{
       display: 'grid', gridTemplateColumns: 'minmax(0,1fr) auto minmax(0,1fr)', gap: 16,
@@ -169,15 +172,19 @@ function ScoreHero({ match }: { match: MatchData }) {
       </div>
 
       {/* Centre status */}
-      <div style={{ textAlign: 'center', minWidth: 72, flexShrink: 0 }}>
+      <div style={{ textAlign: 'center', minWidth: 80, flexShrink: 0 }}>
         {state === 'in' && (
           <>
             <div className="mono" style={{ fontSize: 10, color: 'var(--live)', letterSpacing: '0.2em', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
               <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--live)', display: 'inline-block' }} />
               LIVE
             </div>
-            {displayClock && <div className="mono" style={{ fontSize: 20, marginTop: 5 }}>{displayClock}</div>}
-            <div className="serif" style={{ fontSize: 12, fontStyle: 'italic', color: 'var(--ink-3)', marginTop: 3 }}>{statusDetail}</div>
+            <div className="mono" style={{ fontSize: 22, marginTop: 5, fontVariantNumeric: 'tabular-nums' }}>
+              {clockDisplay || '–'}
+            </div>
+            {statusDetail && (
+              <div className="serif" style={{ fontSize: 11, fontStyle: 'italic', color: 'var(--ink-3)', marginTop: 3 }}>{statusDetail}</div>
+            )}
           </>
         )}
         {state === 'post' && (
@@ -494,13 +501,33 @@ function toastForEvent(ev: KeyEvent, home: Team, away: Team) {
   }
 }
 
+// ── Clock ticker helpers ──────────────────────────────────────────────────────
+
+// Parse "45+2'" or "7'" into total seconds
+function parseClockToSeconds(clock: string): number {
+  const m = clock.match(/^(\d+)(?:\+(\d+))?/);
+  if (!m) return 0;
+  const base = parseInt(m[1], 10);
+  const added = m[2] ? parseInt(m[2], 10) : 0;
+  return (base + added) * 60;
+}
+
+// Render total seconds back to "MM:SS" display
+function secondsToClock(s: number): string {
+  const m = Math.floor(s / 60);
+  const sec = s % 60;
+  return `${m}:${String(sec).padStart(2, '0')}`;
+}
+
 export default function TestMatchPage() {
   const [match, setMatch] = useState<MatchData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [lastFetched, setLastFetched] = useState<number | null>(null);
   const [tick, setTick] = useState(0);
-  // Track seen event IDs so we only toast genuinely new ones
+  const [liveClock, setLiveClock] = useState<string>('');
+  // { seconds: number at fetch time, fetchedAt: ms timestamp }
+  const clockBase = useRef<{ seconds: number; fetchedAt: number } | null>(null);
   const seenEventIds = useRef<Set<string>>(new Set());
   const isFirstLoad = useRef(true);
 
@@ -529,6 +556,16 @@ export default function TestMatchPage() {
       setMatch(incoming);
       setError(null);
       setLastFetched(Date.now());
+
+      // Seed the live clock base so the ticker can count up between polls
+      if (incoming.state === 'in' && incoming.displayClock) {
+        clockBase.current = {
+          seconds: parseClockToSeconds(incoming.displayClock),
+          fetchedAt: Date.now(),
+        };
+      } else {
+        clockBase.current = null;
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load match');
     } finally {
@@ -544,11 +581,17 @@ export default function TestMatchPage() {
     return () => clearInterval(id);
   }, [fetchMatch, match?.state]);
 
+  // 1-second ticker: drives live clock AND the "X ago" counter
   useEffect(() => {
-    const id = setInterval(() => setTick((t) => t + 1), 5000);
+    const id = setInterval(() => {
+      setTick((t) => t + 1);
+      if (clockBase.current) {
+        const elapsed = Math.floor((Date.now() - clockBase.current.fetchedAt) / 1000);
+        setLiveClock(secondsToClock(clockBase.current.seconds + elapsed));
+      }
+    }, 1000);
     return () => clearInterval(id);
   }, []);
-  void tick;
 
   if (loading) {
     return (
@@ -608,7 +651,7 @@ export default function TestMatchPage() {
       </div>
 
       {/* Score */}
-      <ScoreHero match={match} />
+      <ScoreHero match={match} liveClock={liveClock} />
 
       {/* Venue */}
       <div style={{ padding: '10px 32px', borderBottom: '1px solid var(--rule)', background: 'var(--paper-2)' }}>
