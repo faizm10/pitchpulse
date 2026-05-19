@@ -25,6 +25,7 @@ pitchpulse/
 | Frontend | Next.js 14, React 18, TypeScript, plain CSS (no Tailwind) |
 | Map | MapLibre GL + Carto basemaps; 16 venues in `frontend/data/venues.ts` |
 | Live data | ESPN public site API (proxied via Next.js `app/api/*` routes) |
+| Supplemental | FotMob WC league 77 — squads, fixtures, match resolve (`/api/fotmob/*`, `FOTMOB_ENABLED=1`) |
 | Predictions | FastAPI + scikit-learn RandomForest (`backend/`) |
 | ML data | `backend/app/data/world_cup_matches.csv` (1930–2018 tournament matches) |
 
@@ -40,8 +41,8 @@ pitchpulse/
 
 ## Frontend (`frontend/`)
 
-- **Env:** `PREDICT_API_URL=http://127.0.0.1:8001` in `.env.local`
-- **API routes:** `/api/scores`, `/api/standings`, `/api/news`, `/api/match/[id]`, `/api/predict` (proxy to FastAPI)
+- **Env:** `PREDICT_API_URL=http://127.0.0.1:8001`, `FOTMOB_ENABLED=1` in `.env.local` (see `.env.example`)
+- **API routes:** `/api/scores`, `/api/standings`, `/api/news`, `/api/match/[id]`, `/api/predict` (proxy to FastAPI); `/api/fotmob/league`, `/api/fotmob/team/[id]`, `/api/fotmob/team-by-code/[code]`, `/api/fotmob/match/resolve`
 
 ### Live (ESPN + ML)
 
@@ -52,11 +53,13 @@ pitchpulse/
 - AI prediction bars + typewriter narrative (`MatchPrediction`, `lib/predict.ts`)
 - Interactive map with stadium markers (`DashboardMap`, `StadiumMarkers`)
 - Home rail live summary (first live match → predict)
+- Team hubs (`/team/[code]`) — FotMob squads + WC fixtures; player profiles (`/player/[id]?team=`)
+- Match detail FotMob block — group/fixture context; xG when matchDetails is reachable
 
 ### Still mock / placeholder
 
 - Knockout bracket (`/bracket`) — `lib/data.ts`
-- Player stats (`/stats`) — `lib/data.ts`
+- Player stats leaderboard (`/stats`) — `lib/data.ts` (team squads are live via FotMob)
 - Stadium pages (`/stadium/[id]`) — mock `StadiumView`; map uses `data/venues.ts`
 - Country host pages — mock `CountryView`
 - Match timeline & possession blocks — hidden in `MatchDetail` until ESPN play-by-play
@@ -94,7 +97,7 @@ Open http://localhost:3000
 ## Near-Term Backlog
 
 1. Regenerate CSV from Kaggle for real knockout `stage` labels (stage-weight feature)
-2. Wire bracket and stats to live APIs
+2. Wire bracket and stats to live APIs — see [.codex/plans/fotmob-integration.md](.codex/plans/fotmob-integration.md) (FotMob, league id 77)
 3. Align stadium detail pages with `data/venues.ts`
 4. ESPN play-by-play for match timeline
 5. Persist My World Cup preferences beyond localStorage
