@@ -49,7 +49,7 @@ export function MyWorldCup() {
             gap: 8, maxHeight: 560, overflow: 'auto', paddingRight: 4,
           }}>
             {all.map((t) => (
-              <div key={t.code} onClick={() => setMyTeam(t.code)} style={{
+              <div key={t.code} onClick={() => setMyTeam(t.code)} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter') setMyTeam(t.code); }} style={{
                 padding: 14, border: '1px solid var(--rule)', borderRadius: 10,
                 background: myTeam === t.code ? 'var(--ink)' : 'var(--paper)',
                 color: myTeam === t.code ? 'var(--paper)' : 'inherit',
@@ -59,7 +59,22 @@ export function MyWorldCup() {
               }}>
                 <Flag code={t.code} w={24} h={16} />
                 <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.name}</div>
+                  <Link
+                    href={`/team/${t.code}`}
+                    onClick={(e) => e.stopPropagation()}
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 500,
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      color: 'inherit',
+                      textDecoration: 'none',
+                      display: 'block',
+                    }}
+                  >
+                    {t.name}
+                  </Link>
                   <div className="mono" style={{ fontSize: 9, opacity: 0.6, letterSpacing: '0.08em' }}>GRP {t.group}</div>
                 </div>
               </div>
