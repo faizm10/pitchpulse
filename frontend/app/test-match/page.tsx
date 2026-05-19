@@ -94,7 +94,9 @@ interface MatchData {
   state: 'pre' | 'in' | 'post';
   statusDetail: string;
   statusShort: string;
+  statusTypeName: string;
   displayClock: string;
+  period: number;
   homeTeam: Team;
   awayTeam: Team;
   venue: { name: string; city: string; country: string };
@@ -181,11 +183,19 @@ function ago(ts: number): string {
   return `${Math.floor(s / 60)}m ago`;
 }
 
+function isHalftime(m: Pick<MatchData, 'statusTypeName' | 'statusDetail' | 'statusShort'>): boolean {
+  if (m.statusTypeName === 'STATUS_HALFTIME') return true;
+  const detail = (m.statusDetail ?? '').toUpperCase();
+  const short = (m.statusShort ?? '').toUpperCase();
+  return detail === 'HT' || short === 'HT' || /halftime/i.test(m.statusDetail ?? '');
+}
+
 // ── Score hero ────────────────────────────────────────────────────────────────
 
 function ScoreHero({ match, liveClock, isMobile }: { match: MatchData; liveClock: string; isMobile: boolean }) {
   const { homeTeam, awayTeam, state, statusDetail, displayClock, date } = match;
-  const clockDisplay = state === 'in' ? (liveClock || displayClock) : displayClock;
+  const ht = isHalftime(match);
+  const clockDisplay = state === 'in' && !ht ? (liveClock || displayClock) : displayClock;
   const pad = isMobile ? '20px 16px' : '36px 32px';
   const logoSize = isMobile ? 44 : 64;
   const nameFontSize = isMobile ? 18 : 28;
@@ -256,17 +266,29 @@ function ScoreHero({ match, liveClock, isMobile }: { match: MatchData; liveClock
               <span aria-hidden="true" style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--live)', display: 'inline-block' }} />
               <span className="sr-only">Live match — </span>LIVE
             </div>
-            <div
-              className="mono"
-              aria-live="polite"
-              aria-atomic="true"
-              aria-label={`Match clock: ${clockDisplay}`}
-              style={{ fontSize: isMobile ? 18 : 22, marginTop: 5, fontVariantNumeric: 'tabular-nums' }}
-            >
-              {clockDisplay || '–'}
-            </div>
-            {statusDetail && (
-              <div className="serif" style={{ fontSize: isMobile ? 10 : 11, fontStyle: 'italic', color: 'var(--ink-3)', marginTop: 3 }}>{statusDetail}</div>
+            {ht ? (
+              <div
+                className="mono"
+                aria-label="Halftime"
+                style={{ fontSize: isMobile ? 22 : 28, marginTop: 8, letterSpacing: '0.12em', fontWeight: 500 }}
+              >
+                HT
+              </div>
+            ) : (
+              <>
+                <div
+                  className="mono"
+                  aria-live="polite"
+                  aria-atomic="true"
+                  aria-label={`Match clock: ${clockDisplay}`}
+                  style={{ fontSize: isMobile ? 18 : 22, marginTop: 5, fontVariantNumeric: 'tabular-nums' }}
+                >
+                  {clockDisplay || '–'}
+                </div>
+                {statusDetail && statusDetail.toUpperCase() !== 'HT' && (
+                  <div className="serif" style={{ fontSize: isMobile ? 10 : 11, fontStyle: 'italic', color: 'var(--ink-3)', marginTop: 3 }}>{statusDetail}</div>
+                )}
+              </>
             )}
           </>
         )}
@@ -779,10 +801,14 @@ function toastForEvent(ev: KeyEvent, home: Team, away: Team) {
 
 // ── Clock helpers ─────────────────────────────────────────────────────────────
 
-function parseClockToSeconds(clock: string): number {
-  const m = clock.match(/^(\d+)(?:\+(\d+))?/);
-  if (!m) return 0;
-  return (parseInt(m[1], 10) + (m[2] ? parseInt(m[2], 10) : 0)) * 60;
+function parseClockToSeconds(clock: string, period = 1): number {
+  const cleaned = clock.replace(/'/g, '').trim();
+  const m = cleaned.match(/^(\d+)(?:\+(\d+))?/);
+  if (!m) return period >= 2 ? 45 * 60 : 0;
+  let minutes = parseInt(m[1], 10) + (m[2] ? parseInt(m[2], 10) : 0);
+  // ESPN 2nd-half clocks are often 1'–44' relative to the half; map to match minute.
+  if (period >= 2 && minutes < 45) minutes += 45;
+  return minutes * 60;
 }
 
 function secondsToClock(s: number): string {
@@ -817,6 +843,7 @@ export default function TestMatchPage() {
   const [, setTick] = useState(0);
   const [liveClock, setLiveClock] = useState<string>('');
   const clockBase = useRef<{ seconds: number; fetchedAt: number } | null>(null);
+  const wasHalftime = useRef(false);
   const seenEventIds = useRef<Set<string>>(new Set());
   const isFirstLoad = useRef(true);
 
@@ -845,9 +872,26 @@ export default function TestMatchPage() {
       setError(null);
       setLastFetched(Date.now());
 
-      if (incoming.state === 'in' && incoming.displayClock) {
-        clockBase.current = { seconds: parseClockToSeconds(incoming.displayClock), fetchedAt: Date.now() };
+      const ht = isHalftime(incoming);
+      if (incoming.state === 'in' && ht) {
+        wasHalftime.current = true;
+        clockBase.current = null;
+        setLiveClock('');
+      } else if (incoming.state === 'in') {
+        const period = incoming.period ?? 1;
+        let secs: number;
+        if (wasHalftime.current && period >= 2) {
+          wasHalftime.current = false;
+          secs = 45 * 60;
+        } else if (incoming.displayClock) {
+          secs = parseClockToSeconds(incoming.displayClock, period);
+        } else {
+          secs = period >= 2 ? 45 * 60 : 0;
+        }
+        clockBase.current = { seconds: secs, fetchedAt: Date.now() };
+        setLiveClock(secondsToClock(secs));
       } else {
+        wasHalftime.current = false;
         clockBase.current = null;
       }
     } catch (e) {
@@ -868,13 +912,13 @@ export default function TestMatchPage() {
   useEffect(() => {
     const id = setInterval(() => {
       setTick((t) => t + 1);
-      if (clockBase.current) {
+      if (clockBase.current && match && !isHalftime(match)) {
         const elapsed = Math.floor((Date.now() - clockBase.current.fetchedAt) / 1000);
         setLiveClock(secondsToClock(clockBase.current.seconds + elapsed));
       }
     }, 1000);
     return () => clearInterval(id);
-  }, []);
+  }, [match?.statusTypeName, match?.statusDetail, match?.statusShort]);
 
   if (loading) {
     return (

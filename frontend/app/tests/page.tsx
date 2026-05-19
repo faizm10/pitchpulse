@@ -77,6 +77,48 @@ function stateColor(state: LiveInfo['state']): string {
   return 'var(--ink-3)';
 }
 
+const CARD_FETCH_RETRIES = 3;
+const CARD_RETRY_DELAY_MS = 500;
+
+function matchFromPayload(m: Record<string, unknown>): LiveInfo {
+  const home = m.homeTeam as LiveInfo['homeTeam'];
+  const away = m.awayTeam as LiveInfo['awayTeam'];
+  return {
+    state: m.state as LiveInfo['state'],
+    homeTeam: home,
+    awayTeam: away,
+    statusDetail: (m.statusDetail as string) ?? '',
+    liveClock: (m.liveClock as string) ?? (m.displayClock as string) ?? '',
+    league: (m.league as string) ?? '',
+    round: m.round as string | undefined,
+  };
+}
+
+async function fetchMatchCard(
+  apiPath: string,
+  signal: AbortSignal,
+): Promise<LiveInfo> {
+  let lastErr: unknown;
+  for (let attempt = 0; attempt < CARD_FETCH_RETRIES; attempt++) {
+    if (signal.aborted) throw new DOMException('Aborted', 'AbortError');
+    try {
+      const res = await fetch(apiPath, { signal, cache: 'no-store' });
+      const data = await res.json();
+      if (!res.ok || !data.match) {
+        throw new Error(typeof data.error === 'string' ? data.error : `HTTP ${res.status}`);
+      }
+      return matchFromPayload(data.match);
+    } catch (err) {
+      if (signal.aborted) throw err;
+      lastErr = err;
+      if (attempt < CARD_FETCH_RETRIES - 1) {
+        await new Promise((r) => setTimeout(r, CARD_RETRY_DELAY_MS * (attempt + 1)));
+      }
+    }
+  }
+  throw lastErr;
+}
+
 // ── Match card ────────────────────────────────────────────────────────────────
 
 function MatchCard({ game, isMobile }: { game: TestGame; isMobile: boolean }) {
@@ -85,34 +127,29 @@ function MatchCard({ game, isMobile }: { game: TestGame; isMobile: boolean }) {
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    let cancelled = false;
+    const controller = new AbortController();
+    let initialLoad = true;
+
     async function load() {
       try {
-        const res = await fetch(game.apiPath);
-        const data = await res.json();
-        if (!res.ok || !data.match) throw new Error();
-        const m = data.match;
-        if (!cancelled) {
-          setInfo({
-            state: m.state,
-            homeTeam: m.homeTeam,
-            awayTeam: m.awayTeam,
-            statusDetail: m.statusDetail ?? '',
-            liveClock: m.liveClock ?? m.displayClock ?? '',
-            league: m.league,
-            round: m.round,
-          });
-        }
-      } catch {
-        if (!cancelled) setError(true);
+        const next = await fetchMatchCard(game.apiPath, controller.signal);
+        setInfo(next);
+        setError(false);
+      } catch (err) {
+        if (controller.signal.aborted) return;
+        setError(true);
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!controller.signal.aborted) setLoading(false);
+        initialLoad = false;
       }
     }
+
     load();
-    // Poll live games faster
     const interval = setInterval(load, 20_000);
-    return () => { cancelled = true; clearInterval(interval); };
+    return () => {
+      controller.abort();
+      clearInterval(interval);
+    };
   }, [game.apiPath]);
 
   const logoSize = isMobile ? 40 : 52;

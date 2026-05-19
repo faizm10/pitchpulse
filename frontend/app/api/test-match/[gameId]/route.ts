@@ -272,6 +272,7 @@ function parseMatchData(data: any, gameId: string, league: string) {
     state,
     statusDetail: status?.type?.detail ?? status?.type?.description ?? "",
     statusShort: status?.type?.shortDetail ?? "",
+    statusTypeName: status?.type?.name ?? "",
     displayClock: status?.displayClock ?? "",
     period: status?.period ?? 1,
     homeTeam: buildTeam(home),
