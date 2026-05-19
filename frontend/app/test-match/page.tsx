@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { Toaster, toast } from 'sonner';
+import { PitchPulseToaster } from '@/components/PitchPulseToaster';
+import { showMatchEventToast } from '@/lib/match-toasts';
 import { TestMatchSkeleton } from '@/components/skeleton/TestMatchSkeleton';
 
 const GAME_ID = '740958';
@@ -739,67 +740,6 @@ function NewsSection({ news, isMobile }: { news: NewsItem[]; isMobile: boolean }
   );
 }
 
-// ── Toast helpers ─────────────────────────────────────────────────────────────
-
-const BASE_TOAST: React.CSSProperties = {
-  fontFamily: 'var(--font-mono, ui-monospace, monospace)',
-  fontSize: 12,
-  letterSpacing: '0.04em',
-  borderRadius: 8,
-  padding: '14px 16px',
-  boxShadow: '0 4px 24px rgba(0,0,0,0.18)',
-  minWidth: 260,
-  maxWidth: 340,
-};
-
-function toastForEvent(ev: KeyEvent, home: Team, away: Team) {
-  const slug = ev.typeSlug;
-  const athlete = ev.participants?.[0]?.athlete || ev.text || 'Unknown';
-  const teamName = ev.teamName || '';
-  const clock = ev.clock ? `${ev.clock}` : '';
-  const scoreStr = ev.homeScore != null
-    ? `${home.name}  ${ev.homeScore} – ${ev.awayScore}  ${away.name}`
-    : '';
-
-  if (ev.scoringPlay || slug === 'goal' || slug === 'penalty-scored') {
-    toast(`⚽  GOAL!  ${athlete}`, {
-      description: scoreStr ? `${clock ? clock + '  ·  ' : ''}${scoreStr}` : clock,
-      duration: 8000,
-      style: { ...BASE_TOAST, background: '#111', color: '#f2ede3', border: '1.5px solid #e63c3c' },
-    });
-  } else if (slug === 'own-goal') {
-    toast(`⚽  Own Goal  —  ${athlete}`, {
-      description: scoreStr ? `${clock ? clock + '  ·  ' : ''}${scoreStr}` : clock,
-      duration: 8000,
-      style: { ...BASE_TOAST, background: '#111', color: '#f2ede3', border: '1.5px solid #e63c3c' },
-    });
-  } else if (slug === 'yellow-card') {
-    toast(`🟨  Yellow Card  —  ${athlete}`, {
-      description: `${clock ? clock + '  ·  ' : ''}${teamName}`,
-      duration: 5000,
-      style: { ...BASE_TOAST, background: '#fffbea', color: '#1a1a1a', border: '1.5px solid #e6b800' },
-    });
-  } else if (slug === 'red-card' || slug === 'yellow-red-card') {
-    toast(`🟥  Red Card  —  ${athlete}`, {
-      description: `${clock ? clock + '  ·  ' : ''}${teamName}`,
-      duration: 7000,
-      style: { ...BASE_TOAST, background: '#1e0505', color: '#f2ede3', border: '1.5px solid #c0392b' },
-    });
-  } else if (slug === 'substitution') {
-    toast(`↔  Substitution  —  ${athlete}`, {
-      description: `${clock ? clock + '  ·  ' : ''}${teamName}`,
-      duration: 4000,
-      style: { ...BASE_TOAST, background: 'var(--paper, #f2ede3)', color: 'var(--ink, #1a1a1a)', border: '1px solid #ccc' },
-    });
-  } else {
-    toast(ev.text || ev.typeText, {
-      description: `${clock ? clock + '  ·  ' : ''}${teamName}`,
-      duration: 4000,
-      style: { ...BASE_TOAST, background: 'var(--paper, #f2ede3)', color: 'var(--ink, #1a1a1a)', border: '1px solid #ccc' },
-    });
-  }
-}
-
 // ── Clock helpers ─────────────────────────────────────────────────────────────
 
 function parseClockToSeconds(clock: string, period = 1): number {
@@ -865,7 +805,7 @@ export default function TestMatchPage() {
           .filter((ev) => !seenEventIds.current.has(ev.id))
           .forEach((ev) => {
             seenEventIds.current.add(ev.id);
-            toastForEvent(ev, incoming.homeTeam, incoming.awayTeam);
+            showMatchEventToast(ev, incoming.homeTeam, incoming.awayTeam);
           });
       }
 
@@ -943,7 +883,7 @@ export default function TestMatchPage() {
 
   return (
     <div className="screen" style={{ minHeight: '100vh', maxWidth: '100vw', overflowX: 'hidden' }}>
-      <Toaster position={isMobile ? 'top-center' : 'bottom-right'} expand={!isMobile} gap={8} />
+      <PitchPulseToaster position={isMobile ? 'top-center' : 'bottom-right'} expand={!isMobile} />
 
       {/* ── Header ── */}
       <header
@@ -990,7 +930,7 @@ export default function TestMatchPage() {
                   { id: 'demo-yellow', clock: "45+2'", period: 1, typeSlug: 'yellow-card', typeText: 'Yellow Card', text: 'Foul', fullText: 'Foul', scoringPlay: false, teamName: match.homeTeam.name, homeScore: null, awayScore: null, participants: [{ athlete: 'Lewis Cook', team: match.homeTeam.name }] },
                   { id: 'demo-red', clock: "78'", period: 2, typeSlug: 'red-card', typeText: 'Red Card', text: 'Serious foul', fullText: 'Serious foul', scoringPlay: false, teamName: match.homeTeam.name, homeScore: null, awayScore: null, participants: [{ athlete: 'Marcos Senesi', team: match.homeTeam.name }] },
                 ];
-                fakeEvents.forEach((ev, i) => setTimeout(() => toastForEvent(ev, match.homeTeam, match.awayTeam), i * 800));
+                fakeEvents.forEach((ev, i) => setTimeout(() => showMatchEventToast(ev, match.homeTeam, match.awayTeam), i * 800));
               }}
             >
               Test Toasts
