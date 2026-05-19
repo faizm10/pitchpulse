@@ -1,7 +1,9 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { Map, MapMarker, MarkerContent, MarkerPopup, MapControls, useMap } from '@/components/ui/map';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -48,6 +50,23 @@ const TEST_GAMES: TestGame[] = [
     round: 'GW37',
   },
 ];
+
+// ── EPL venue coordinates ─────────────────────────────────────────────────────
+
+const EPL_VENUES: Record<string, { name: string; city: string; longitude: number; latitude: number }> = {
+  'espn-bournemouth-mancity': {
+    name: 'Vitality Stadium',
+    city: 'Bournemouth',
+    longitude: -1.8380,
+    latitude: 50.7352,
+  },
+  'fotmob-chelsea-spurs': {
+    name: 'Stamford Bridge',
+    city: 'London',
+    longitude: -0.1908,
+    latitude: 51.4816,
+  },
+};
 
 // ── Responsive hook ───────────────────────────────────────────────────────────
 
@@ -119,39 +138,211 @@ async function fetchMatchCard(
   throw lastErr;
 }
 
+// ── Map ───────────────────────────────────────────────────────────────────────
+
+function MapLoadedObserver({ onLoad }: { onLoad: () => void }) {
+  const { isLoaded } = useMap();
+  useEffect(() => { if (isLoaded) onLoad(); }, [isLoaded, onLoad]);
+  return null;
+}
+
+function TestsMap({
+  games,
+  liveInfos,
+  isMobile,
+  onSelectGame,
+}: {
+  games: TestGame[];
+  liveInfos: Record<string, LiveInfo | null>;
+  isMobile: boolean;
+  onSelectGame: (href: string) => void;
+}) {
+  const [isMapLoaded, setIsMapLoaded] = useState(false);
+  const handleLoad = useCallback(() => setIsMapLoaded(true), []);
+
+  return (
+    <div style={{ position: 'relative', height: isMobile ? 300 : 440, borderRadius: 12, overflow: 'hidden', border: '1px solid var(--rule)' }}>
+      {!isMapLoaded && (
+        <div style={{
+          position: 'absolute', inset: 0, zIndex: 5,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: 'var(--paper-2)',
+        }}>
+          <span className="mono" style={{ fontSize: 11, color: 'var(--ink-3)', letterSpacing: '0.14em' }}>Loading map…</span>
+        </div>
+      )}
+
+      <Map
+        center={[-1.8, 52.4]}
+        zoom={isMobile ? 5.2 : 6}
+        minZoom={4}
+        maxZoom={14}
+        theme="light"
+      >
+        <MapLoadedObserver onLoad={handleLoad} />
+
+        {games.map((game) => {
+          const venue = EPL_VENUES[game.slug];
+          if (!venue) return null;
+          const info = liveInfos[game.slug];
+          const isLive = info?.state === 'in';
+          const color = game.source === 'fotmob' ? '#0078ff' : '#e63c3c';
+
+          return (
+            <MapMarker key={game.slug} longitude={venue.longitude} latitude={venue.latitude}>
+              <MarkerContent>
+                <div style={{ position: 'relative' }}>
+                  {isLive && (
+                    <span style={{
+                      position: 'absolute', inset: 0, borderRadius: '50%',
+                      backgroundColor: color,
+                      animation: 'pulse-ring 1.8s ease-out infinite',
+                    }} />
+                  )}
+                  {/* glow */}
+                  <div style={{
+                    position: 'absolute', inset: -4, borderRadius: '50%',
+                    filter: 'blur(6px)', opacity: 0.65,
+                    backgroundColor: color,
+                  }} />
+                  {/* dot */}
+                  <button
+                    type="button"
+                    aria-label={`${venue.name} — click to view match`}
+                    style={{
+                      position: 'relative',
+                      width: 14, height: 14, borderRadius: '50%',
+                      border: '2px solid white',
+                      backgroundColor: color,
+                      cursor: 'pointer',
+                      boxShadow: '0 0 12px rgba(255,255,255,0.15)',
+                      transition: 'transform 180ms',
+                      padding: 0,
+                    }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1.4)'; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)'; }}
+                  />
+                </div>
+              </MarkerContent>
+
+              <MarkerPopup>
+                <div style={{ minWidth: 210, borderRadius: 12, overflow: 'hidden', background: 'var(--paper)' }}>
+                  {/* color stripe */}
+                  <div style={{ height: 4, background: color }} />
+                  <div style={{ padding: 12, background: 'var(--paper-2)' }}>
+                    {/* Venue info */}
+                    <p style={{ margin: 0, fontWeight: 600, fontSize: 14, color: 'var(--ink)', lineHeight: 1.3 }}>
+                      {venue.name}
+                    </p>
+                    <p style={{ margin: '2px 0 0', fontSize: 12, color: 'var(--ink-3)' }}>
+                      {venue.city} · {game.league}
+                    </p>
+
+                    {/* Match state */}
+                    <div style={{ borderTop: '1px solid var(--rule-soft)', paddingTop: 8, marginTop: 8 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                        <span style={{
+                          fontSize: 10, fontFamily: 'var(--mono)', letterSpacing: '0.1em',
+                          color: info ? stateColor(info.state) : 'var(--ink-3)',
+                        }}>
+                          {info ? (
+                            isLive
+                              ? <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--live)', display: 'inline-block' }} />
+                                  LIVE{info.liveClock ? ` · ${info.liveClock}` : ''}
+                                </span>
+                              : stateLabel(info.state)
+                          ) : '…'}
+                        </span>
+                        <span className="mono" style={{ fontSize: 9, color: 'var(--ink-3)', letterSpacing: '0.1em' }}>
+                          {game.round ?? ''}
+                        </span>
+                      </div>
+
+                      {/* Teams */}
+                      {info && [info.homeTeam, info.awayTeam].map((team, i) => (
+                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
+                          <img
+                            src={team.logo}
+                            alt=""
+                            aria-hidden="true"
+                            width={16}
+                            height={16}
+                            style={{ width: 16, height: 16, objectFit: 'contain', flexShrink: 0 }}
+                            onError={(e) => { (e.target as HTMLImageElement).style.opacity = '0.2'; }}
+                          />
+                          <span style={{ flex: 1, fontSize: 12, color: 'var(--ink)', fontWeight: 500 }}>
+                            {team.shortName ?? team.name}
+                          </span>
+                          <span style={{ fontSize: 13, fontFamily: 'var(--mono)', fontWeight: 700, color: 'var(--ink)' }}>
+                            {info.state !== 'pre' ? team.score : '–'}
+                          </span>
+                        </div>
+                      ))}
+
+                      {!info && (
+                        <div style={{ fontSize: 11, color: 'var(--ink-3)', fontFamily: 'var(--mono)', textAlign: 'center', padding: '8px 0' }}>
+                          Loading…
+                        </div>
+                      )}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => onSelectGame(game.href)}
+                      style={{
+                        marginTop: 10, width: '100%',
+                        borderRadius: 8, border: '1px solid var(--rule)',
+                        background: 'var(--paper)', padding: '8px 12px',
+                        fontSize: 11, fontWeight: 500, color: 'var(--ink)',
+                        cursor: 'pointer', fontFamily: 'var(--mono)',
+                        letterSpacing: '0.08em',
+                      }}
+                    >
+                      VIEW MATCH DETAILS →
+                    </button>
+                  </div>
+                </div>
+              </MarkerPopup>
+            </MapMarker>
+          );
+        })}
+
+        <MapControls position="bottom-right" showZoom />
+      </Map>
+
+      {/* Map label */}
+      <div style={{
+        position: 'absolute', bottom: 12, left: 14, zIndex: 10,
+        pointerEvents: 'none',
+      }}>
+        <span className="mono" style={{
+          fontSize: 9, letterSpacing: '0.18em', color: 'var(--ink-3)',
+          background: 'rgba(255,255,255,0.85)', borderRadius: 4, padding: '3px 7px',
+          backdropFilter: 'blur(4px)',
+        }}>
+          ENGLAND · PREMIER LEAGUE
+        </span>
+      </div>
+    </div>
+  );
+}
+
 // ── Match card ────────────────────────────────────────────────────────────────
 
-function MatchCard({ game, isMobile }: { game: TestGame; isMobile: boolean }) {
-  const [info, setInfo] = useState<LiveInfo | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    let initialLoad = true;
-
-    async function load() {
-      try {
-        const next = await fetchMatchCard(game.apiPath, controller.signal);
-        setInfo(next);
-        setError(false);
-      } catch (err) {
-        if (controller.signal.aborted) return;
-        setError(true);
-      } finally {
-        if (!controller.signal.aborted) setLoading(false);
-        initialLoad = false;
-      }
-    }
-
-    load();
-    const interval = setInterval(load, 20_000);
-    return () => {
-      controller.abort();
-      clearInterval(interval);
-    };
-  }, [game.apiPath]);
-
+function MatchCard({
+  game,
+  info,
+  loading,
+  error,
+  isMobile,
+}: {
+  game: TestGame;
+  info: LiveInfo | null;
+  loading: boolean;
+  error: boolean;
+  isMobile: boolean;
+}) {
   const logoSize = isMobile ? 40 : 52;
 
   return (
@@ -309,6 +500,45 @@ function Legend() {
 
 export default function TestsIndexPage() {
   const isMobile = useIsMobile();
+  const router = useRouter();
+
+  // Shared live info state — fetched once for map + polled per card
+  const [liveInfos, setLiveInfos] = useState<Record<string, LiveInfo | null>>({});
+  const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>(
+    () => Object.fromEntries(TEST_GAMES.map(g => [g.slug, true]))
+  );
+  const [errorStates, setErrorStates] = useState<Record<string, boolean>>({});
+
+  // Initial fetch + polling for each game
+  useEffect(() => {
+    const controllers: Record<string, AbortController> = {};
+    const intervals: Record<string, ReturnType<typeof setInterval>> = {};
+
+    for (const game of TEST_GAMES) {
+      const load = async () => {
+        const ctrl = new AbortController();
+        controllers[game.slug] = ctrl;
+        try {
+          const info = await fetchMatchCard(game.apiPath, ctrl.signal);
+          setLiveInfos(prev => ({ ...prev, [game.slug]: info }));
+          setErrorStates(prev => ({ ...prev, [game.slug]: false }));
+        } catch (err) {
+          if ((err as Error)?.name === 'AbortError') return;
+          setErrorStates(prev => ({ ...prev, [game.slug]: true }));
+        } finally {
+          setLoadingStates(prev => ({ ...prev, [game.slug]: false }));
+        }
+      };
+
+      load();
+      intervals[game.slug] = setInterval(load, 20_000);
+    }
+
+    return () => {
+      Object.values(controllers).forEach(c => c.abort());
+      Object.values(intervals).forEach(id => clearInterval(id));
+    };
+  }, []);
 
   return (
     <main
@@ -316,7 +546,7 @@ export default function TestsIndexPage() {
       style={{ minHeight: '100vh', maxWidth: '100vw', overflowX: 'hidden', padding: isMobile ? '24px 16px' : '40px 40px' }}
     >
       {/* Page heading */}
-      <div style={{ marginBottom: isMobile ? 24 : 32 }}>
+      <div style={{ marginBottom: isMobile ? 20 : 28 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8, flexWrap: 'wrap' }}>
           <h1 className="serif" style={{ fontSize: isMobile ? 28 : 40, lineHeight: 1, margin: 0 }}>
             API Test Games
@@ -330,8 +560,21 @@ export default function TestsIndexPage() {
         </div>
         <p className="mono" style={{ fontSize: 11, color: 'var(--ink-3)', margin: 0, lineHeight: 1.7, maxWidth: 560 }}>
           Live data harness for testing ESPN and FotMob integrations.
-          Cards poll every 20s — click any card to open the full match page.
+          Cards poll every 20s — click any card or map pin to open the full match page.
         </p>
+      </div>
+
+      {/* England map */}
+      <div style={{ marginBottom: isMobile ? 20 : 28 }}>
+        <h2 className="mono" style={{ fontSize: 10, letterSpacing: '0.2em', color: 'var(--ink-3)', margin: '0 0 12px' }}>
+          MATCH LOCATIONS
+        </h2>
+        <TestsMap
+          games={TEST_GAMES}
+          liveInfos={liveInfos}
+          isMobile={isMobile}
+          onSelectGame={(href) => router.push(href)}
+        />
       </div>
 
       {/* Source legend */}
@@ -351,7 +594,14 @@ export default function TestsIndexPage() {
           gap: isMobile ? 12 : 16,
         }}>
           {TEST_GAMES.map((game) => (
-            <MatchCard key={game.slug} game={game} isMobile={isMobile} />
+            <MatchCard
+              key={game.slug}
+              game={game}
+              info={liveInfos[game.slug] ?? null}
+              loading={loadingStates[game.slug] ?? false}
+              error={errorStates[game.slug] ?? false}
+              isMobile={isMobile}
+            />
           ))}
         </div>
       </section>
