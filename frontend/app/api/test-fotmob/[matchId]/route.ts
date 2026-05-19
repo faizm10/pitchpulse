@@ -314,11 +314,43 @@ export async function GET(
         projectedRank: row.rank, rankChange: 0,
       }));
 
+  // ── Halftime detection ───────────────────────────────────────────────────
+  // FotMob represents halftime in several ways depending on the match.
+  // Check every known indicator so the clock freezes correctly.
+  const halfs = status.halfs ?? {};
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const rawStatus: any = status;
+  const isHalftime =
+    state === "in" &&
+    (halfs.halfTimeStarted === true ||
+      String(rawStatus.statusCategory ?? "").toLowerCase() === "ht" ||
+      String(rawStatus.type ?? "").toLowerCase() === "ht" ||
+      String(rawStatus.longName ?? "").toLowerCase().includes("half time") ||
+      String(rawStatus.shortName ?? "").toUpperCase() === "HT" ||
+      // Between halves: first started but second not yet
+      (halfs.firstHalfStarted === true && halfs.secondHalfStarted === false &&
+        // Only treat as halftime when the raw liveTime suggests a reset (< 2 min)
+        // because during normal first-half play firstHalfStarted is also true
+        (() => {
+          const lt = status.liveTime;
+          if (!lt) return false;
+          const raw = lt.long ?? lt.short ?? "";
+          // "HT" literal
+          if (String(raw).toUpperCase().includes("HT")) return true;
+          // Clock near zero in "M:SS" or "MM:SS" format while events exist past 40'
+          const parts = String(raw).replace(/[^\d:]/g, "").split(":");
+          if (parts.length === 2) {
+            const mins = parseInt(parts[0], 10);
+            return mins === 0;
+          }
+          return false;
+        })()));
+
   // ── Status label ─────────────────────────────────────────────────────────
   let statusDetail = "";
   if (state === "post") statusDetail = "Full Time";
+  else if (isHalftime) statusDetail = "Half Time";
   else if (state === "in") {
-    const halfs = status.halfs ?? {};
     if (halfs.secondHalfStarted) statusDetail = "2nd Half";
     else if (halfs.firstHalfStarted) statusDetail = "1st Half";
     else statusDetail = "In Progress";
@@ -339,8 +371,9 @@ export async function GET(
       round: fixture.round ?? "",
       date: status.utcTime ?? "",
       state,
+      isHalftime,
       statusDetail,
-      liveClock,
+      liveClock: isHalftime ? "" : liveClock,
       homeTeam,
       awayTeam,
       // ESPN-sourced extras (null if ESPN unavailable)

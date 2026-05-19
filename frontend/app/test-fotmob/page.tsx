@@ -98,6 +98,7 @@ interface MatchData {
   round: string;
   date: string;
   state: 'pre' | 'in' | 'post';
+  isHalftime: boolean;
   statusDetail: string;
   liveClock: string;
   homeTeam: FotmobTeam;
@@ -201,8 +202,8 @@ function ScoreHero({
   liveClock: string;
   isMobile: boolean;
 }) {
-  const { homeTeam, awayTeam, state, statusDetail, date } = match;
-  const clockDisplay = state === 'in' ? liveClock || match.liveClock : '';
+  const { homeTeam, awayTeam, state, isHalftime, statusDetail, date } = match;
+  const clockDisplay = state === 'in' && !isHalftime ? liveClock || match.liveClock : '';
   const logoSize = isMobile ? 44 : 72;
   const nameFontSize = isMobile ? 20 : 32;
   const scoreFontSize = isMobile ? 48 : 72;
@@ -269,7 +270,17 @@ function ScoreHero({
 
       {/* Centre */}
       <div style={{ textAlign: 'center', minWidth: isMobile ? 64 : 96, flexShrink: 0 }}>
-        {state === 'in' && (
+        {state === 'in' && isHalftime && (
+          <>
+            <div className="mono" style={{ fontSize: 10, color: 'var(--ink-3)', letterSpacing: '0.22em' }}>
+              HALF TIME
+            </div>
+            <div className="mono" style={{ fontSize: isMobile ? 20 : 26, marginTop: 6, color: 'var(--ink-3)' }}>
+              HT
+            </div>
+          </>
+        )}
+        {state === 'in' && !isHalftime && (
           <>
             <div
               className="mono"
@@ -846,7 +857,7 @@ export default function TestFotmobPage() {
       setError(null);
       setLastFetched(Date.now());
 
-      if (incoming.state === 'in' && incoming.liveClock) {
+      if (incoming.state === 'in' && !incoming.isHalftime && incoming.liveClock) {
         clockBase.current = { seconds: clockToSeconds(incoming.liveClock), fetchedAt: Date.now() };
       } else {
         clockBase.current = null;
