@@ -180,15 +180,21 @@ function ago(ts: number): string {
 }
 
 function clockToSeconds(clock: string): number {
+  if (!clock) return 0;
+  // FotMob format: "16'" or "45+2'" — extract leading digits as minutes
+  if (clock.includes("'") || !clock.includes(':')) {
+    const m = parseInt(clock, 10);
+    return isNaN(m) ? 0 : m * 60;
+  }
+  // ESPN format: "MM:SS"
   const parts = clock.split(':');
   if (parts.length !== 2) return 0;
   return parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
 }
 
 function secondsToClock(s: number): string {
-  const m = Math.floor(s / 60);
-  const sec = s % 60;
-  return `${m}:${String(sec).padStart(2, '0')}`;
+  // Display as soccer minutes ("16'") not a countdown timer
+  return `${Math.floor(s / 60)}'`;
 }
 
 function eventIcon(typeSlug: string): string {
@@ -313,7 +319,7 @@ function ScoreHero({
             >
               {clockDisplay || '–'}
             </div>
-            {statusDetail && (
+            {statusDetail && !clockDisplay && (
               <div className="serif" style={{ fontSize: 11, fontStyle: 'italic', color: 'var(--ink-3)', marginTop: 4 }}>
                 {statusDetail}
               </div>
@@ -1019,7 +1025,10 @@ export default function MLSGamePage({ params }: { params: { slug: string } }) {
       setLastFetched(Date.now());
 
       if (incoming.state === 'in' && !incoming.isHalftime && incoming.liveClock) {
-        clockBase.current = { seconds: clockToSeconds(incoming.liveClock), fetchedAt: Date.now() };
+        const secs = clockToSeconds(incoming.liveClock);
+        // Only interpolate when we have a meaningful base — a 0 parse means
+        // the format wasn't recognised; fall back to showing the raw API string
+        clockBase.current = secs > 0 ? { seconds: secs, fetchedAt: Date.now() } : null;
       } else {
         clockBase.current = null;
       }
