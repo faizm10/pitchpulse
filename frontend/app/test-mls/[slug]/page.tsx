@@ -54,6 +54,7 @@ interface StandingsGroup { label: string; rows: StandingRow[]; }
 
 interface KeyEvent {
   id: string;
+  sequence: number;
   clock: string;
   period: number;
   typeSlug: string;
@@ -125,6 +126,8 @@ interface MLSMatchData {
   isExtraTime: boolean;
   isExtraTimeHalftime: boolean;
   isPenaltyShootout: boolean;
+  hadPenaltyShootout: boolean;
+  penScore: { home: number; away: number } | null;
   statusDetail: string;
   statusTypeName: string;
   displayClock: string;
@@ -227,6 +230,7 @@ function ScoreHero({
   const {
     homeTeam, awayTeam, state,
     isHalftime, isExtraTime, isExtraTimeHalftime, isPenaltyShootout,
+    hadPenaltyShootout, penScore,
     statusDetail, date,
   } = match;
 
@@ -367,9 +371,28 @@ function ScoreHero({
 
         {/* ── Full time / Final ── */}
         {state === 'post' && (
-          <div className="mono" style={{ fontSize: 10, color: 'var(--ink-3)', letterSpacing: '0.16em' }}>
-            {statusDetail || 'FULL TIME'}
-          </div>
+          <>
+            <div className="mono" style={{ fontSize: 10, color: 'var(--ink-3)', letterSpacing: '0.16em' }}>
+              {hadPenaltyShootout ? 'AFTER PENALTIES' : (statusDetail || 'FULL TIME')}
+            </div>
+            {hadPenaltyShootout && penScore && (
+              <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+                {/* PK score */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span className="serif tnum" style={{ fontSize: isMobile ? 18 : 22, fontWeight: 700, lineHeight: 1 }}>
+                    {penScore.home}
+                  </span>
+                  <span className="mono" style={{ fontSize: 12, color: 'var(--ink-3)' }}>–</span>
+                  <span className="serif tnum" style={{ fontSize: isMobile ? 18 : 22, fontWeight: 700, lineHeight: 1 }}>
+                    {penScore.away}
+                  </span>
+                </div>
+                <div className="mono" style={{ fontSize: 8, color: 'var(--ink-3)', letterSpacing: '0.16em' }}>
+                  ON PENS
+                </div>
+              </div>
+            )}
+          </>
         )}
         {state === 'pre' && (
           <>
@@ -430,6 +453,188 @@ function ScoreHero({
 
       <span className="sr-only">{scoreDesc}</span>
     </div>
+  );
+}
+
+// ── Penalty shootout panel ───────────────────────────────────────────────────
+
+interface PenKick {
+  id: string;
+  sequence: number;
+  result: 'scored' | 'missed';
+  athlete: string;
+  teamName: string;
+}
+
+function PenaltyShootoutPanel({
+  keyEvents, homeTeam, awayTeam, isMobile,
+}: {
+  keyEvents: KeyEvent[];
+  homeTeam: MLSTeam;
+  awayTeam: MLSTeam;
+  isMobile: boolean;
+}) {
+  // Collect penalty shootout kicks in chronological order.
+  // period === 5 distinguishes shootout kicks from in-game penalties (e.g. a 51' spot kick in regular time).
+  // Sort by sequence (ESPN commentary order) — all shootout events share the same clock value "120'".
+  const penKicks: PenKick[] = keyEvents
+    .filter(ev =>
+      ev.period === 5 &&
+      (ev.typeSlug === 'penalty-scored' || ev.typeSlug === 'penalty-missed')
+    )
+    .map(ev => ({
+      id: ev.id,
+      sequence: ev.sequence ?? 0,
+      result: (ev.typeSlug === 'penalty-scored' ? 'scored' : 'missed') as 'scored' | 'missed',
+      athlete: ev.participants[0]?.athlete || ev.text || '',
+      teamName: ev.teamName,
+    }))
+    .sort((a, b) => (a.sequence - b.sequence) || (parseInt(a.id, 10) - parseInt(b.id, 10)));
+
+  const isHomeKick = (teamName: string) => {
+    const n = teamName.toLowerCase();
+    const hn = homeTeam.name.toLowerCase();
+    return n.includes(hn) || hn.includes(n) ||
+      n.includes(homeTeam.abbreviation.toLowerCase());
+  };
+
+  const homeKicks = penKicks.filter(k => isHomeKick(k.teamName));
+  const awayKicks = penKicks.filter(k => !isHomeKick(k.teamName));
+
+  const homePenScore = homeKicks.filter(k => k.result === 'scored').length;
+  const awayPenScore = awayKicks.filter(k => k.result === 'scored').length;
+
+  // Always show at least 5 slots; expand if sudden death
+  const totalSlots = Math.max(5, homeKicks.length + 1, awayKicks.length + 1);
+  const dotSize = isMobile ? 30 : 36;
+
+  function TeamRow({ team, kicks }: { team: MLSTeam; kicks: PenKick[] }) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 12 : 18 }}>
+        {/* Team label */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 6,
+          minWidth: isMobile ? 52 : 72, flexShrink: 0,
+        }}>
+          <img
+            src={team.logo} alt="" aria-hidden="true"
+            width={20} height={20}
+            style={{ width: 20, height: 20, objectFit: 'contain' }}
+            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+          />
+          <span className="mono" style={{ fontSize: 10, letterSpacing: '0.12em' }}>
+            {team.abbreviation}
+          </span>
+        </div>
+
+        {/* Kick dots */}
+        <div style={{ display: 'flex', gap: isMobile ? 6 : 8, flexWrap: 'wrap' }}>
+          {Array.from({ length: totalSlots }).map((_, i) => {
+            const kick = kicks[i];
+            const isNext = !kick && i === kicks.length; // next kick to be taken
+
+            if (!kick) {
+              return (
+                <div
+                  key={i}
+                  aria-label="Pending"
+                  style={{
+                    width: dotSize, height: dotSize, borderRadius: '50%',
+                    border: `2px solid var(--rule)`,
+                    opacity: isNext ? 0.65 : 0.25,
+                    boxSizing: 'border-box',
+                  }}
+                />
+              );
+            }
+
+            const scored = kick.result === 'scored';
+            return (
+              <div
+                key={i}
+                title={kick.athlete}
+                aria-label={`${kick.athlete}: ${scored ? 'scored' : 'missed'}`}
+                style={{
+                  width: dotSize, height: dotSize, borderRadius: '50%',
+                  background: scored ? '#22c55e' : '#ef4444',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: isMobile ? 14 : 16, flexShrink: 0,
+                  boxShadow: scored
+                    ? '0 0 0 3px rgba(34,197,94,0.2)'
+                    : '0 0 0 3px rgba(239,68,68,0.2)',
+                }}
+              >
+                {scored ? '⚽' : '✕'}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <section
+      aria-label="Penalty shootout"
+      style={{
+        padding: isMobile ? '18px 16px' : '24px 40px',
+        borderTop: '1px solid var(--rule)',
+        background: 'var(--paper-2)',
+      }}
+    >
+      {/* Header row */}
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        marginBottom: 20, paddingBottom: 12, borderBottom: '1px solid var(--rule)',
+        flexWrap: 'wrap', gap: 8,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+          <span aria-hidden="true" style={{
+            width: 7, height: 7, borderRadius: '50%',
+            background: 'var(--live)', display: 'inline-block',
+            boxShadow: '0 0 6px var(--live)',
+          }} />
+          <h2 className="mono" style={{
+            fontSize: 10, letterSpacing: '0.2em',
+            color: 'var(--live)', margin: 0,
+          }}>
+            PENALTY SHOOTOUT
+          </h2>
+        </div>
+
+        {/* Live penalty score */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span className="mono" style={{ fontSize: 10, color: 'var(--ink-3)', letterSpacing: '0.1em' }}>
+            {homeTeam.abbreviation}
+          </span>
+          <span className="serif tnum" style={{ fontSize: isMobile ? 26 : 34, lineHeight: 1, fontWeight: 700 }}>
+            {homePenScore}
+          </span>
+          <span className="mono" style={{ fontSize: 16, color: 'var(--ink-3)' }}>–</span>
+          <span className="serif tnum" style={{ fontSize: isMobile ? 26 : 34, lineHeight: 1, fontWeight: 700 }}>
+            {awayPenScore}
+          </span>
+          <span className="mono" style={{ fontSize: 10, color: 'var(--ink-3)', letterSpacing: '0.1em' }}>
+            {awayTeam.abbreviation}
+          </span>
+        </div>
+      </div>
+
+      {/* Team rows */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <TeamRow team={homeTeam} kicks={homeKicks} />
+        <TeamRow team={awayTeam} kicks={awayKicks} />
+      </div>
+
+      {penKicks.length === 0 && (
+        <p className="mono" style={{
+          fontSize: 10, color: 'var(--ink-3)', letterSpacing: '0.12em',
+          marginTop: 14, textAlign: 'center',
+        }}>
+          Kicks will appear here as they are taken
+        </p>
+      )}
+    </section>
   );
 }
 
@@ -1223,6 +1428,16 @@ export default function MLSGamePage({ params }: { params: { slug: string } }) {
           </>
         )}
       </div>
+
+      {/* Penalty shootout — shown above key events when pens are live or after game ends on pens */}
+      {match.hadPenaltyShootout && (
+        <PenaltyShootoutPanel
+          keyEvents={match.keyEvents ?? []}
+          homeTeam={match.homeTeam}
+          awayTeam={match.awayTeam}
+          isMobile={isMobile}
+        />
+      )}
 
       {/* Key events */}
       {match.keyEvents?.length > 0 && (
