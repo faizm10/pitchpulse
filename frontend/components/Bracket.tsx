@@ -282,7 +282,7 @@ function Column({
       : label === 'Semi-finals'
       ? 615
       : label === 'Final'
-      ? 460
+      ? 1360
       : 0;
 
   return (
@@ -343,37 +343,51 @@ function Column({
                 }
               />
 
-              {/* RIGHT CONNECTOR */}
               {label !== 'Final' && (
-                <div
-                  style={{
-                    position: 'absolute',
-                    right: -24,
-                    top: '50%',
-                    width: 24,
-                    height: 2,
-                    transform: 'translateY(-50%)',
-                    background: 'var(--rule)',
-                    opacity: 0.7,
-                  }}
-                />
-              )}
+  <>
+    {/* top/bottom horizontal */}
+    <div
+      style={{
+        position: 'absolute',
+        right: -40,
+        top: '50%',
+        width: 40,
+        height: 2,
+        background: 'var(--rule)',
+        transform: 'translateY(-50%)',
+      }}
+    />
 
-              {/* VERTICAL CONNECTOR */}
-              {i % 2 === 0 &&
-                label !== 'Final' && (
-                  <div
-                    style={{
-                      position: 'absolute',
-                      right: -24,
-                      top: '50%',
-                      width: 2,
-                      height: connectorHeight,
-                      background: 'var(--rule)',
-                      opacity: 0.7,
-                    }}
-                  />
-                )}
+    {/* vertical connector */}
+    {i % 2 === 0 && (
+      <div
+        style={{
+          position: 'absolute',
+          right: -40,
+          top: '50%',
+          width: 2,
+          height: connectorHeight,
+          background: 'var(--rule)',
+        }}
+      />
+    )}
+
+    {/* middle connector into next round */}
+    {i % 2 === 0 && (
+      <div
+        style={{
+          position: 'absolute',
+          right: -80,
+          top: `calc(50% + ${connectorHeight / 2}px)`,
+          width: 40,
+          height: 2,
+          background: 'var(--rule)',
+        }}
+      />
+    )}
+  </>
+)}
+                
             </div>
           );
         })}
@@ -564,7 +578,7 @@ function TeamRow({
       style={{
         display: 'grid',
         gridTemplateColumns:
-          '20px 1fr 24px',
+          '32px 1fr 28px',
         alignItems: 'center',
         gap: 8,
         padding: '10px 12px',
@@ -598,7 +612,7 @@ function TeamRow({
           whiteSpace: 'nowrap',
           overflow: 'hidden',
           textOverflow: 'ellipsis',
-          minWidth: 0,
+          minWidth: 550,
         }}
       >
         {name || 'TBD'}
