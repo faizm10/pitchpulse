@@ -28,22 +28,6 @@ export interface GoalMatchTeams {
 
 /** MLS Round 2 test slugs → squads for dev panel + name lookup on live goals */
 export const MLS_GAME_SQUADS: Record<string, Record<ScoringSide, GoalScorerOption[]>> = {
-  'atl-orl': {
-    home: [
-      { id: 'giakoumakis', name: 'Giorgos Giakoumakis', number: 9, flag: '🇬🇷' },
-      { id: 'almada', name: 'Thiago Almada', number: 10, flag: '🇦🇷', assist: 'L. Abram' },
-      { id: 'wolff', name: 'Caleb Wiley', number: 26, flag: '🇺🇸' },
-      { id: 'lennon', name: 'Brooks Lennon', number: 11, flag: '🇺🇸' },
-      { id: 'cohen', name: 'Saba Lobjanidze', number: 17, flag: '🇬🇪' },
-    ],
-    away: [
-      { id: 'torres', name: 'Facundo Torres', number: 10, flag: '🇺🇾' },
-      { id: 'muriel', name: 'Luis Muriel', number: 9, flag: '🇨🇴' },
-      { id: 'enrique', name: 'Martín Ojeda', number: 8, flag: '🇦🇷' },
-      { id: 'gallese', name: 'Duncan McGuire', number: 13, flag: '🏴󠁧󠁢󠁳󠁣󠁴󠁿' },
-      { id: 'araujo', name: 'César Araújo', number: 5, flag: '🇺🇾' },
-    ],
-  },
   'hou-stl': {
     home: [
       { id: 'baird', name: 'Fafà Picault', number: 10, flag: '🇭🇹' },

@@ -35,50 +35,19 @@ interface LiveInfo {
 
 const TEST_GAMES: TestGame[] = [
   {
-    slug: 'fotmob-chelsea-spurs',
-    href: '/test-fotmob',
-    source: 'fotmob',
-    matchId: '4813739',
-    apiPath: '/api/test-fotmob/4813739',
-    league: 'Premier League',
-    round: 'GW37',
-  },
-  {
-    slug: 'mls-atl-orl',
-    href: '/test-mls/atl-orl',
-    source: 'espn',
-    matchId: '401871128',
-    apiPath: '/api/test-mls/401871128',
-    league: 'MLS',
-    round: 'R2',
-  },
-  {
     slug: 'mls-hou-stl',
     href: '/test-mls/hou-stl',
     source: 'espn',
     matchId: '401871127',
     apiPath: '/api/test-mls/401871127',
-    league: 'MLS',
-    round: 'R2',
+    league: 'US Open Cup',
+    round: 'QF',
   },
 ];
 
 // ── EPL venue coordinates ─────────────────────────────────────────────────────
 
 const EPL_VENUES: Record<string, { name: string; city: string; longitude: number; latitude: number }> = {
-  'fotmob-chelsea-spurs': {
-    name: 'Stamford Bridge',
-    city: 'London',
-    longitude: -0.1908,
-    latitude: 51.4816,
-  },
-  // MLS venues
-  'mls-atl-orl': {
-    name: 'Mercedes-Benz Stadium',
-    city: 'Atlanta, GA',
-    longitude: -84.4004,
-    latitude: 33.7553,
-  },
   'mls-hou-stl': {
     name: 'Shell Energy Stadium',
     city: 'Houston, TX',
@@ -648,9 +617,6 @@ export default function TestsIndexPage() {
 
       {/* Quick nav to test pages */}
       <nav aria-label="Quick links" style={{ marginTop: isMobile ? 28 : 36, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-        <Link href="/test-fotmob" className="btn" style={{ fontSize: 11, minHeight: 40, padding: '0 16px', textDecoration: 'none' }}>
-          FotMob Match →
-        </Link>
         <Link href="/" className="btn" style={{ fontSize: 11, minHeight: 40, padding: '0 16px', textDecoration: 'none' }}>
           ← Home
         </Link>

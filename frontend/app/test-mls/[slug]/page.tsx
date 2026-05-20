@@ -11,7 +11,6 @@ import { showMatchEventToast } from '@/lib/match-toasts';
 // ── Game config ───────────────────────────────────────────────────────────────
 
 const MLS_GAME_CONFIG: Record<string, { gameId: string }> = {
-  'atl-orl': { gameId: '401871128' },
   'hou-stl': { gameId: '401871127' },
 };
 
