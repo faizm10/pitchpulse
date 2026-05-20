@@ -5,8 +5,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Map, MapMarker, MarkerContent, MarkerPopup, MapControls, useMap } from '@/components/ui/map';
 import { DEFAULT_MAP_VIEW } from '@/data/venues';
-import { GoalNotification } from '@/components/GoalNotification';
-import type { GoalData } from '@/components/GoalNotification';
+import { useGoalCelebration } from '@/components/GoalCelebration';
+import type { GoalData } from '@/components/GoalCelebration';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -840,30 +840,32 @@ function MatchCard({
         )}
       </div>
 
-      {/* Score */}
-      <div style={{ padding: isMobile ? '14px 12px' : '18px 14px' }}>
+      {/* Score — fixed height so all cards are identical dimensions */}
+      <div style={{ padding: '0 14px', height: 96, display: 'flex', alignItems: 'center' }}>
         {loading && (
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 48 }}>
+          <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
             <span className="mono" style={{ fontSize: 10, color: 'var(--ink-3)' }}>Loading…</span>
           </div>
         )}
         {error && !loading && (
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 48 }}>
+          <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
             <span className="mono" style={{ fontSize: 10, color: '#e63c3c' }}>Failed to load</span>
           </div>
         )}
         {info && !loading && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) auto minmax(0,1fr)', alignItems: 'center', gap: 8 }}>
+          <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'minmax(0,1fr) auto minmax(0,1fr)', alignItems: 'center', gap: 8 }}>
+            {/* Home */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 7, minWidth: 0 }}>
               <img src={info.homeTeam.logo} alt={info.homeTeam.name} width={logoSize} height={logoSize}
                 style={{ width: logoSize, height: logoSize, objectFit: 'contain', flexShrink: 0 }}
                 onError={e => { (e.target as HTMLImageElement).style.opacity = '0.2'; }} />
-              <span className="serif" style={{ fontSize: isMobile ? 13 : 15, lineHeight: 1.1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <span className="serif" style={{ fontSize: isMobile ? 13 : 15, lineHeight: 1.15, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {info.homeTeam.shortName ?? info.homeTeam.name}
               </span>
             </div>
 
-            <div style={{ textAlign: 'center', flexShrink: 0, minWidth: 52 }}>
+            {/* Scoreline — always occupies the same column width */}
+            <div style={{ textAlign: 'center', flexShrink: 0, minWidth: 60, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
               {info.state !== 'pre' ? (
                 <>
                   <div className="serif tnum" style={{ fontSize: isMobile ? 24 : 30, lineHeight: 1, letterSpacing: '0.04em' }}>
@@ -871,23 +873,31 @@ function MatchCard({
                     <span style={{ margin: '0 4px', color: 'var(--ink-3)', fontSize: isMobile ? 17 : 20 }}>–</span>
                     {info.awayTeam.score}
                   </div>
-                  {info.hadPenaltyShootout && info.penScore && (
-                    <div className="serif tnum" style={{ fontSize: 12, color: 'var(--ink-3)', marginTop: 3 }}>
-                      {info.penScore.home} – {info.penScore.away}
-                      <div className="mono" style={{ fontSize: 7, letterSpacing: '0.12em' }}>ON PENS</div>
-                    </div>
-                  )}
+                  {/* PK score — always reserve space so card height doesn't shift */}
+                  <div style={{ minHeight: 28, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                    {info.hadPenaltyShootout && info.penScore ? (
+                      <>
+                        <div className="serif tnum" style={{ fontSize: 12, color: 'var(--ink-3)' }}>
+                          {info.penScore.home} – {info.penScore.away}
+                        </div>
+                        <div className="mono" style={{ fontSize: 7, letterSpacing: '0.12em', color: 'var(--ink-3)' }}>ON PENS</div>
+                      </>
+                    ) : null}
+                  </div>
                 </>
               ) : (
-                <div className="mono" style={{ fontSize: 14, color: 'var(--ink-3)' }}>VS</div>
+                <div style={{ height: 58, display: 'flex', alignItems: 'center' }}>
+                  <span className="mono" style={{ fontSize: 14, color: 'var(--ink-3)' }}>VS</span>
+                </div>
               )}
             </div>
 
+            {/* Away */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexDirection: 'row-reverse', minWidth: 0 }}>
               <img src={info.awayTeam.logo} alt={info.awayTeam.name} width={logoSize} height={logoSize}
                 style={{ width: logoSize, height: logoSize, objectFit: 'contain', flexShrink: 0 }}
                 onError={e => { (e.target as HTMLImageElement).style.opacity = '0.2'; }} />
-              <span className="serif" style={{ fontSize: isMobile ? 13 : 15, lineHeight: 1.1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textAlign: 'right' }}>
+              <span className="serif" style={{ fontSize: isMobile ? 13 : 15, lineHeight: 1.15, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textAlign: 'right' }}>
                 {info.awayTeam.shortName ?? info.awayTeam.name}
               </span>
             </div>
@@ -930,19 +940,17 @@ export default function AdminDashboard() {
   // Modal
   const [detailGame, setDetailGame] = useState<TestGame | null>(null);
 
-  // Goal celebration
-  const [goalTrigger, setGoalTrigger] = useState(0);
-  const [goalData, setGoalData] = useState<GoalData | null>(null);
+  // Goal celebration — single reusable hook, no manual trigger/data state
+  const { fireGoal, GoalCelebrationMount } = useGoalCelebration();
   const [goalFiredFor, setGoalFiredFor] = useState<string | null>(null);
   const goalFiredTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleFireGoal = useCallback((data: GoalData, slug: string) => {
-    setGoalData(data);
-    setGoalTrigger(n => n + 1);
+    fireGoal(data);
     setGoalFiredFor(slug);
     if (goalFiredTimerRef.current) clearTimeout(goalFiredTimerRef.current);
     goalFiredTimerRef.current = setTimeout(() => setGoalFiredFor(null), 6000);
-  }, []);
+  }, [fireGoal]);
 
   useEffect(() => () => {
     if (goalFiredTimerRef.current) clearTimeout(goalFiredTimerRef.current);
@@ -995,13 +1003,8 @@ export default function AdminDashboard() {
   return (
     <div className="screen" style={{ minHeight: '100vh', background: 'var(--paper-2)' }}>
 
-      {/* Goal celebration — full screen overlay */}
-      {goalData && (
-        <GoalNotification
-          trigger={goalTrigger}
-          data={goalData}
-        />
-      )}
+      {/* Goal celebration — mounted via reusable hook */}
+      <GoalCelebrationMount />
 
       {/* Match detail modal */}
       {detailGame && (
