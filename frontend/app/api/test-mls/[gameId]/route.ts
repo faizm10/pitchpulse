@@ -30,9 +30,19 @@ function fuzzyTeamMatch(fotmobName: string, espnName: string): boolean {
 }
 
 const NOTABLE_TYPES = new Set([
-  "goal", "own-goal", "penalty-scored", "penalty-missed",
+  "goal", "own-goal",
+  // ESPN uses triple-dash slugs for penalty kicks
+  "penalty-scored", "penalty-missed",
+  "penalty---scored", "penalty---missed",
   "yellow-card", "red-card", "yellow-red-card", "substitution", "shot-on-target",
 ]);
+
+// Normalize ESPN's triple-dash penalty slug to a consistent single-dash form
+function normalizeTypeSlug(slug: string): string {
+  if (slug === "penalty---scored") return "penalty-scored";
+  if (slug === "penalty---missed") return "penalty-missed";
+  return slug;
+}
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function parseEspnExtras(data: any) {
@@ -43,12 +53,14 @@ function parseEspnExtras(data: any) {
   for (const item of (data.commentary ?? []) as any[]) {
     const p = item.play;
     if (!p?.id) continue;
-    const typeSlug: string = p.type?.type ?? "";
-    if (!p.scoringPlay && !NOTABLE_TYPES.has(typeSlug)) continue;
+    const rawSlug: string = p.type?.type ?? "";
+    const typeSlug = normalizeTypeSlug(rawSlug);
+    if (!p.scoringPlay && !NOTABLE_TYPES.has(rawSlug) && !NOTABLE_TYPES.has(typeSlug)) continue;
     if (seenPlayIds.has(String(p.id))) continue;
     seenPlayIds.add(String(p.id));
     keyEvents.push({
       id: String(p.id),
+      sequence: item.sequence ?? 0,
       clock: p.clock?.displayValue ?? "",
       period: p.period?.number ?? 1,
       typeSlug,
@@ -261,6 +273,13 @@ export async function GET(
     period === 5 ||
     statusDetail.toLowerCase().includes("penalty shootout");
 
+  // True both while pens are live AND after the game ends on penalties
+  const hadPenaltyShootout =
+    isPenaltyShootout ||
+    statusTypeName === "STATUS_FINAL_PEN" ||
+    statusDetail.toLowerCase().includes("pens") ||
+    statusDetail.toLowerCase().includes("after penalties");
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function teamScore(c: any): string {
     if (c?.score?.displayValue) return c.score.displayValue;
@@ -297,6 +316,32 @@ export async function GET(
 
   // ESPN extras
   const extras = parseEspnExtras(espnData);
+
+  // Compute penalty shootout score from period-5 events
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let penScore: { home: number; away: number } | null = null;
+  if (hadPenaltyShootout) {
+    const shootoutKicks = extras.keyEvents.filter(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (ev: any) => ev.period === 5 && (ev.typeSlug === "penalty-scored" || ev.typeSlug === "penalty-missed")
+    );
+    if (shootoutKicks.length > 0) {
+      let homeGoals = 0, awayGoals = 0;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      for (const kick of shootoutKicks) {
+        if (kick.typeSlug !== "penalty-scored") continue;
+        // Resolve by team name matching home/away
+        const t: string = (kick.teamName ?? "").toLowerCase();
+        const hn = homeTeam.name.toLowerCase();
+        const an = awayTeam.name.toLowerCase();
+        const isHome =
+          t.includes(hn) || hn.includes(t) ||
+          t.includes(homeTeam.abbreviation.toLowerCase());
+        if (isHome) homeGoals++; else awayGoals++;
+      }
+      penScore = { home: homeGoals, away: awayGoals };
+    }
+  }
 
   // ── Standings from ESPN ───────────────────────────────────────────────────
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -523,6 +568,8 @@ export async function GET(
       isExtraTime,
       isExtraTimeHalftime,
       isPenaltyShootout,
+      hadPenaltyShootout,
+      penScore,
       statusDetail: isHalftime
         ? "Half Time"
         : isExtraTimeHalftime
