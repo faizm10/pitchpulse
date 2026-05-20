@@ -195,28 +195,40 @@ function parseScoreboardRound(data: any, currentGameId: string, label: string) {
 // ── Route handler ─────────────────────────────────────────────────────────────
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ gameId: string }> }
 ) {
   const { gameId } = await params;
+  const searchParams = req.nextUrl.searchParams;
+
+  // Callers pass ?league=usa.open or ?league=uefa.europa etc.
+  const espnLeague = searchParams.get("league") ?? "usa.open";
+  // Callers pass ?fotmob=9441 to override the FotMob league ID
+  const fotmobLeagueId = parseInt(searchParams.get("fotmob") ?? String(MLS_FOTMOB_ID), 10);
+  // Only fetch the Open Cup bracket when the competition actually has one
+  const isOpenCup = espnLeague === "usa.open";
 
   const [espnRes, fotmobRes, qfRes, r16Res] = await Promise.allSettled([
     fetch(
-      `https://site.api.espn.com/apis/site/v2/sports/soccer/usa.open/summary?event=${gameId}`,
+      `https://site.api.espn.com/apis/site/v2/sports/soccer/${espnLeague}/summary?event=${gameId}`,
       { next: { revalidate: 0 } }
     ),
     fetch(
-      `https://www.fotmob.com/api/data/leagues?id=${MLS_FOTMOB_ID}`,
+      `https://www.fotmob.com/api/data/leagues?id=${fotmobLeagueId}`,
       { headers: FOTMOB_HEADERS, next: { revalidate: 0 } }
     ),
-    fetch(
-      `https://site.api.espn.com/apis/site/v2/sports/soccer/usa.open/scoreboard?dates=20260519-20260520`,
-      { next: { revalidate: 60 } }
-    ),
-    fetch(
-      `https://site.api.espn.com/apis/site/v2/sports/soccer/usa.open/scoreboard?dates=20260428-20260430`,
-      { next: { revalidate: 3600 } }
-    ),
+    isOpenCup
+      ? fetch(
+          `https://site.api.espn.com/apis/site/v2/sports/soccer/usa.open/scoreboard?dates=20260519-20260520`,
+          { next: { revalidate: 60 } }
+        )
+      : Promise.reject(new Error("not open cup")),
+    isOpenCup
+      ? fetch(
+          `https://site.api.espn.com/apis/site/v2/sports/soccer/usa.open/scoreboard?dates=20260428-20260430`,
+          { next: { revalidate: 3600 } }
+        )
+      : Promise.reject(new Error("not open cup")),
   ]);
 
   // ESPN is required
