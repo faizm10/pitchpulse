@@ -122,6 +122,9 @@ interface MLSMatchData {
   date: string;
   state: 'pre' | 'in' | 'post';
   isHalftime: boolean;
+  isExtraTime: boolean;
+  isExtraTimeHalftime: boolean;
+  isPenaltyShootout: boolean;
   statusDetail: string;
   statusTypeName: string;
   displayClock: string;
@@ -221,8 +224,15 @@ function ScoreHero({
   liveClock: string;
   isMobile: boolean;
 }) {
-  const { homeTeam, awayTeam, state, isHalftime, statusDetail, date } = match;
-  const clockDisplay = state === 'in' && !isHalftime ? liveClock || match.liveClock : '';
+  const {
+    homeTeam, awayTeam, state,
+    isHalftime, isExtraTime, isExtraTimeHalftime, isPenaltyShootout,
+    statusDetail, date,
+  } = match;
+
+  // Show the running clock only during active play (not any break or pens)
+  const clockSuppressed = isHalftime || isExtraTimeHalftime || isPenaltyShootout;
+  const clockDisplay = state === 'in' && !clockSuppressed ? liveClock || match.liveClock : '';
   const logoSize = isMobile ? 44 : 72;
   const nameFontSize = isMobile ? 20 : 32;
   const scoreFontSize = isMobile ? 48 : 72;
@@ -295,20 +305,48 @@ function ScoreHero({
 
       {/* Centre */}
       <div style={{ textAlign: 'center', minWidth: isMobile ? 64 : 96, flexShrink: 0 }}>
+
+        {/* ── Half time ── */}
         {state === 'in' && isHalftime && (
           <>
             <div className="mono" style={{ fontSize: 10, color: 'var(--ink-3)', letterSpacing: '0.22em' }}>HALF TIME</div>
             <div className="mono" style={{ fontSize: isMobile ? 20 : 26, marginTop: 6, color: 'var(--ink-3)' }}>HT</div>
           </>
         )}
-        {state === 'in' && !isHalftime && (
+
+        {/* ── Extra-time half time ── */}
+        {state === 'in' && isExtraTimeHalftime && (
+          <>
+            <div className="mono" style={{ fontSize: 10, color: 'var(--ink-3)', letterSpacing: '0.2em' }}>ET HALF TIME</div>
+            <div className="mono" style={{ fontSize: isMobile ? 20 : 26, marginTop: 6, color: 'var(--ink-3)' }}>ET HT</div>
+          </>
+        )}
+
+        {/* ── Penalty shootout ── */}
+        {state === 'in' && isPenaltyShootout && (
+          <>
+            <div className="mono" style={{
+              fontSize: 10, letterSpacing: '0.22em',
+              color: 'var(--live)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+            }}>
+              <span aria-hidden="true" style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--live)', display: 'inline-block' }} />
+              PENALTIES
+            </div>
+            <div className="mono" style={{ fontSize: isMobile ? 18 : 22, marginTop: 6, letterSpacing: '0.08em' }}>PENS</div>
+          </>
+        )}
+
+        {/* ── Live (regular or ET) ── */}
+        {state === 'in' && !isHalftime && !isExtraTimeHalftime && !isPenaltyShootout && (
           <>
             <div
               className="mono"
               style={{ fontSize: 10, color: 'var(--live)', letterSpacing: '0.22em', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}
             >
               <span aria-hidden="true" style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--live)', display: 'inline-block' }} />
-              <span className="sr-only">Live — </span>LIVE
+              <span className="sr-only">Live — </span>
+              {isExtraTime ? 'ET LIVE' : 'LIVE'}
             </div>
             <div
               className="mono"
@@ -319,13 +357,21 @@ function ScoreHero({
             >
               {clockDisplay || '–'}
             </div>
-            {statusDetail && !clockDisplay && (
+            {/* ET period label — shows which half of ET and the minute range */}
+            {isExtraTime && (
+              <div className="mono" style={{ fontSize: 9, color: 'var(--ink-3)', marginTop: 4, letterSpacing: '0.12em' }}>
+                {match.period === 3 ? 'ET1 · 90–105' : 'ET2 · 105–120'}
+              </div>
+            )}
+            {statusDetail && !clockDisplay && !isExtraTime && (
               <div className="serif" style={{ fontSize: 11, fontStyle: 'italic', color: 'var(--ink-3)', marginTop: 4 }}>
                 {statusDetail}
               </div>
             )}
           </>
         )}
+
+        {/* ── Full time / Final ── */}
         {state === 'post' && (
           <div className="mono" style={{ fontSize: 10, color: 'var(--ink-3)', letterSpacing: '0.16em' }}>
             {statusDetail || 'FULL TIME'}
@@ -1029,7 +1075,14 @@ export default function MLSGamePage({ params }: { params: { slug: string } }) {
       setError(null);
       setLastFetched(Date.now());
 
-      if (incoming.state === 'in' && !incoming.isHalftime && incoming.liveClock) {
+      const clockActive =
+        incoming.state === 'in' &&
+        !incoming.isHalftime &&
+        !incoming.isExtraTimeHalftime &&
+        !incoming.isPenaltyShootout &&
+        incoming.liveClock;
+
+      if (clockActive) {
         const secs = clockToSeconds(incoming.liveClock);
         // Only interpolate when we have a meaningful base — a 0 parse means
         // the format wasn't recognised; fall back to showing the raw API string

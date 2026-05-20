@@ -10,7 +10,7 @@ const FOTMOB_HEADERS = {
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
 };
 
-const MLS_FOTMOB_ID = 130; // FotMob league ID for Major League Soccer
+const MLS_FOTMOB_ID = 9441; // FotMob competition ID for US Open Cup
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -231,8 +231,32 @@ export async function GET(
   const statusDetail: string = statusObj?.type?.detail ?? statusObj?.type?.description ?? "";
   const displayClock: string = statusObj?.displayClock ?? "";
 
-  // Halftime from ESPN's status type
-  const isHalftime = statusTypeName === "STATUS_HALFTIME" || statusDetail.toLowerCase().includes("halftime");
+  const period: number = statusObj?.period ?? 1;
+
+  // ── Match phase detection from ESPN statusTypeName + period ───────────────
+  const isHalftime =
+    statusTypeName === "STATUS_HALFTIME" ||
+    statusDetail.toLowerCase().includes("halftime");
+
+  const isExtraTimeHalftime =
+    statusTypeName === "STATUS_HALFTIME_ET" ||
+    statusDetail.toLowerCase().includes("et halftime") ||
+    statusDetail.toLowerCase().includes("extra time halftime");
+
+  // Extra time: ESPN uses FIRST/SECOND_HALF_EXTRA_TIME; period 3 = ET1, 4 = ET2
+  const isExtraTime =
+    state === "in" &&
+    !isExtraTimeHalftime &&
+    (statusTypeName === "STATUS_FIRST_HALF_EXTRA_TIME" ||
+      statusTypeName === "STATUS_SECOND_HALF_EXTRA_TIME" ||
+      (period >= 3 && period < 5));
+
+  // Penalty shootout: period 5 or ESPN shootout status
+  const isPenaltyShootout =
+    statusTypeName === "STATUS_PENALTY_SHOOTOUT" ||
+    statusTypeName === "STATUS_SHOOTOUT" ||
+    period === 5 ||
+    statusDetail.toLowerCase().includes("penalty shootout");
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function teamScore(c: any): string {
@@ -347,7 +371,31 @@ export async function GET(
   const standingsGroupsProjected = standingsGroups.map(g => ({ ...g, rows: projectGroup(g.rows) }));
 
   // ── FotMob enhancement (live clock + qualColors) ──────────────────────────
-  let liveClock = isHalftime ? "" : displayClock;
+  // Clear clock during any break or shootout — only show clock during active play
+  const clockSuppressed = isHalftime || isExtraTimeHalftime || isPenaltyShootout;
+
+  // ESPN resets its period clock to 0:00 at the start of each ET half.
+  // Offset it so we always show the true accumulated match minute:
+  //   ET1 (period 3): 90–105'   ET2 (period 4): 105–120'
+  function applyEtOffset(rawClock: string): string {
+    if (!rawClock || !isExtraTime) return rawClock;
+    // Parse the raw value — handles both "MM:SS" and "MM'" formats
+    let secs = 0;
+    if (rawClock.includes(":")) {
+      const [m, s] = rawClock.split(":");
+      secs = parseInt(m, 10) * 60 + parseInt(s, 10);
+    } else {
+      secs = parseInt(rawClock, 10) * 60;
+    }
+    const etBase = period === 3 ? 90 : 105; // minutes
+    // Only offset if the value is below the ET floor (ESPN reset the clock)
+    if (secs < etBase * 60) {
+      secs += etBase * 60;
+    }
+    return `${Math.floor(secs / 60)}'`;
+  }
+
+  let liveClock = clockSuppressed ? "" : applyEtOffset(displayClock);
   let fotmobMatchId: string | null = null;
   let source = "espn";
 
@@ -371,22 +419,25 @@ export async function GET(
         const fStatus = fixture.status ?? {};
 
         // FotMob live clock (more granular than ESPN's minute display)
-        if (fStatus.started && !fStatus.finished && !isHalftime) {
+        if (fStatus.started && !fStatus.finished && !clockSuppressed) {
           const lt = fStatus.liveTime;
           const raw = lt?.long ?? lt?.short ?? "";
           const cleaned = String(raw).replace(/‎/g, "").replace(/'/g, "'");
-          if (cleaned && cleaned.toUpperCase() !== "HT") {
-            liveClock = cleaned;
+          if (cleaned && cleaned.toUpperCase() !== "HT" && cleaned.toUpperCase() !== "ET") {
+            liveClock = applyEtOffset(cleaned);
           }
         }
 
-        // Check FotMob halftime too (belt-and-suspenders)
+        // Clear clock for any FotMob-detected break (HT, ET HT, pens)
+        const fShort = String(fStatus.liveTime?.short ?? "").toUpperCase();
         const fHalfs = fStatus.halfs ?? {};
-        const fotmobHT =
+        const fotmobSuppressed =
           fHalfs.halfTimeStarted === true ||
           String(fStatus.statusCategory ?? "").toLowerCase() === "ht" ||
-          String(fStatus.liveTime?.short ?? "").toUpperCase().includes("HT");
-        if (fotmobHT) liveClock = "";
+          fShort.includes("HT") ||
+          fShort === "PEN" ||
+          fShort === "PENS";
+        if (fotmobSuppressed) liveClock = "";
 
         // Enrich qualColor from FotMob standings
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -464,11 +515,18 @@ export async function GET(
       date: competition.date ?? "",
       state,
       isHalftime,
-      statusDetail: isHalftime ? "Half Time" : statusDetail,
+      isExtraTime,
+      isExtraTimeHalftime,
+      isPenaltyShootout,
+      statusDetail: isHalftime
+        ? "Half Time"
+        : isExtraTimeHalftime
+        ? "ET Half Time"
+        : statusDetail,
       statusTypeName,
       displayClock,
       liveClock,
-      period: statusObj?.period ?? 1,
+      period,
       homeTeam,
       awayTeam,
       venue,
