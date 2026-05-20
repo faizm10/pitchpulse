@@ -10,8 +10,17 @@ import { showMatchEventToast } from '@/lib/match-toasts';
 
 // ── Game config ───────────────────────────────────────────────────────────────
 
-const MLS_GAME_CONFIG: Record<string, { gameId: string }> = {
-  'hou-stl': { gameId: '401871127' },
+const MLS_GAME_CONFIG: Record<string, {
+  gameId: string;
+  espnLeague: string;
+  fotmobLeagueId?: number;
+  label: string;   // shown in the page header
+  round: string;
+}> = {
+  'hou-stl':  { gameId: '401871127', espnLeague: 'usa.open',    fotmobLeagueId: 9441,  label: 'US Open Cup', round: 'QF'    },
+  'clb-nyc':  { gameId: '401871130', espnLeague: 'usa.open',    fotmobLeagueId: 9441,  label: 'US Open Cup', round: 'QF'    },
+  'col-sj':   { gameId: '401871129', espnLeague: 'usa.open',    fotmobLeagueId: 9441,  label: 'US Open Cup', round: 'QF'    },
+  'fri-vil':  { gameId: '401862911', espnLeague: 'uefa.europa',                         label: 'UEFA Europa League', round: 'Final' },
 };
 
 const POLL_LIVE = 12_000;
@@ -1235,7 +1244,9 @@ export default function MLSGamePage({ params }: { params: { slug: string } }) {
   const fetchMatch = useCallback(async () => {
     if (!config) return;
     try {
-      const res = await fetch(`/api/test-mls/${config.gameId}`);
+      const params = new URLSearchParams({ league: config.espnLeague });
+      if (config.fotmobLeagueId) params.set('fotmob', String(config.fotmobLeagueId));
+      const res = await fetch(`/api/test-mls/${config.gameId}?${params}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? `HTTP ${res.status}`);
       const incoming: MLSMatchData = data.match;
@@ -1368,7 +1379,7 @@ export default function MLSGamePage({ params }: { params: { slug: string } }) {
             ← Tests
           </Link>
           <div className="mono" style={{ fontSize: 10, letterSpacing: '0.18em', color: 'var(--ink-3)' }}>
-            MLS · R2
+            {config.label} · {config.round}
           </div>
           <div className="mono" style={{
             fontSize: 9, padding: '2px 7px', borderRadius: 3,
