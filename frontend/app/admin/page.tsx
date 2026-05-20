@@ -154,7 +154,6 @@ function StatCard({ label, value, accent }: { label: string; value: string | num
       flex: 1, minWidth: 100, padding: '16px 20px',
       borderRadius: 10, background: 'var(--paper)',
       boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
-      borderTop: `3px solid ${accent ?? 'var(--ink-2)'}`,
     }}>
       <div className="mono" style={{ fontSize: 9, letterSpacing: '0.16em', color: 'var(--ink-3)', marginBottom: 6 }}>
         {label}
