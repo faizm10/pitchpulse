@@ -32,13 +32,14 @@ export function useGoalCelebration() {
   }, []);
 
   /**
-   * Render <GoalCelebrationMount /> once in your component tree.
-   * It renders nothing until fireGoal() is called.
+   * Render this node once in your component tree.
+   * Returning JSX (not a component function) keeps the same
+   * GoalNotification instance alive across renders — React reconciles
+   * by position, so trigger increments reach the existing effect once.
    */
-  function GoalCelebrationMount() {
-    if (!data) return null;
-    return <GoalNotification trigger={trigger} data={data} />;
-  }
+  const celebrationNode = data
+    ? <GoalNotification trigger={trigger} data={data} />
+    : null;
 
-  return { fireGoal, GoalCelebrationMount };
+  return { fireGoal, celebrationNode };
 }

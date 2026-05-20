@@ -941,7 +941,7 @@ export default function AdminDashboard() {
   const [detailGame, setDetailGame] = useState<TestGame | null>(null);
 
   // Goal celebration — single reusable hook, no manual trigger/data state
-  const { fireGoal, GoalCelebrationMount } = useGoalCelebration();
+  const { fireGoal, celebrationNode } = useGoalCelebration();
   const [goalFiredFor, setGoalFiredFor] = useState<string | null>(null);
   const goalFiredTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -1003,8 +1003,8 @@ export default function AdminDashboard() {
   return (
     <div className="screen" style={{ minHeight: '100vh', background: 'var(--paper-2)' }}>
 
-      {/* Goal celebration — mounted via reusable hook */}
-      <GoalCelebrationMount />
+      {/* Goal celebration — stable JSX node from hook */}
+      {celebrationNode}
 
       {/* Match detail modal */}
       {detailGame && (
