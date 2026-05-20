@@ -234,14 +234,17 @@ export async function GET(
   const period: number = statusObj?.period ?? 1;
 
   // ── Match phase detection from ESPN statusTypeName + period ───────────────
-  const isHalftime =
-    statusTypeName === "STATUS_HALFTIME" ||
-    statusDetail.toLowerCase().includes("halftime");
-
+  // ET halftime must be detected first so isHalftime can exclude it
   const isExtraTimeHalftime =
     statusTypeName === "STATUS_HALFTIME_ET" ||
     statusDetail.toLowerCase().includes("et halftime") ||
     statusDetail.toLowerCase().includes("extra time halftime");
+
+  // Regular halftime — explicitly exclude ET halftime so they never both fire
+  const isHalftime =
+    !isExtraTimeHalftime &&
+    (statusTypeName === "STATUS_HALFTIME" ||
+      statusDetail.toLowerCase().includes("halftime"));
 
   // Extra time: ESPN uses FIRST/SECOND_HALF_EXTRA_TIME; period 3 = ET1, 4 = ET2
   const isExtraTime =
@@ -387,6 +390,8 @@ export async function GET(
     } else {
       secs = parseInt(rawClock, 10) * 60;
     }
+    // Guard: if parsing failed return the raw string unchanged rather than "NaN'"
+    if (isNaN(secs)) return rawClock;
     const etBase = period === 3 ? 90 : 105; // minutes
     // Only offset if the value is below the ET floor (ESPN reset the clock)
     if (secs < etBase * 60) {
