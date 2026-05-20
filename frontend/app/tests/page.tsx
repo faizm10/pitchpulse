@@ -35,11 +35,38 @@ interface LiveInfo {
 
 const TEST_GAMES: TestGame[] = [
   {
+    slug: 'uel-fri-vil',
+    href: '/test-mls/fri-vil',
+    source: 'espn',
+    matchId: '401862911',
+    apiPath: '/api/test-mls/401862911?league=uefa.europa',
+    league: 'UEFA Europa League',
+    round: 'Final',
+  },
+  {
     slug: 'mls-hou-stl',
     href: '/test-mls/hou-stl',
     source: 'espn',
     matchId: '401871127',
-    apiPath: '/api/test-mls/401871127',
+    apiPath: '/api/test-mls/401871127?league=usa.open&fotmob=9441',
+    league: 'US Open Cup',
+    round: 'QF',
+  },
+  {
+    slug: 'mls-clb-nyc',
+    href: '/test-mls/clb-nyc',
+    source: 'espn',
+    matchId: '401871130',
+    apiPath: '/api/test-mls/401871130?league=usa.open&fotmob=9441',
+    league: 'US Open Cup',
+    round: 'QF',
+  },
+  {
+    slug: 'mls-col-sj',
+    href: '/test-mls/col-sj',
+    source: 'espn',
+    matchId: '401871129',
+    apiPath: '/api/test-mls/401871129?league=usa.open&fotmob=9441',
     league: 'US Open Cup',
     round: 'QF',
   },
@@ -48,11 +75,29 @@ const TEST_GAMES: TestGame[] = [
 // ── EPL venue coordinates ─────────────────────────────────────────────────────
 
 const EPL_VENUES: Record<string, { name: string; city: string; longitude: number; latitude: number }> = {
+  'uel-fri-vil': {
+    name: 'Vodafone Park',
+    city: 'Istanbul, Turkey',
+    longitude: 29.0097,
+    latitude: 41.0340,
+  },
   'mls-hou-stl': {
     name: 'Shell Energy Stadium',
     city: 'Houston, TX',
     longitude: -95.3510,
     latitude: 29.7522,
+  },
+  'mls-clb-nyc': {
+    name: 'ScottsMiracle-Gro Field',
+    city: 'Columbus, OH',
+    longitude: -82.9917,
+    latitude: 39.9689,
+  },
+  'mls-col-sj': {
+    name: "Dick's Sporting Goods Park",
+    city: 'Commerce City, CO',
+    longitude: -104.8919,
+    latitude: 39.8052,
   },
 };
 
