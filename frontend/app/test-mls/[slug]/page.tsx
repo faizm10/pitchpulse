@@ -357,13 +357,7 @@ function ScoreHero({
             >
               {clockDisplay || '–'}
             </div>
-            {/* ET period label — shows which half of ET and the minute range */}
-            {isExtraTime && (
-              <div className="mono" style={{ fontSize: 9, color: 'var(--ink-3)', marginTop: 4, letterSpacing: '0.12em' }}>
-                {match.period === 3 ? 'ET1 · 90–105' : 'ET2 · 105–120'}
-              </div>
-            )}
-            {statusDetail && !clockDisplay && !isExtraTime && (
+            {statusDetail && !clockDisplay && (
               <div className="serif" style={{ fontSize: 11, fontStyle: 'italic', color: 'var(--ink-3)', marginTop: 4 }}>
                 {statusDetail}
               </div>
