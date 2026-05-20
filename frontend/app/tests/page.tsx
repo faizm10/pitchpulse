@@ -27,6 +27,8 @@ interface LiveInfo {
   displayClock?: string;
   league: string;
   round?: string;
+  hadPenaltyShootout?: boolean;
+  penScore?: { home: number; away: number } | null;
 }
 
 // ── Test game registry ────────────────────────────────────────────────────────
@@ -101,9 +103,9 @@ function useIsMobile(breakpoint = 640) {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function stateLabel(state: LiveInfo['state']): string {
+function stateLabel(state: LiveInfo['state'], hadPenaltyShootout?: boolean): string {
   if (state === 'in') return 'LIVE';
-  if (state === 'post') return 'FT';
+  if (state === 'post') return hadPenaltyShootout ? 'FT (P)' : 'FT';
   return 'PRE';
 }
 
@@ -127,6 +129,8 @@ function matchFromPayload(m: Record<string, unknown>): LiveInfo {
     liveClock: (m.liveClock as string) ?? (m.displayClock as string) ?? '',
     league: (m.league as string) ?? '',
     round: m.round as string | undefined,
+    hadPenaltyShootout: (m.hadPenaltyShootout as boolean) ?? false,
+    penScore: (m.penScore as { home: number; away: number } | null) ?? null,
   };
 }
 
@@ -243,7 +247,7 @@ function EPLMarkers({
                                 <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--live)', display: 'inline-block' }} />
                                 LIVE{info.liveClock ? ` · ${info.liveClock}` : ''}
                               </span>
-                            : stateLabel(info.state)
+                            : stateLabel(info.state, info.hadPenaltyShootout)
                           : '…'}
                       </span>
                       <span style={{ fontSize: 9, fontFamily: 'var(--mono)', color: 'var(--ink-3)', letterSpacing: '0.1em' }}>
@@ -413,7 +417,7 @@ function MatchCard({
                 <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--live)', display: 'inline-block' }} aria-hidden="true" />
               )}
               <span className="mono" style={{ fontSize: 9, letterSpacing: '0.14em', color: stateColor(info.state) }}>
-                {stateLabel(info.state)}
+                {stateLabel(info.state, info.hadPenaltyShootout)}
                 {info.state === 'in' && (info.liveClock || info.statusDetail) ? ` · ${info.liveClock || info.statusDetail}` : ''}
               </span>
             </div>
@@ -452,11 +456,25 @@ function MatchCard({
               {/* Scores / VS */}
               <div style={{ textAlign: 'center', minWidth: isMobile ? 56 : 72, flexShrink: 0 }}>
                 {info.state !== 'pre' ? (
-                  <div className="serif tnum" style={{ fontSize: isMobile ? 28 : 36, lineHeight: 1, letterSpacing: '0.04em' }}>
-                    {info.homeTeam.score}
-                    <span style={{ margin: '0 6px', color: 'var(--ink-3)', fontSize: isMobile ? 20 : 26 }}>–</span>
-                    {info.awayTeam.score}
-                  </div>
+                  <>
+                    <div className="serif tnum" style={{ fontSize: isMobile ? 28 : 36, lineHeight: 1, letterSpacing: '0.04em' }}>
+                      {info.homeTeam.score}
+                      <span style={{ margin: '0 6px', color: 'var(--ink-3)', fontSize: isMobile ? 20 : 26 }}>–</span>
+                      {info.awayTeam.score}
+                    </div>
+                    {info.hadPenaltyShootout && info.penScore && (
+                      <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                        <div className="serif tnum" style={{ fontSize: isMobile ? 14 : 17, lineHeight: 1, color: 'var(--ink-3)' }}>
+                          {info.penScore.home}
+                          <span style={{ margin: '0 4px', fontSize: isMobile ? 10 : 12 }}>–</span>
+                          {info.penScore.away}
+                        </div>
+                        <div className="mono" style={{ fontSize: 8, letterSpacing: '0.14em', color: 'var(--ink-3)' }}>
+                          ON PENS
+                        </div>
+                      </div>
+                    )}
+                  </>
                 ) : (
                   <div className="mono" style={{ fontSize: isMobile ? 14 : 18, color: 'var(--ink-3)' }}>VS</div>
                 )}
