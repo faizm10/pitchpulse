@@ -1003,15 +1003,20 @@ export default function MLSGamePage({ params }: { params: { slug: string } }) {
             seenEventIds.current.add(ev.id);
             if (!isInitialLoad) {
               if (isScoringGoalEvent(ev)) {
-                playGoal(
-                  buildGoalDataFromKeyEvent(
-                    ev,
-                    incoming.homeTeam,
-                    incoming.awayTeam,
-                    incoming.league,
-                    slug
-                  )
+                const goalData = buildGoalDataFromKeyEvent(
+                  ev,
+                  incoming.homeTeam,
+                  incoming.awayTeam,
+                  incoming.league,
+                  slug
                 );
+                // ESPN commentary events often have null scores — fall back to
+                // the live match scores so the ticker/overlay shows the right scoreline
+                playGoal({
+                  ...goalData,
+                  homeScore: ev.homeScore != null ? ev.homeScore : (parseInt(incoming.homeTeam.score, 10) || 0),
+                  awayScore: ev.awayScore != null ? ev.awayScore : (parseInt(incoming.awayTeam.score, 10) || 0),
+                });
               } else {
                 showMatchEventToast(ev, incoming.homeTeam, incoming.awayTeam);
               }
@@ -1090,8 +1095,10 @@ export default function MLSGamePage({ params }: { params: { slug: string } }) {
   const isHybrid = match.source === 'espn+fotmob';
 
   return (
+    <>
+    {/* Rendered outside the scrollable container so iOS Safari fixed-position overlay isn't clipped */}
+    {celebration}
     <div className="screen" style={{ minHeight: '100vh', maxWidth: '100vw', overflowX: 'hidden' }}>
-      {celebration}
       <PitchPulseToaster position={isMobile ? 'top-center' : 'bottom-right'} />
 
       {/* Header — matches Chelsea page layout exactly */}
@@ -1237,5 +1244,6 @@ export default function MLSGamePage({ params }: { params: { slug: string } }) {
 
       <div style={{ height: isMobile ? 32 : 0 }} aria-hidden="true" />
     </div>
+    </>
   );
 }
