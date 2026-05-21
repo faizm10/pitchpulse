@@ -137,58 +137,64 @@ function isPlaceholderName(name: string): boolean {
 
 function shortenPlaceholder(name: string): string {
   const n = name.trim();
-  let m = n.match(/round of (\d+)\s+(\d+)\s+winner/i);
-  if (m) return `R${m[1]} W${m[2]}`;
-  m = n.match(/round of 32\s+(\d+)\s+winner/i);
+
+  // 1. Match Round of 32 / 16 Winners (e.g., "Round of 16 3 Winner")
+  let m = n.match(/round of 32\s+(\d+)\s+Winner/i);
   if (m) return `R32 W${m[1]}`;
-  m = n.match(/round of 16\s+(\d+)\s+winner/i);
+  
+  m = n.match(/round of 16\s+(\d+)\s+Winner/i);
   if (m) return `R16 W${m[1]}`;
-  m = n.match(/quarter-?finals?\s+(\d+)\s+winner/i);
+
+  // 2. Match Quarterfinal / Semifinal Winners (e.g., "Quarterfinal 1 Winner")
+  m = n.match(/quarter\-?finals?\s+(\d+)\s+Winner/i);
   if (m) return `QF W${m[1]}`;
-  m = n.match(/semi-?finals?\s+(\d+)\s+winner/i);
+  
+  m = n.match(/semi\-?finals?\s+(\d+)\s+Winner/i);
   if (m) return `SF W${m[1]}`;
-  m = n.match(/group\s+([a-l])\s+(2nd|second)(?:\s+place)?/i);
-  if (m) return `2${m[1].toUpperCase()}`;
-  m = n.match(/group\s+([a-l])\s+(winner|1st|first)(?:\s+place)?/i);
+
+  // 3. Match Group Winners (e.g., "Group C Winner")
+  m = n.match(/group\s+([a-l])\s+Winner/i);
   if (m) return `1${m[1].toUpperCase()}`;
-  m = n.match(/(\d)(?:st|nd|rd|th)?\s+place\s+group\s+([a-l])/i);
-  if (m) return `${m[1]}${m[2].toUpperCase()}`;
-  if (/^third\b/i.test(n) || /^3rd\b/i.test(n)) {
-    return n.replace(/^third place\s+/i, '3rd ').replace(/^3rd place\s+/i, '3rd ');
+
+  // 4. Match Group 2nd Places (e.g., "Group A 2nd Place")
+  m = n.match(/group\s+([a-l])\s+2nd\s+Place/i);
+  if (m) return `2${m[1].toUpperCase()}`;
+
+  // 5. Clean up Third Place groups (e.g., "Third Place Group A/B/C/D/F" -> "3rd A/B/C/D/F")
+  if (/^third place\b/i.test(n)) {
+    return n.replace(/^third place\s+/i, '3rd ');
   }
+
   return n;
 }
-
-/** Compact card label; full string kept for hover when shortened */
 function bracketSlotLabel(
   code: string | null,
   hint: string | undefined,
   apiName: string | undefined
-): { display: string; full: string } {
+): { display: string; full: string; isPlaceholder: boolean } {
   const api = apiName?.trim() ?? '';
   const hintText = hint?.trim() ?? '';
 
+  if (api && isPlaceholderName(api)) {
+    return { display: shortenPlaceholder(api), full: api, isPlaceholder: true };
+  }
+
   if (code) {
     const display = api || hintText || 'TBD';
-    return { display, full: display };
+    return { display, full: display, isPlaceholder: false };
   }
 
   if (hintText) {
     const full = api || hintText;
-    return { display: hintText, full };
-  }
-
-  if (api && isPlaceholderName(api)) {
-    return { display: shortenPlaceholder(api), full: api };
+    return { display: hintText, full, isPlaceholder: true };
   }
 
   if (api) {
-    return { display: api, full: api };
+    return { display: api, full: api, isPlaceholder: false };
   }
 
-  return { display: 'TBD', full: 'TBD' };
+  return { display: 'TBD', full: 'TBD', isPlaceholder: true };
 }
-
 const R32_DATES = [
   'Jun 28',
   'Jun 29',
@@ -572,8 +578,14 @@ function TeamRow({
   dim: boolean;
   won?: boolean;
 }) {
-  const { display, full } = bracketSlotLabel(code, hint, apiName);
-  const isHint = !code;
+  const { display, full, isPlaceholder } = bracketSlotLabel(code, hint, apiName);
+
+  // first column:
+  {code && !isPlaceholder ? (
+    <Flag code={code} w={20} h={14} />
+  ) : (
+    <span className="bracket-slot-icon" />
+  )}  const isHint = !code;
 
   return (
     <div
