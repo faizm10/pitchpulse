@@ -58,7 +58,7 @@ pitchpulse/
 
 ### Still mock / placeholder
 
-- Knockout bracket (`/bracket`) — `lib/data.ts`
+- Knockout bracket connector polish (data via `/api/bracket` + static R32 hints)
 - Player stats leaderboard (`/stats`) — `lib/data.ts` (team squads are live via FotMob)
 - Stadium pages (`/stadium/[id]`) — mock `StadiumView`; map uses `data/venues.ts`
 - Country host pages — mock `CountryView`
