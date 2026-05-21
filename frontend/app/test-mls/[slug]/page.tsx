@@ -1347,7 +1347,7 @@ export default function MLSGamePage({ params }: { params: { slug: string } }) {
         <p className="mono" style={{ fontSize: 12, color: 'var(--ink-3)', marginTop: 10 }}>{error}</p>
         <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
           <button className="btn" onClick={fetchMatch} style={{ minHeight: 44, padding: '0 20px' }}>Retry</button>
-          <Link href="/tests" className="btn" style={{ minHeight: 44, padding: '0 20px', textDecoration: 'none' }}>← Back</Link>
+          <Link href="/admin" className="btn" style={{ minHeight: 44, padding: '0 20px', textDecoration: 'none' }}>← Admin</Link>
         </div>
       </div>
     );
@@ -1372,11 +1372,11 @@ export default function MLSGamePage({ params }: { params: { slug: string } }) {
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
           <Link
-            href="/tests"
+            href="/admin"
             className="mono"
             style={{ fontSize: 10, color: 'var(--ink-3)', textDecoration: 'none', letterSpacing: '0.12em', marginRight: 4 }}
           >
-            ← Tests
+            ← Admin
           </Link>
           <div className="mono" style={{ fontSize: 10, letterSpacing: '0.18em', color: 'var(--ink-3)' }}>
             {config.label} · {config.round}
