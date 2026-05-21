@@ -129,28 +129,22 @@ const FLAGS: Record<string, React.ComponentType<any>> = {
   
   
 };
-export function Flag({
-  code,
-  w = 22,
-  h = 14,
-}: {
-  code: string;
-  w?: number;
-  h?: number;
-}) {
+export function Flag({ code, w = 22, h = 14 }: { code: string; w?: number; h?: number }) {
   const FlagIcon = FLAGS[code];
 
-  if (!FlagIcon) return null;
+  if (!FlagIcon) return (
+    <span style={{
+      display: 'inline-block',
+      width: w,
+      height: h,
+      borderRadius: 2,
+      background: 'var(--rule)',
+      opacity: 0.4,
+    }} />
+  );
 
   return (
-    <FlagIcon
-      style={{
-        width: w,
-        height: h,
-        borderRadius: 2,
-        objectFit: "cover",
-      }}
-    />
+    <FlagIcon style={{ width: w, height: h, borderRadius: 2, objectFit: 'cover' }} />
   );
 }
 

@@ -6,7 +6,7 @@ import { Flag } from './Shared';
 
 interface LiveBracketMatch {
   id: string;
-  a: string |null;
+  a: string | null;
   b: string | null;
   aName: string;
   bName: string;
@@ -24,6 +24,30 @@ interface LiveBracket {
   SF: LiveBracketMatch[];
   F: LiveBracketMatch[];
 }
+
+/** Fixed slot geometry so gutters and pair blocks stay aligned across rounds */
+const CARD_H = 106;
+const SLOT_GAP = 14;
+const PAIR_GAP = 20;
+const GUTTER_W = 44;
+const H0 = 2 * CARD_H + SLOT_GAP;
+
+type RoundId = keyof LiveBracket;
+
+interface RoundConfig {
+  id: RoundId;
+  label: string;
+  mergeLevel: number;
+  slotsPerPair: 1 | 2;
+}
+
+const ROUNDS: RoundConfig[] = [
+  { id: 'R32', label: 'Round of 32', mergeLevel: 0, slotsPerPair: 2 },
+  { id: 'R16', label: 'Round of 16', mergeLevel: 0, slotsPerPair: 1 },
+  { id: 'QF', label: 'Quarter-finals', mergeLevel: 1, slotsPerPair: 1 },
+  { id: 'SF', label: 'Semi-finals', mergeLevel: 2, slotsPerPair: 1 },
+  { id: 'F', label: 'Final', mergeLevel: 3, slotsPerPair: 1 },
+];
 
 const blank = (id: string): LiveBracketMatch => ({
   id,
@@ -67,6 +91,110 @@ const R32_HINTS = [
   ['1B', '3rd A/C/D/F/L'],
 ];
 
+const ROUND_SIZES: Record<RoundId, number> = {
+  R32: 16,
+  R16: 8,
+  QF: 4,
+  SF: 2,
+  F: 1,
+};
+
+function padRound(
+  matches: LiveBracketMatch[],
+  size: number,
+  idPrefix: string
+): LiveBracketMatch[] {
+  const out = matches.slice(0, size);
+  while (out.length < size) {
+    out.push(blank(`${idPrefix}${out.length + 1}`));
+  }
+  return out;
+}
+
+function normalizeBracket(raw: Partial<LiveBracket>): LiveBracket {
+  return {
+    R32: padRound(raw.R32 ?? [], ROUND_SIZES.R32, 'r'),
+    R16: padRound(raw.R16 ?? [], ROUND_SIZES.R16, 'm'),
+    QF: padRound(raw.QF ?? [], ROUND_SIZES.QF, 'q'),
+    SF: padRound(raw.SF ?? [], ROUND_SIZES.SF, 's'),
+    F: padRound(raw.F ?? [], ROUND_SIZES.F, 'f'),
+  };
+}
+
+function isPlaceholderName(name: string): boolean {
+  const n = name.trim();
+  if (!n || /^tbd$/i.test(n)) return true;
+  return (
+    /winner/i.test(n) ||
+    /^group\s/i.test(n) ||
+    /^third\b/i.test(n) ||
+    /^3rd\b/i.test(n) ||
+    /^round of/i.test(n) ||
+    /^quarter-?final/i.test(n) ||
+    /^semi-?final/i.test(n)
+  );
+}
+
+function shortenPlaceholder(name: string): string {
+  const n = name.trim();
+
+  // 1. Match Round of 32 / 16 Winners (e.g., "Round of 16 3 Winner")
+  let m = n.match(/round of 32\s+(\d+)\s+Winner/i);
+  if (m) return `R32 W${m[1]}`;
+  
+  m = n.match(/round of 16\s+(\d+)\s+Winner/i);
+  if (m) return `R16 W${m[1]}`;
+
+  // 2. Match Quarterfinal / Semifinal Winners (e.g., "Quarterfinal 1 Winner")
+  m = n.match(/quarter\-?finals?\s+(\d+)\s+Winner/i);
+  if (m) return `QF W${m[1]}`;
+  
+  m = n.match(/semi\-?finals?\s+(\d+)\s+Winner/i);
+  if (m) return `SF W${m[1]}`;
+
+  // 3. Match Group Winners (e.g., "Group C Winner")
+  m = n.match(/group\s+([a-l])\s+Winner/i);
+  if (m) return `1${m[1].toUpperCase()}`;
+
+  // 4. Match Group 2nd Places (e.g., "Group A 2nd Place")
+  m = n.match(/group\s+([a-l])\s+2nd\s+Place/i);
+  if (m) return `2${m[1].toUpperCase()}`;
+
+  // 5. Clean up Third Place groups (e.g., "Third Place Group A/B/C/D/F" -> "3rd A/B/C/D/F")
+  if (/^third place\b/i.test(n)) {
+    return n.replace(/^third place\s+/i, '3rd ');
+  }
+
+  return n;
+}
+function bracketSlotLabel(
+  code: string | null,
+  hint: string | undefined,
+  apiName: string | undefined
+): { display: string; full: string; isPlaceholder: boolean } {
+  const api = apiName?.trim() ?? '';
+  const hintText = hint?.trim() ?? '';
+
+  if (api && isPlaceholderName(api)) {
+    return { display: shortenPlaceholder(api), full: api, isPlaceholder: true };
+  }
+
+  if (code) {
+    const display = api || hintText || 'TBD';
+    return { display, full: display, isPlaceholder: false };
+  }
+
+  if (hintText) {
+    const full = api || hintText;
+    return { display: hintText, full, isPlaceholder: true };
+  }
+
+  if (api) {
+    return { display: api, full: api, isPlaceholder: false };
+  }
+
+  return { display: 'TBD', full: 'TBD', isPlaceholder: true };
+}
 const R32_DATES = [
   'Jun 28',
   'Jun 29',
@@ -86,6 +214,29 @@ const R32_DATES = [
   'Jul 4',
 ];
 
+function pairBlockHeight(mergeLevel: number): number {
+  let h = H0;
+  for (let i = 0; i < mergeLevel; i++) {
+    h = 2 * h + PAIR_GAP;
+  }
+  return h;
+}
+
+function feederCentersY(
+  height: number,
+  mergeLevel: number
+): [number, number] {
+  if (mergeLevel === 0) {
+    const y0 = CARD_H / 2;
+    const y1 = CARD_H + SLOT_GAP + CARD_H / 2;
+    return [y0, y1];
+  }
+  const childH = pairBlockHeight(mergeLevel - 1);
+  const y0 = childH / 2;
+  const y1 = childH + PAIR_GAP + childH / 2;
+  return [y0, y1];
+}
+
 export function Bracket() {
   const [bracket, setBracket] = useState<LiveBracket>(STATIC_HINTS);
   const [loading, setLoading] = useState(true);
@@ -95,17 +246,14 @@ export function Bracket() {
       try {
         const res = await fetch('/api/bracket');
         const data = await res.json();
-
-        const b = data.bracket as LiveBracket;
-
-        setBracket({
-          R32: b.R32?.length ? b.R32 : STATIC_HINTS.R32,
-          R16: b.R16?.length ? b.R16 : STATIC_HINTS.R16,
-          QF: b.QF?.length ? b.QF : STATIC_HINTS.QF,
-          SF: b.SF?.length ? b.SF : STATIC_HINTS.SF,
-          F: b.F?.length ? b.F : STATIC_HINTS.F,
-        });
+        const b = data.bracket as Partial<LiveBracket>;
+        setBracket(
+          normalizeBracket(
+            Object.keys(b).length ? b : STATIC_HINTS
+          )
+        );
       } catch {
+        /* keep static hints */
       } finally {
         setLoading(false);
       }
@@ -122,272 +270,207 @@ export function Bracket() {
     ...bracket.F,
   ];
 
-  const liveCount = allMatches.filter(
-    (m) => m.status === 'live'
-  ).length;
-
-  const playedCount = allMatches.filter(
-    (m) => m.status === 'ft'
-  ).length;
-
+  const liveCount = allMatches.filter((m) => m.status === 'live').length;
+  const playedCount = allMatches.filter((m) => m.status === 'ft').length;
   const winner =
-    bracket.F[0]?.status === 'ft'
-      ? getWinner(bracket.F[0])
-      : null;
+    bracket.F[0]?.status === 'ft' ? getWinner(bracket.F[0]) : null;
 
   return (
-    <div
-      className="screen"
-      style={{
-        minHeight: '100vh',
-        background:
-          'radial-gradient(circle at top, rgba(255,215,0,0.08), transparent 35%)',
-      }}
-    >
-      {/* HERO */}
-      <div
-        style={{
-          padding: '52px 56px 40px',
-          borderBottom: '1px solid var(--rule)',
-        }}
-      >
-        <div className="eyebrow">
-          Knockout · Round of 32 → Final
-        </div>
-
-        <div
-          className="headline"
-          style={{
-            fontSize: 68,
-            marginTop: 8,
-            letterSpacing: '-0.04em',
-            lineHeight: 0.95,
-          }}
-        >
+    <div className="screen bracket-screen">
+      <div className="bracket-hero">
+        <div className="eyebrow">Knockout · Round of 32 → Final</div>
+        <div className="headline bracket-headline">
           The path to <em>MetLife.</em>
         </div>
-
-        <div
-          className="mono"
-          style={{
-            fontSize: 11,
-            color: 'var(--ink-3)',
-            marginTop: 16,
-            letterSpacing: '0.08em',
-          }}
-        >
+        <div className="mono bracket-hero-meta">
           {loading
             ? 'Loading bracket…'
             : `${playedCount} matches played · ${
-                liveCount > 0
-                  ? `${liveCount} live · `
-                  : ''
+                liveCount > 0 ? `${liveCount} live · ` : ''
               }Final Jul 19, 2026`}
         </div>
       </div>
 
-      {/* BRACKET */}
-      <div
-        style={{
-          padding: '48px 32px 90px',
-          overflowX: 'auto',
-          backgroundImage:
-            'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px)',
-          backgroundSize: '100% 32px',
-        }}
-      >
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns:
-              '280px 240px 220px 200px 180px 120px',
-            minWidth: 1350,
-            gap: 16,
-            alignItems: 'stretch',
-          }}
-        >
-          <Column
-            label="Round of 32"
-            matches={bracket.R32}
-            hints={R32_HINTS}
-            dates={R32_DATES}
-          />
+      <div className="bracket-scroll bracket-grid">
+        <div className="bracket-board">
+          {ROUNDS.map((round, roundIndex) => {
+            const matches = bracket[round.id];
+            const pairCount = Math.ceil(
+              matches.length / round.slotsPerPair
+            );
 
-          <Column
-            label="Round of 16"
-            matches={bracket.R16}
+            return (
+              <span key={round.id} style={{ display: 'contents' }}>
+                {roundIndex > 0 && (
+                  <GutterColumn
+                    count={pairCount}
+                    mergeLevel={round.mergeLevel}
+                  />
+                )}
+                <RoundColumn
+                  round={round}
+                  matches={matches}
+                  hints={round.id === 'R32' ? R32_HINTS : undefined}
+                  dates={round.id === 'R32' ? R32_DATES : undefined}
+                  isFinal={round.id === 'F'}
+                />
+              </span>
+            );
+          })}
+          <TrophyColumn
+            winner={winner}
+            slotHeight={pairBlockHeight(3)}
           />
-
-          <Column
-            label="Quarter-finals"
-            matches={bracket.QF}
-          />
-
-          <Column
-            label="Semi-finals"
-            matches={bracket.SF}
-          />
-
-          <Column
-            label="Final"
-            matches={bracket.F}
-          />
-
-          <TrophyColumn winner={winner} />
         </div>
       </div>
     </div>
   );
 }
 
-function getWinner(
-  m: LiveBracketMatch
-): string | null {
+function getWinner(m: LiveBracketMatch): string | null {
   if (!m.score) return null;
-
   if (m.score[0] > m.score[1]) return m.aName;
-
   if (m.score[1] > m.score[0]) return m.bName;
-
   return null;
 }
 
-function Column({
-  label,
-  matches,
-  hints,
-  dates,
+function GutterColumn({
+  count,
+  mergeLevel,
 }: {
-  label: string;
-  matches: LiveBracketMatch[];
-  hints?: string[][];
-  dates?: string[];
+  count: number;
+  mergeLevel: number;
 }) {
-  const gap =
-    label === 'Round of 32'
-      ? 75
-      : label === 'Round of 16'
-      ? 256
-      : label === 'Quarter-finals'
-      ? 618
-      : label === 'Semi-finals'
-      ? 1340
-      : 420;
-
-  const top =
-    label === 'Round of 16'
-      ? 94
-      : label === 'Quarter-finals'
-      ? 276
-      : label === 'Semi-finals'
-      ? 615
-      : label === 'Final'
-      ? 1360
-      : 0;
+  const cellH = pairBlockHeight(mergeLevel);
 
   return (
     <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        position: 'relative',
-      }}
+      className="bracket-gutter-col"
+      style={{ width: GUTTER_W }}
+      aria-hidden
     >
-      <div
-        className="mono"
-        style={{
-          fontSize: 10,
-          color: 'var(--ink-3)',
-          letterSpacing: '0.16em',
-          textAlign: 'center',
-          paddingBottom: 16,
-        }}
-      >
-        {label.toUpperCase()}
+      <div className="bracket-col-label bracket-col-label--spacer" />
+      <div className="bracket-col-body">
+        {Array.from({ length: count }, (_, i) => (
+          <div
+            key={i}
+            className="bracket-gutter-cell"
+            style={{
+              height: cellH,
+              marginBottom: i < count - 1 ? PAIR_GAP : 0,
+            }}
+          >
+            <BracketConnector
+              width={GUTTER_W}
+              height={cellH}
+              mergeLevel={mergeLevel}
+            />
+          </div>
+        ))}
       </div>
+    </div>
+  );
+}
 
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap,
-          paddingTop: top,
-          position: 'relative',
-        }}
-      >
-        {matches.map((m, i) => {
-          const connectorHeight =
-            label === 'Round of 32'
-              ? 92
-              : label === 'Round of 16'
-              ? 156
-              : label === 'Quarter-finals'
-              ? 306
-              : 0;
+function BracketConnector({
+  width,
+  height,
+  mergeLevel,
+}: {
+  width: number;
+  height: number;
+  mergeLevel: number;
+}) {
+  const [y0, y1] = feederCentersY(height, mergeLevel);
+  const yMid = height / 2;
+  const midX = width * 0.5;
+  const stroke = 'var(--rule)';
+
+  return (
+    <svg
+      className="bracket-gutter-svg"
+      width={width}
+      height={height}
+      viewBox={`0 0 ${width} ${height}`}
+      preserveAspectRatio="none"
+    >
+      <path
+        d={`M 0 ${y0} H ${midX} M 0 ${y1} H ${midX} M ${midX} ${y0} V ${yMid} M ${midX} ${y1} V ${yMid} M ${midX} ${yMid} H ${width}`}
+        fill="none"
+        stroke={stroke}
+        strokeWidth={2}
+        vectorEffect="non-scaling-stroke"
+      />
+    </svg>
+  );
+}
+
+function RoundColumn({
+  round,
+  matches,
+  hints,
+  dates,
+  isFinal,
+}: {
+  round: RoundConfig;
+  matches: LiveBracketMatch[];
+  hints?: string[][];
+  dates?: string[];
+  isFinal?: boolean;
+}) {
+  const blockH = pairBlockHeight(round.mergeLevel);
+  const pairCount = Math.ceil(matches.length / round.slotsPerPair);
+
+  return (
+    <div
+      className={`bracket-col ${isFinal ? 'bracket-col--final' : ''}`}
+    >
+      <div className="mono bracket-col-label">{round.label.toUpperCase()}</div>
+      <div className="bracket-col-body">
+        {Array.from({ length: pairCount }, (_, pairIndex) => {
+          const slotIndexes =
+            round.slotsPerPair === 2
+              ? [pairIndex * 2, pairIndex * 2 + 1]
+              : [pairIndex];
 
           return (
             <div
-              key={m.id}
+              key={pairIndex}
+              className={`bracket-pair-block ${
+                round.slotsPerPair === 1
+                  ? 'bracket-pair-block--single'
+                  : ''
+              }`}
               style={{
-                position: 'relative',
+                minHeight: blockH,
+                marginBottom:
+                  pairIndex < pairCount - 1 ? PAIR_GAP : 0,
               }}
             >
-              {/* CARD */}
-              <Card
-                m={m}
-                hintA={hints?.[i]?.[0]}
-                hintB={hints?.[i]?.[1]}
-                date={dates?.[i]}
-                showLeftConnector={
-                  label !== 'Round of 32'
-                }
-              />
+              {slotIndexes.map((matchIndex, slotIndex) => {
+                const m = matches[matchIndex];
+                if (!m) return null;
 
-              {label !== 'Final' && (
-  <>
-    {/* top/bottom horizontal */}
-    <div
-      style={{
-        position: 'absolute',
-        right: -40,
-        top: '50%',
-        width: 40,
-        height: 2,
-        background: 'var(--rule)',
-        transform: 'translateY(-50%)',
-      }}
-    />
-
-    {/* vertical connector */}
-    {i % 2 === 0 && (
-      <div
-        style={{
-          position: 'absolute',
-          right: -40,
-          top: '50%',
-          width: 2,
-          height: connectorHeight,
-          background: 'var(--rule)',
-        }}
-      />
-    )}
-
-    {/* middle connector into next round */}
-    {i % 2 === 0 && (
-      <div
-        style={{
-          position: 'absolute',
-          right: -80,
-          top: `calc(50% + ${connectorHeight / 2}px)`,
-          width: 40,
-          height: 2,
-          background: 'var(--rule)',
-        }}
-      />
-    )}
-  </>
-)}
-                
+                return (
+                  <div
+                    key={m.id}
+                    className="bracket-slot"
+                    style={
+                      round.slotsPerPair === 2 && slotIndex === 0
+                        ? { marginBottom: SLOT_GAP }
+                        : undefined
+                    }
+                  >
+                    <Card
+                      m={m}
+                      hintA={hints?.[matchIndex]?.[0]}
+                      hintB={hints?.[matchIndex]?.[1]}
+                      date={dates?.[matchIndex]}
+                      isFinal={isFinal}
+                    />
+                  </div>
+                );
+              })}
             </div>
           );
         })}
@@ -401,17 +484,16 @@ function Card({
   hintA,
   hintB,
   date,
-  showLeftConnector,
+  isFinal,
 }: {
   m: LiveBracketMatch;
   hintA?: string;
   hintB?: string;
   date?: string;
-  showLeftConnector?: boolean;
+  isFinal?: boolean;
 }) {
   const isLive = m.status === 'live';
   const isFt = m.status === 'ft';
-
   const hasTeams = !!(m.a || m.b);
 
   const winner: 'a' | 'b' | null =
@@ -419,224 +501,113 @@ function Card({
       ? m.score[0] > m.score[1]
         ? 'a'
         : m.score[1] > m.score[0]
-        ? 'b'
-        : null
+          ? 'b'
+          : null
       : null;
 
   const displayDate = date
     ? date
     : m.date
-    ? new Date(m.date).toLocaleDateString(
-        'en-US',
-        {
+      ? new Date(m.date).toLocaleDateString('en-US', {
           month: 'short',
           day: 'numeric',
-        }
-      )
-    : '—';
+        })
+      : '—';
 
-  const content = (
+  const card = (
     <div
-      style={{
-        position: 'relative',
-        borderRadius: 18,
-        overflow: 'hidden',
-        background: 'rgba(255,255,255,0.72)',
-        backdropFilter: 'blur(10px)',
-        border:
-          '1px solid rgba(255,255,255,0.08)',
-        boxShadow:
-          '0 6px 24px rgba(0,0,0,0.05)',
-      }}
+      className={`bracket-card ${isFinal ? 'is-final' : ''} ${
+        isLive ? 'is-live' : ''
+      }`}
+      style={{ minHeight: CARD_H }}
     >
-      {/* LEFT CONNECTOR */}
-      {showLeftConnector && (
-        <div
-          style={{
-            position: 'absolute',
-            left: -24,
-            top: '50%',
-            width: 24,
-            height: 2,
-            transform: 'translateY(-50%)',
-            background: 'var(--rule)',
-            opacity: 0.7,
-          }}
-        />
-      )}
-
-      {/* META */}
-      <div
-        style={{
-          padding: '6px 10px',
-          borderBottom:
-            '1px solid var(--rule-soft)',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          fontFamily: 'var(--mono)',
-          fontSize: 9,
-          color: 'var(--ink-3)',
-          letterSpacing: '0.08em',
-        }}
-      >
+      <div className="bracket-card-meta">
         <span>{displayDate}</span>
-
         {isLive ? (
-          <span
-            style={{
-              background:
-                'rgba(255,0,0,0.12)',
-              color: '#ff4d4d',
-              padding: '2px 7px',
-              borderRadius: 999,
-              fontWeight: 700,
-            }}
-          >
-            LIVE {m.displayClock}
-          </span>
+          <span className="bracket-live-pill">LIVE {m.displayClock}</span>
         ) : (
-          <span>
-            {m.venue?.city?.toUpperCase()}
+          <span className="bracket-venue">
+            {m.venue?.city?.toUpperCase() || '—'}
           </span>
         )}
       </div>
 
-      {/* TEAM A */}
       <TeamRow
         code={m.a}
-        name={m.aName || hintA}
+        hint={hintA}
+        apiName={m.aName}
         score={m.score?.[0]}
         dim={winner === 'b'}
-        isHint={!m.a}
+        won={winner === 'a'}
       />
 
-      <div
-        style={{
-          height: 1,
-          background: 'var(--rule-soft)',
-        }}
-      />
+      <div className="bracket-card-divider" />
 
-      {/* TEAM B */}
       <TeamRow
         code={m.b}
-        name={m.bName || hintB}
+        hint={hintB}
+        apiName={m.bName}
         score={m.score?.[1]}
         dim={winner === 'a'}
-        isHint={!m.b}
+        won={winner === 'b'}
       />
     </div>
   );
 
-  if (!hasTeams) return content;
+  if (!hasTeams) return card;
 
   return (
-    <Link
-      href={`/match/${m.id}`}
-      style={{
-        textDecoration: 'none',
-        color: 'inherit',
-        display: 'block',
-      }}
-    >
-      <div
-        style={{
-          transition:
-            'transform 0.18s ease, box-shadow 0.18s ease',
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.transform =
-            'translateY(-3px)';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.transform =
-            'translateY(0)';
-        }}
-      >
-        {content}
-      </div>
+    <Link href={`/match/${m.id}`} className="bracket-link">
+      {card}
     </Link>
   );
 }
 
 function TeamRow({
   code,
-  name,
+  hint,
+  apiName,
   score,
   dim,
-  isHint,
+  won,
 }: {
   code: string | null;
-  name?: string;
+  hint?: string;
+  apiName?: string;
   score?: number;
   dim: boolean;
-  isHint: boolean;
+  won?: boolean;
 }) {
+  const { display, full, isPlaceholder } = bracketSlotLabel(code, hint, apiName);
+
+  // first column:
+  {code && !isPlaceholder ? (
+    <Flag code={code} w={20} h={14} />
+  ) : (
+    <span className="bracket-slot-icon" />
+  )}  const isHint = !code;
+
   return (
     <div
-      style={{
-        display: 'grid',
-        gridTemplateColumns:
-          '32px 1fr 28px',
-        alignItems: 'center',
-        gap: 8,
-        padding: '10px 12px',
-        opacity: dim ? 0.38 : 1,
-      }}
+      className={`bracket-team-row ${dim ? 'is-dim' : ''} ${
+        won ? 'bracket-team-winner' : ''
+      }`}
     >
       {code ? (
         <Flag code={code} w={20} h={14} />
       ) : (
-        <span
-          style={{
-            width: 20,
-            height: 14,
-            border:
-              '1px dashed var(--rule)',
-            borderRadius: 3,
-          }}
-        />
+        <span className="bracket-slot-icon" />
       )}
 
       <span
-        style={{
-          fontSize: 13,
-          fontWeight: code ? 600 : 400,
-          fontStyle: isHint
-            ? 'italic'
-            : 'normal',
-          color: isHint
-            ? 'var(--ink-3)'
-            : 'var(--ink)',
-          whiteSpace: 'nowrap',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          minWidth: 550,
-        }}
+        className={isHint ? 'bracket-team-hint' : 'bracket-team-name'}
+        title={full !== display ? full : undefined}
       >
-        {name || 'TBD'}
+        {display}
       </span>
 
-      <span
-        className="mono tnum"
-        style={{
-          fontSize: 13,
-          textAlign: 'right',
-          fontWeight:
-            score !== undefined && !dim
-              ? 700
-              : 500,
-          color:
-            score !== undefined
-              ? 'var(--ink)'
-              : 'var(--ink-3)',
-        }}
-      >
-        {score !== undefined &&
-        score !== null
-          ? score
-          : '—'}
+      <span className="mono tnum bracket-score">
+        {score !== undefined && score !== null ? score : '—'}
       </span>
     </div>
   );
@@ -644,93 +615,37 @@ function TeamRow({
 
 function TrophyColumn({
   winner,
+  slotHeight,
 }: {
   winner: string | null;
+  slotHeight: number;
 }) {
   return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'center',
-        gap: 16,
-      }}
-    >
+    <div className="bracket-col bracket-trophy-col">
+      <div className="mono bracket-col-label">WINNER</div>
       <div
-        className="mono"
-        style={{
-          fontSize: 10,
-          color: 'var(--ink-3)',
-          letterSpacing: '0.14em',
-        }}
+        className="bracket-col-body bracket-trophy-body"
+        style={{ minHeight: slotHeight }}
       >
-        WINNER
-      </div>
-
-      <div
-        style={{
-          width: 100,
-          borderRadius: 20,
-          padding: '22px 12px',
-          background:
-            'linear-gradient(to bottom, rgba(255,215,0,0.10), rgba(255,255,255,0.04))',
-          border:
-            '1px solid rgba(255,255,255,0.08)',
-          backdropFilter: 'blur(10px)',
-          boxShadow:
-            '0 0 40px rgba(255,215,0,0.15)',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: 12,
-          textAlign: 'center',
-        }}
-      >
-        <span style={{ fontSize: 42 }}>
-          🏆
-        </span>
-
-        {winner ? (
-          <span
-            className="serif"
-            style={{
-              fontSize: 13,
-              fontWeight: 700,
-              lineHeight: 1.2,
-            }}
-          >
-            {winner}
-          </span>
-        ) : (
-          <span
-            className="serif it"
-            style={{
-              fontSize: 11,
-              color: 'var(--ink-3)',
-              lineHeight: 1.5,
-            }}
-          >
-            To be
+        <div className="bracket-trophy-wrap">
+          <div className="bracket-trophy">
+            <span className="bracket-trophy-icon">🏆</span>
+            {winner ? (
+              <span className="serif bracket-trophy-name">{winner}</span>
+            ) : (
+              <span className="serif it bracket-trophy-placeholder">
+                To be
+                <br />
+                written
+              </span>
+            )}
+          </div>
+          <div className="mono bracket-trophy-date">
+            JUL 19
             <br />
-            written
-          </span>
-        )}
-      </div>
-
-      <div
-        className="mono"
-        style={{
-          fontSize: 9,
-          color: 'var(--ink-3)',
-          letterSpacing: '0.12em',
-          textAlign: 'center',
-          lineHeight: 1.8,
-        }}
-      >
-        JUL 19
-        <br />
-        METLIFE
+            METLIFE
+          </div>
+        </div>
       </div>
     </div>
   );
