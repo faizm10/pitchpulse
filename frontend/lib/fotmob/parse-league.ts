@@ -99,6 +99,7 @@ function parseFixtures(raw: any): FotmobFixture[] {
 }
 
 export function parseLeagueOverview(
+
   raw: Record<string, unknown>,
   leagueId: number
 ): FotmobLeagueOverview {
