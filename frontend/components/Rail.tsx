@@ -3,11 +3,17 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { matches, teams, pulses, stadiums, groups } from '@/lib/data';
+import { matches, teams, pulses, stadiums } from '@/lib/data';
 import { Flag, FormDots, ago } from './Shared';
 import { useTweaks, useMyTeam } from './Providers';
 import type { Match as LocalMatch } from '@/lib/types';
 import type { Match } from '@/types/espn';
+
+interface StandingsRow {
+  team: { id: string; name: string; abbreviation: string; logo: string | null };
+  played: number; wins: number; draws: number; losses: number; gd: number; pts: number; rank: number;
+}
+interface StandingsGroup { name: string; abbreviation: string; rows: StandingsRow[]; }
 import { buildPredictionNarrative, fetchPrediction } from '@/lib/predict';
 import { useTypewriter } from '@/hooks/useTypewriter';
 
@@ -15,6 +21,9 @@ export function Rail() {
   const { tweaks } = useTweaks();
   const { myTeam } = useMyTeam();
   const [liveMatches, setLiveMatches] = useState<Match[]>([]);
+  const [upcomingMatches, setUpcomingMatches] = useState<Match[]>([]);
+  const [standingsGroups, setStandingsGroups] = useState<StandingsGroup[]>([]);
+  const [groupIdx, setGroupIdx] = useState(0);
   const [railNarrative, setRailNarrative] = useState('');
 
   useEffect(() => {
@@ -42,19 +51,30 @@ export function Rail() {
   );
 
   useEffect(() => {
-    async function loadLive() {
+    async function loadMatches() {
       try {
         const res = await fetch('/api/scores');
         const data = await res.json();
-        setLiveMatches((data.matches ?? []).filter((m: Match) => m.state === 'in'));
+        const all: Match[] = data.matches ?? [];
+        setLiveMatches(all.filter((m) => m.state === 'in'));
+        const pre = all
+          .filter((m) => m.state === 'pre')
+          .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        setUpcomingMatches(pre.slice(0, 5));
       } catch {}
     }
-    loadLive();
-    const interval = setInterval(loadLive, 30000);
+    async function loadStandings() {
+      try {
+        const res = await fetch('/api/wc/standings');
+        const data = await res.json();
+        setStandingsGroups(data.groups ?? []);
+      } catch {}
+    }
+    loadMatches();
+    loadStandings();
+    const interval = setInterval(loadMatches, 30000);
     return () => clearInterval(interval);
   }, []);
-
-  const upcoming = matches.filter((m) => m.status === 'upcoming').slice(0, 4);
 
   return (
     <aside className="rail">
@@ -128,44 +148,67 @@ export function Rail() {
         })}
       </div>
 
-      <div className="rail-section">
-        <div className="rail-h">
-          <span>GROUP A · STANDINGS</span>
-          <span style={{ fontSize: 9 }}>FINAL</span>
-        </div>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'var(--mono)', fontSize: 11 }}>
-          <thead>
-            <tr style={{ color: 'var(--ink-3)', fontSize: 9, letterSpacing: '0.14em' }}>
-              <th style={{ textAlign: 'left', padding: '6px 0' }}>TEAM</th>
-              <th>P</th><th>W</th><th>D</th><th>L</th><th>GD</th><th>PTS</th>
-            </tr>
-          </thead>
-          <tbody>
-            {groups.A.map((row, i) => (
-              <tr key={row.team} style={{ borderTop: '1px dashed var(--rule-soft)' }}>
-                <td style={{ padding: '8px 0', display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ width: 16, color: 'var(--ink-3)', fontSize: 10 }}>{i + 1}</span>
-                  <Flag code={row.team} w={18} h={12} />
-                  <span style={{ fontFamily: 'var(--sans)', fontSize: 12 }}>{teams[row.team]?.name}</span>
-                </td>
-                <td style={{ textAlign: 'center' }}>{row.p}</td>
-                <td style={{ textAlign: 'center' }}>{row.w}</td>
-                <td style={{ textAlign: 'center' }}>{row.d}</td>
-                <td style={{ textAlign: 'center' }}>{row.l}</td>
-                <td style={{ textAlign: 'center' }}>{row.gf - row.ga > 0 ? `+${row.gf - row.ga}` : row.gf - row.ga}</td>
-                <td style={{ textAlign: 'center', fontWeight: 700, color: 'var(--ink)' }}>{row.pts}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      {/* Group standings — one at a time, flippable */}
+      {standingsGroups.length > 0 && (() => {
+        const group = standingsGroups[groupIdx % standingsGroups.length];
+        return (
+          <div className="rail-section">
+            <div className="rail-h">
+              <span>{group.name.toUpperCase()} · STANDINGS</span>
+              <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                <button
+                  onClick={() => setGroupIdx((i) => (i - 1 + standingsGroups.length) % standingsGroups.length)}
+                  style={{ background: 'none', border: '1px solid var(--rule)', borderRadius: 4, width: 22, height: 18, cursor: 'pointer', fontSize: 12, color: 'var(--ink-3)', display: 'grid', placeItems: 'center' }}
+                >‹</button>
+                <span style={{ fontSize: 9, color: 'var(--ink-3)', minWidth: 32, textAlign: 'center' }}>{groupIdx + 1}/{standingsGroups.length}</span>
+                <button
+                  onClick={() => setGroupIdx((i) => (i + 1) % standingsGroups.length)}
+                  style={{ background: 'none', border: '1px solid var(--rule)', borderRadius: 4, width: 22, height: 18, cursor: 'pointer', fontSize: 12, color: 'var(--ink-3)', display: 'grid', placeItems: 'center' }}
+                >›</button>
+              </div>
+            </div>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'var(--mono)', fontSize: 11 }}>
+              <thead>
+                <tr style={{ color: 'var(--ink-3)', fontSize: 9, letterSpacing: '0.14em' }}>
+                  <th style={{ textAlign: 'left', padding: '6px 0' }}>TEAM</th>
+                  <th>P</th><th>W</th><th>D</th><th>L</th><th>GD</th><th>PTS</th>
+                </tr>
+              </thead>
+              <tbody>
+                {group.rows.map((row, i) => (
+                  <tr key={row.team.id} style={{ borderTop: '1px dashed var(--rule-soft)' }}>
+                    <td style={{ padding: '8px 0', display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ width: 16, color: 'var(--ink-3)', fontSize: 10 }}>{i + 1}</span>
+                      {row.team.logo
+                        ? <img src={row.team.logo} alt={row.team.abbreviation} style={{ width: 18, height: 18, objectFit: 'contain' }} />
+                        : <Flag code={row.team.abbreviation} w={18} h={12} />}
+                      <span style={{ fontFamily: 'var(--sans)', fontSize: 12 }}>{row.team.name}</span>
+                    </td>
+                    <td style={{ textAlign: 'center' }}>{row.played}</td>
+                    <td style={{ textAlign: 'center' }}>{row.wins}</td>
+                    <td style={{ textAlign: 'center' }}>{row.draws}</td>
+                    <td style={{ textAlign: 'center' }}>{row.losses}</td>
+                    <td style={{ textAlign: 'center' }}>{row.gd > 0 ? `+${row.gd}` : row.gd}</td>
+                    <td style={{ textAlign: 'center', fontWeight: 700, color: 'var(--ink)' }}>{row.pts}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        );
+      })()}
 
+      {/* Up next — real ESPN pre matches */}
       <div className="rail-section">
         <div className="rail-h">
           <span>UP NEXT</span>
-          <span style={{ fontSize: 9 }}>QUARTERFINALS</span>
+          <span style={{ fontSize: 9 }}>{upcomingMatches.length > 0 ? `${upcomingMatches.length} MATCHES` : ''}</span>
         </div>
-        {upcoming.map((m) => <MatchRow key={m.id} m={m} />)}
+        {upcomingMatches.length === 0 ? (
+          <div className="mono" style={{ fontSize: 11, color: 'var(--ink-3)', padding: '8px 0' }}>No upcoming matches.</div>
+        ) : (
+          upcomingMatches.map((m) => <UpcomingMatchRow key={m.id} m={m} />)
+        )}
       </div>
     </aside>
   );
@@ -232,6 +275,33 @@ function LiveMatchRow({ m }: { m: Match }) {
           {m.displayClock}
         </div>
       </div>
+    </div>
+  );
+}
+
+function UpcomingMatchRow({ m }: { m: Match }) {
+  const router = useRouter();
+  const kickoff = new Date(m.date);
+  const dateStr = kickoff.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+  const timeStr = kickoff.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZoneName: 'short' });
+  return (
+    <div className="match-row" onClick={() => router.push(`/match/${m.id}`)}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        {m.homeTeam.logo
+          ? <img src={m.homeTeam.logo} alt={m.homeTeam.abbreviation} style={{ width: 18, height: 18, objectFit: 'contain' }} />
+          : <Flag code={m.homeTeam.abbreviation} />}
+        {m.awayTeam.logo
+          ? <img src={m.awayTeam.logo} alt={m.awayTeam.abbreviation} style={{ width: 18, height: 18, objectFit: 'contain' }} />
+          : <Flag code={m.awayTeam.abbreviation} />}
+      </div>
+      <div style={{ minWidth: 0 }}>
+        <div className="team-name-sm">{m.homeTeam.name}</div>
+        <div className="team-name-sm" style={{ opacity: 0.6 }}>{m.awayTeam.name}</div>
+        <div className="mono" style={{ fontSize: 9, color: 'var(--ink-3)', marginTop: 4, letterSpacing: '0.08em' }}>
+          {dateStr} · {timeStr}
+        </div>
+      </div>
+      <div className="mono" style={{ fontSize: 11, color: 'var(--ink-3)' }}>—</div>
     </div>
   );
 }

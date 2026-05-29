@@ -20,23 +20,30 @@ function MatchPopupSection({ match }: { match: Match }) {
 
   return (
     <div style={{ borderTop: "1px solid var(--rule-soft)", paddingTop: 8, marginTop: 8 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-        <span style={{
-          fontSize: 10, color: "var(--ink-3)",
-          textTransform: "uppercase", letterSpacing: "0.08em",
-        }}>
-          {isLive ? "Live" : isFinished ? "Full Time" : "Upcoming"}
-        </span>
-        {isLive && (
-          <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 10, fontWeight: 700, color: "var(--live)" }}>
-            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--live)" }} />
-            {match.displayClock}
+      <div style={{ marginBottom: 8 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span style={{
+            fontSize: 10, color: "var(--ink-3)",
+            textTransform: "uppercase", letterSpacing: "0.08em",
+          }}>
+            {isLive ? "Live" : isFinished ? "Full Time" : "Upcoming"}
           </span>
-        )}
-        {!isLive && (
-          <span style={{ fontSize: 10, color: "var(--ink-3)", fontFamily: "var(--mono)" }}>
+          {isLive && (
+            <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 10, fontWeight: 700, color: "var(--live)" }}>
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--live)" }} />
+              {match.displayClock}
+            </span>
+          )}
+          {isFinished && match.statusDetail && (
+            <span style={{ fontSize: 10, color: "var(--ink-3)", fontFamily: "var(--mono)" }}>
+              {match.statusDetail}
+            </span>
+          )}
+        </div>
+        {!isLive && !isFinished && match.statusDetail && (
+          <div style={{ fontSize: 10, color: "var(--ink-3)", fontFamily: "var(--mono)", marginTop: 3 }}>
             {match.statusDetail}
-          </span>
+          </div>
         )}
       </div>
 

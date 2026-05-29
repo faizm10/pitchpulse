@@ -751,6 +751,8 @@ function StatsPanel({
       return 0;
     }).slice(0, 10);
 
+  if (!sorted.length) return null;
+
   return (
     <section
       aria-label="Match statistics"
