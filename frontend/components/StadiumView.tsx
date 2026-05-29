@@ -1,143 +1,200 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { stadiums, matches, teams, stadiumViews } from '@/lib/data';
-import { Flag, BackBar, Stat } from './Shared';
-import type { Stadium } from '@/lib/types';
+import { stadiums } from '@/lib/data';
+import { BackBar, Stat } from './Shared';
+import { StadiumMiniMap } from './StadiumMiniMap';
 
-type Face = 'seating' | 'pitch' | 'fan';
+interface WikipediaData {
+  title: string;
+  extract: string;
+  thumbnail: string | null;
+  url: string | null;
+}
+
+interface MatchData {
+  id: string;
+  date: string;
+  name: string;
+  state: string;
+  statusDetail: string;
+  homeTeam: { id: string; name: string; abbreviation: string; logo: string | null; score: string | null } | null;
+  awayTeam: { id: string; name: string; abbreviation: string; logo: string | null; score: string | null } | null;
+  venueName: string | null;
+}
+
+interface StadiumEnrichment {
+  wikipedia: WikipediaData | null;
+  matches: MatchData[];
+}
 
 export function StadiumView({ id }: { id: string }) {
   const s = stadiums.find((x) => x.id === id);
-  const [face, setFace] = useState<Face>('seating');
+  const [enrichment, setEnrichment] = useState<StadiumEnrichment | null>(null);
+  const [imgError, setImgError] = useState(false);
+
+  useEffect(() => {
+    fetch(`/api/stadium/${id}`)
+      .then((r) => r.json())
+      .then(setEnrichment)
+      .catch(() => {});
+  }, [id]);
+
   if (!s) return <div style={{ padding: 60 }}>Stadium not found</div>;
-  const matchHere = matches.find((m) => m.stadium === s.id);
+
+  const wiki = enrichment?.wikipedia ?? null;
+  const espnMatches = enrichment?.matches ?? [];
+  const heroImg = wiki?.thumbnail && !imgError ? wiki.thumbnail : null;
+  const realName = wiki?.title ?? s.name;
+
+  const sortedMatches = [...espnMatches].sort(
+    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+  );
 
   return (
     <div className="screen" style={{ minHeight: 'calc(100vh - 64px)' }}>
       <BackBar label={`${s.country === 'CA' ? 'CANADA' : s.country === 'MX' ? 'MEXICO' : 'UNITED STATES'} · STADIUM`} />
 
-      <div style={{ padding: '48px 56px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 56, alignItems: 'center' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}>
-          <div className="stadium-card">
-            <div className="stadium-card-inner" style={{
-              transform: face === 'pitch' ? 'rotateY(180deg)' : face === 'fan' ? 'rotateY(360deg)' : 'rotateY(0deg)',
-            }}>
-              <div className="stadium-face">
-                <FaceVisual face="seating" stadium={s} />
-              </div>
-              <div className="stadium-face" style={{ transform: 'rotateY(180deg)' }}>
-                <FaceVisual face="pitch" stadium={s} />
-              </div>
-            </div>
-          </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            {(['seating', 'pitch', 'fan'] as const).map((f) => (
-              <button key={f} onClick={() => setFace(f)} className="btn" style={{
-                background: face === f ? 'var(--ink)' : 'transparent',
-                color: face === f ? 'var(--paper)' : 'var(--ink)',
-                border: '1px solid var(--rule)',
-              }}>{f.toUpperCase()}</button>
-            ))}
-          </div>
-          <div className="mono" style={{ fontSize: 10, color: 'var(--ink-3)', letterSpacing: '0.14em' }}>
-            {stadiumViews[face === 'fan' ? 'fan' : face].detail}
-          </div>
+      {/* Hero image */}
+      {heroImg && (
+        <div style={{ position: 'relative', width: '100%', height: 380, overflow: 'hidden' }}>
+          <img
+            src={heroImg}
+            alt={realName}
+            onError={() => setImgError(true)}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+          />
+          <div style={{
+            position: 'absolute', inset: 0,
+            background: 'linear-gradient(to bottom, transparent 65%, var(--paper) 100%)',
+          }} />
         </div>
+      )}
 
+      <div style={{ padding: heroImg ? '0 56px 48px' : '48px 56px', display: 'grid', gridTemplateColumns: '1fr 380px', gap: 48, alignItems: 'start' }}>
+        {/* Left: info column */}
         <div>
-          <div className="eyebrow">Stadium · {s.city.toUpperCase()}</div>
-          <div className="headline" style={{ fontSize: 56, marginTop: 8 }}>{s.name}</div>
-          <div className="serif it" style={{ fontSize: 20, color: 'var(--ink-3)', marginTop: 14, maxWidth: 480 }}>
-            Built {s.opened} · {s.surface.toLowerCase()} · capacity {s.capacity.toLocaleString()}.
+          {/* Name + description */}
+          <div style={{ marginBottom: 40 }}>
+            <div className="eyebrow" style={{ marginBottom: 8 }}>Stadium · {s.city.toUpperCase()}</div>
+            <div className="headline" style={{ fontSize: 48, lineHeight: 1.1, marginBottom: 16 }}>{realName}</div>
+            {wiki?.extract && (
+              <p style={{ fontSize: 15, lineHeight: 1.7, color: 'var(--ink-2)', margin: 0 }}>
+                {wiki.extract.length > 600 ? wiki.extract.slice(0, 600) + '…' : wiki.extract}
+              </p>
+            )}
+            {wiki?.url && (
+              <a href={wiki.url} target="_blank" rel="noopener noreferrer"
+                style={{ display: 'inline-block', marginTop: 10, fontSize: 12, color: 'var(--ink-3)', fontFamily: 'var(--mono)', letterSpacing: '0.08em' }}>
+                Wikipedia ↗
+              </a>
+            )}
           </div>
 
-          <div style={{ marginTop: 32, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24, borderTop: '1px solid var(--rule)', paddingTop: 22 }}>
+          {/* Stats row */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 24, borderTop: '1px solid var(--rule)', paddingTop: 22, marginBottom: 48 }}>
             <Stat n={s.capacity.toLocaleString()} l="Capacity" />
-            <Stat n={s.opened} l="Opened" />
+            <Stat n={String(s.opened)} l="Opened" />
+            <Stat n={s.surface} l="Surface" />
             <Stat n={s.orientation} l="Orientation" />
           </div>
 
-          {matchHere && (
-            <div style={{ marginTop: 32, padding: 20, border: '1px solid var(--rule)', borderRadius: 12, background: 'var(--paper-2)' }}>
-              <div className="mono" style={{ fontSize: 10, letterSpacing: '0.18em', color: 'var(--ink-3)' }}>
-                {matchHere.status === 'live' ? `LIVE · ${matchHere.minute}'` : matchHere.status === 'ft' ? 'FULL TIME' : 'NEXT FIXTURE'}
-              </div>
-              <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
-                <Flag code={matchHere.home} w={32} h={20} />
-                <span className="serif" style={{ fontSize: 24 }}>{teams[matchHere.home]?.name}</span>
-                {matchHere.score ? (
-                  <span className="serif tnum" style={{ fontSize: 26, margin: '0 8px' }}>{matchHere.score[0]}–{matchHere.score[1]}</span>
-                ) : (
-                  <span className="mono" style={{ fontSize: 14, color: 'var(--ink-3)', margin: '0 8px' }}>VS</span>
-                )}
-                <span className="serif" style={{ fontSize: 24 }}>{teams[matchHere.away]?.name}</span>
-                <Flag code={matchHere.away} w={32} h={20} />
-              </div>
-              <Link href={`/match/${matchHere.id}`} className="btn" style={{ marginTop: 14, display: 'inline-flex', textDecoration: 'none' }}>OPEN MATCH →</Link>
+          {/* All WC2026 matches */}
+          <div style={{ marginBottom: 56 }}>
+            <div className="mono" style={{ fontSize: 11, letterSpacing: '0.18em', color: 'var(--ink-3)', marginBottom: 16 }}>
+              WC2026 MATCHES AT THIS VENUE
             </div>
-          )}
+            {enrichment === null ? (
+              <div style={{ color: 'var(--ink-3)', fontSize: 14 }}>Loading matches…</div>
+            ) : sortedMatches.length === 0 ? (
+              <div style={{ color: 'var(--ink-3)', fontSize: 14 }}>No matches scheduled yet.</div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {sortedMatches.map((m) => (
+                  <MatchRow key={m.id} match={m} />
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Right: sticky mini-map */}
+        <div style={{ position: 'sticky', top: 80 }}>
+          <div style={{ height: 420, borderRadius: 16, overflow: 'hidden', border: '1px solid var(--rule)', boxShadow: '0 4px 24px rgba(14,22,38,0.08)' }}>
+            <StadiumMiniMap lat={s.lat} lng={s.lng} name={realName} />
+          </div>
+          <div style={{ marginTop: 12, fontSize: 11, color: 'var(--ink-3)', fontFamily: 'var(--mono)', letterSpacing: '0.08em', textAlign: 'center' }}>
+            {s.city}{s.country === 'CA' ? ', Canada' : s.country === 'MX' ? ', Mexico' : ', USA'}
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
-function FaceVisual({ face, stadium }: { face: Face; stadium: Stadium }) {
+function MatchRow({ match }: { match: MatchData }) {
+  const isLive = match.state === 'in';
+  const isFT = match.state === 'post';
+  const isPre = match.state === 'pre';
+
+  const kickoff = new Date(match.date);
+  const dateStr = kickoff.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+  const timeStr = kickoff.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZoneName: 'short' });
+
+  const home = match.homeTeam;
+  const away = match.awayTeam;
+
   return (
-    <div style={{ width: '100%', height: '100%', background: 'var(--paper-2)', position: 'relative', overflow: 'hidden' }}>
-      <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(rgba(14,22,38,0.08) 1px, transparent 1px)', backgroundSize: '4px 4px', opacity: 0.3 }} />
-      <svg viewBox="0 0 640 440" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
-        {face === 'seating' && (
-          <g>
-            {[1, 2, 3, 4, 5].map((i) => (
-              <ellipse key={i} cx={320} cy={220}
-                rx={80 + i * 36} ry={50 + i * 22}
-                fill="none" stroke="var(--ink)"
-                strokeWidth={i === 5 ? 1.5 : 0.6}
-                strokeOpacity={i === 5 ? 0.6 : 0.18 + i * 0.05} />
-            ))}
-            {[...Array(24)].map((_, i) => {
-              const a = (i / 24) * Math.PI * 2;
-              return (
-                <line key={i}
-                  x1={320 + Math.cos(a) * 84} y1={220 + Math.sin(a) * 54}
-                  x2={320 + Math.cos(a) * 250} y2={220 + Math.sin(a) * 160}
-                  stroke="var(--ink)" strokeWidth="0.4" strokeOpacity="0.18" />
-              );
-            })}
-            <ellipse cx={320} cy={220} rx={80} ry={50} fill="var(--paper)" stroke="var(--ink)" strokeWidth="1" />
-            <line x1={320} y1={170} x2={320} y2={270} stroke="var(--ink)" strokeWidth="0.6" />
-            <circle cx={320} cy={220} r="9" fill="none" stroke="var(--ink)" strokeWidth="0.6" />
-            <text x={320} y={414} textAnchor="middle" fontFamily="var(--mono)" fontSize="10" fill="var(--ink-3)" letterSpacing="0.18em">
-              SEATING BOWL · 11 TIERS · {stadium.capacity.toLocaleString()} CAP
-            </text>
-          </g>
-        )}
-        {face === 'pitch' && (
-          <g>
-            <rect x={120} y={80} width={400} height={280} fill="#256E3D" stroke="var(--ink)" strokeWidth="1.2" />
-            {[0,1,2,3,4,5,6].map((i) => (
-              <rect key={i} x={120} y={80 + i * 40} width={400} height={20} fill="rgba(255,255,255,0.04)" />
-            ))}
-            <line x1={320} y1={80} x2={320} y2={360} stroke="white" strokeWidth="1.2" />
-            <circle cx={320} cy={220} r="42" fill="none" stroke="white" strokeWidth="1.2" />
-            <circle cx={320} cy={220} r="2" fill="white" />
-            <rect x={120} y={140} width={60} height={160} fill="none" stroke="white" strokeWidth="1.2" />
-            <rect x={460} y={140} width={60} height={160} fill="none" stroke="white" strokeWidth="1.2" />
-            <rect x={120} y={180} width={24} height={80} fill="none" stroke="white" strokeWidth="1.2" />
-            <rect x={496} y={180} width={24} height={80} fill="none" stroke="white" strokeWidth="1.2" />
-            <g transform="translate(560, 110)">
-              <circle r="22" fill="var(--paper)" stroke="var(--ink)" strokeWidth="0.8" />
-              <text textAnchor="middle" y="4" fontFamily="var(--mono)" fontSize="11" fill="var(--ink)">N</text>
-            </g>
-            <text x={320} y={400} textAnchor="middle" fontFamily="var(--mono)" fontSize="10" fill="var(--ink-3)" letterSpacing="0.18em">
-              PITCH · 105m × 68m · {stadium.surface.toUpperCase()}
-            </text>
-          </g>
-        )}
-      </svg>
-    </div>
+    <Link href={`/match/${match.id}`} style={{ textDecoration: 'none' }}>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: '100px 1fr auto 1fr 100px',
+        alignItems: 'center',
+        gap: 12,
+        padding: '14px 20px',
+        borderRadius: 10,
+        border: '1px solid var(--rule)',
+        background: 'var(--paper-2)',
+        cursor: 'pointer',
+        transition: 'background 150ms',
+      }}
+        onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--paper-3, var(--rule-soft))')}
+        onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--paper-2)')}
+      >
+        {/* Date / status */}
+        <div>
+          <div className="mono" style={{ fontSize: 10, color: isLive ? 'var(--live)' : 'var(--ink-3)', letterSpacing: '0.1em', fontWeight: isLive ? 700 : 400 }}>
+            {isLive ? '● LIVE' : isFT ? 'FULL TIME' : dateStr}
+          </div>
+          {isPre && (
+            <div className="mono" style={{ fontSize: 10, color: 'var(--ink-3)', marginTop: 2 }}>{timeStr}</div>
+          )}
+          {isFT && match.statusDetail && (
+            <div className="mono" style={{ fontSize: 10, color: 'var(--ink-3)', marginTop: 2 }}>{match.statusDetail}</div>
+          )}
+        </div>
+
+        {/* Home team */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end' }}>
+          <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--ink)' }}>{home?.name ?? '—'}</span>
+          {home?.logo && <img src={home.logo} alt={home.abbreviation} style={{ width: 24, height: 24, objectFit: 'contain' }} />}
+        </div>
+
+        {/* Score */}
+        <div className="mono" style={{ fontSize: 18, fontWeight: 700, color: 'var(--ink)', textAlign: 'center', minWidth: 60 }}>
+          {isPre ? 'vs' : `${home?.score ?? 0} – ${away?.score ?? 0}`}
+        </div>
+
+        {/* Away team */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {away?.logo && <img src={away.logo} alt={away.abbreviation} style={{ width: 24, height: 24, objectFit: 'contain' }} />}
+          <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--ink)' }}>{away?.name ?? '—'}</span>
+        </div>
+
+        {/* Arrow */}
+        <div style={{ textAlign: 'right', color: 'var(--ink-3)', fontSize: 14 }}>→</div>
+      </div>
+    </Link>
   );
 }
