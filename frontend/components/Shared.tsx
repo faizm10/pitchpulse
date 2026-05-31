@@ -152,7 +152,9 @@ export function Flag({ code, w = 22, h = 14 }: { code: string; w?: number; h?: n
 export function Logo() {
   return (
     <Link href="/" className="brand" style={{ textDecoration: 'none', color: 'inherit' }}>
-      <span className="brand-mark"><span className="ring" /></span>
+      <span className="brand-mark" aria-hidden="true">
+        <img src="/pitchpulse.png" alt="" />
+      </span>
       <span className="brand-name">Pitch<em>Pulse</em></span>
       <span className="brand-sub">WC &apos;26</span>
     </Link>

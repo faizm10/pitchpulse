@@ -60,7 +60,7 @@ export function Topbar() {
     <div className="topbar">
       <div className="topbar-left">
         <Logo />
-        <div className="mono" style={{ fontSize: 10, color: 'var(--ink-3)', letterSpacing: '0.16em', borderLeft: '1px solid var(--rule-soft)', paddingLeft: 14 }}>
+        <div className="topbar-status mono">
           {time || '\u00A0'}<br />
           {tournamentLine || ' '}
         </div>
@@ -83,24 +83,20 @@ export function Topbar() {
       </div>
 
       <div className="topbar-right">
-        <div className="mono" style={{ fontSize: 10, color: 'var(--ink-3)', letterSpacing: '0.14em', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--live)' }} />
+        <div className="topbar-live mono">
+          <span />
           4 LIVE
         </div>
         {myTeam ? (
-          <Link href="/mywc" style={{
-            textDecoration: 'none', color: 'inherit',
-            padding: '6px 12px 6px 6px',
-            border: '1px solid var(--rule)',
-            borderRadius: 999,
-            display: 'flex', alignItems: 'center', gap: 8,
-            background: 'var(--paper-2)',
-          }}>
+          <Link href="/mywc" className="my-team-link">
             <Flag code={myTeam} w={20} h={13} />
-            <span style={{ fontSize: 12, fontWeight: 500 }}>{teams[myTeam]?.name}</span>
+            <span className="my-team-name">{teams[myTeam]?.name}</span>
           </Link>
         ) : (
-          <Link href="/mywc" className="btn btn-pulse" style={{ textDecoration: 'none' }}>+ MY WORLD CUP</Link>
+          <Link href="/mywc" className="btn btn-pulse topbar-cta">
+            <span className="mywc-full">+ MY WORLD CUP</span>
+            <span className="mywc-short">MY WC</span>
+          </Link>
         )}
       </div>
     </div>

@@ -7,6 +7,13 @@ import { TweaksPanel } from '@/components/TweaksPanel';
 export const metadata: Metadata = {
   title: "PitchPulse · World Cup '26",
   description: "Real-time map-based intelligence dashboard for the FIFA World Cup 2026.",
+  icons: {
+    icon: [
+      { url: '/favicon.png', sizes: '32x32', type: 'image/png' },
+      { url: '/icon.png', sizes: '1024x1024', type: 'image/png' },
+    ],
+    apple: [{ url: '/apple-icon.png', sizes: '180x180', type: 'image/png' }],
+  },
 };
 
 const fontHref =
