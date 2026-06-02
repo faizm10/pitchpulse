@@ -275,6 +275,10 @@ export function Bracket() {
   const winner =
     bracket.F[0]?.status === 'ft' ? getWinner(bracket.F[0]) : null;
 
+  const liveRound =
+    ROUNDS.find((r) => bracket[r.id].some((m) => m.status === 'live'))?.id ??
+    (playedCount > 0 ? 'R16' : 'R32');
+
   return (
     <div className="screen bracket-screen">
       <div className="bracket-hero">
@@ -282,16 +286,37 @@ export function Bracket() {
         <div className="headline bracket-headline">
           The path to <em>MetLife.</em>
         </div>
-        <div className="mono bracket-hero-meta">
-          {loading
-            ? 'Loading bracket…'
-            : `${playedCount} matches played · ${
-                liveCount > 0 ? `${liveCount} live · ` : ''
-              }Final Jul 19, 2026`}
+        <div className="bracket-hero-meta-row">
+          <div className="mono bracket-hero-meta">
+            {loading
+              ? 'Loading bracket…'
+              : `${playedCount} matches played · Final Jul 19, 2026`}
+          </div>
+          {!loading && liveCount > 0 && (
+            <span className="bracket-hero-live mono">
+              <span className="bracket-hero-live-dot" />
+              {liveCount} live
+            </span>
+          )}
+        </div>
+        <div className="bracket-stages" aria-label="Knockout rounds">
+          {ROUNDS.map((r) => (
+            <span
+              key={r.id}
+              className={`bracket-stage-pill ${
+                r.id === liveRound ? 'is-active' : ''
+              }`}
+            >
+              {r.label}
+            </span>
+          ))}
         </div>
       </div>
 
       <div className="bracket-scroll bracket-grid">
+        <div className="mono bracket-scroll-hint" aria-hidden>
+          SCROLL →
+        </div>
         <div className="bracket-board">
           {ROUNDS.map((round, roundIndex) => {
             const matches = bracket[round.id];
@@ -384,8 +409,6 @@ function BracketConnector({
   const [y0, y1] = feederCentersY(height, mergeLevel);
   const yMid = height / 2;
   const midX = width * 0.5;
-  const stroke = 'var(--rule)';
-
   return (
     <svg
       className="bracket-gutter-svg"
@@ -397,8 +420,9 @@ function BracketConnector({
       <path
         d={`M 0 ${y0} H ${midX} M 0 ${y1} H ${midX} M ${midX} ${y0} V ${yMid} M ${midX} ${y1} V ${yMid} M ${midX} ${yMid} H ${width}`}
         fill="none"
-        stroke={stroke}
-        strokeWidth={2}
+        stroke="var(--bracket-line)"
+        strokeWidth={2.5}
+        strokeLinecap="square"
         vectorEffect="non-scaling-stroke"
       />
     </svg>
@@ -579,13 +603,7 @@ function TeamRow({
   won?: boolean;
 }) {
   const { display, full, isPlaceholder } = bracketSlotLabel(code, hint, apiName);
-
-  // first column:
-  {code && !isPlaceholder ? (
-    <Flag code={code} w={20} h={14} />
-  ) : (
-    <span className="bracket-slot-icon" />
-  )}  const isHint = !code;
+  const showFlag = code && !isPlaceholder;
 
   return (
     <div
@@ -593,14 +611,14 @@ function TeamRow({
         won ? 'bracket-team-winner' : ''
       }`}
     >
-      {code ? (
+      {showFlag ? (
         <Flag code={code} w={20} h={14} />
       ) : (
         <span className="bracket-slot-icon" />
       )}
 
       <span
-        className={isHint ? 'bracket-team-hint' : 'bracket-team-name'}
+        className={isPlaceholder ? 'bracket-team-hint' : 'bracket-team-name'}
         title={full !== display ? full : undefined}
       >
         {display}
