@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
 
+/** Allow cold start on Render free tier; server-side only (no browser CORS). */
+const PREDICT_TIMEOUT_MS = 60_000;
+
 export async function POST(req: Request) {
   const baseUrl = process.env.PREDICT_API_URL;
   if (!baseUrl) {
@@ -40,11 +43,16 @@ export async function POST(req: Request) {
 
   const url = `${baseUrl.replace(/\/$/, '')}/predict`;
 
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), PREDICT_TIMEOUT_MS);
+
   try {
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ home_team: homeTeam, away_team: awayTeam }),
+      signal: controller.signal,
+      cache: 'no-store',
     });
 
     const data = await res.json().catch(() => ({}));
@@ -58,10 +66,20 @@ export async function POST(req: Request) {
 
     return NextResponse.json(data);
   } catch (err) {
+    const aborted =
+      err instanceof Error &&
+      (err.name === 'AbortError' || err.message.includes('aborted'));
     console.error('[/api/predict]', err);
     return NextResponse.json(
-      { error: 'Failed to reach prediction service', detail: String(err) },
-      { status: 502 }
+      {
+        error: aborted
+          ? 'Prediction service timed out (cold start). Try again.'
+          : 'Failed to reach prediction service',
+        detail: String(err),
+      },
+      { status: aborted ? 504 : 502 }
     );
+  } finally {
+    clearTimeout(timeout);
   }
 }

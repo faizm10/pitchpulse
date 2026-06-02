@@ -28,18 +28,47 @@ export function buildPredictionNarrative(p: PredictResponse): string {
   return `${top.label} favored at ${top.pct}%${h2h}.`;
 }
 
+function predictionErrorMessage(
+  status: number,
+  data: { error?: string; detail?: unknown }
+): string {
+  if (status === 500 && data?.error?.includes('PREDICT_API_URL')) {
+    return 'Prediction service is not configured for this deployment.';
+  }
+  if (status === 502 || status === 504) {
+    return 'Prediction service is waking up or unreachable — try again in a moment.';
+  }
+  if (typeof data?.error === 'string' && data.error.length > 0) {
+    return data.error;
+  }
+  return 'Prediction failed';
+}
+
 export async function fetchPrediction(
   homeTeam: string,
   awayTeam: string
 ): Promise<PredictResponse> {
-  const res = await fetch('/api/predict', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ home_team: homeTeam, away_team: awayTeam }),
-  });
-  const data = await res.json();
-  if (!res.ok) {
-    throw new Error(data?.error ?? 'Prediction failed');
+  let res: Response;
+  try {
+    res = await fetch('/api/predict', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ home_team: homeTeam, away_team: awayTeam }),
+    });
+  } catch {
+    throw new Error(
+      'Could not reach the prediction service. Check your connection and try again.'
+    );
   }
+
+  const data = (await res.json().catch(() => ({}))) as {
+    error?: string;
+    detail?: unknown;
+  };
+
+  if (!res.ok) {
+    throw new Error(predictionErrorMessage(res.status, data));
+  }
+
   return data as PredictResponse;
 }

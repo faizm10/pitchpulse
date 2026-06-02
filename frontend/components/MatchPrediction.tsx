@@ -28,7 +28,26 @@ export function MatchPrediction({
     );
   }
 
-  if (error || !prediction) {
+  if (error) {
+    return (
+      <div>
+        <div className="eyebrow">AI Prediction</div>
+        <div
+          className="match-prediction-unavailable"
+          role="status"
+        >
+          <p className="match-prediction-unavailable-title">
+            Predictions unavailable right now
+          </p>
+          <p className="mono match-prediction-unavailable-detail">
+            {error}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!prediction) {
     return null;
   }
 

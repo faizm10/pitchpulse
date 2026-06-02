@@ -2,7 +2,8 @@
   "name": "pitchpulse",
   "private": true,
   "scripts": {
-    "prepare": "husky"
+    "prepare": "husky",
+    "smoke:predict": "node scripts/smoke-predict-api.mjs"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.8.0",
