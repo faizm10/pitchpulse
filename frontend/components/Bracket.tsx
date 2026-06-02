@@ -277,7 +277,8 @@ export function Bracket() {
 
   const liveRound =
     ROUNDS.find((r) => bracket[r.id].some((m) => m.status === 'live'))?.id ??
-    (playedCount > 0 ? 'R16' : 'R32');
+    ROUNDS.find((r) => bracket[r.id].some((m) => m.status !== 'ft'))?.id ??
+    'F';
 
   return (
     <div className="screen bracket-screen">
