@@ -757,29 +757,59 @@ body {
 }
 
 /* knockout bracket */
-.bracket-hero-glow {
-  background:
-    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(200, 147, 42, 0.14), transparent 55%),
-    radial-gradient(ellipse 60% 40% at 80% 0%, rgba(229, 57, 43, 0.06), transparent 50%);
-}
-[data-look="broadcast"] .bracket-hero-glow {
-  background:
-    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(200, 147, 42, 0.18), transparent 55%),
-    radial-gradient(ellipse 60% 40% at 80% 0%, rgba(255, 92, 60, 0.08), transparent 50%);
-}
-
 .bracket-screen {
+  --bracket-line: rgba(200, 147, 42, 0.55);
+  --bracket-card-bg: #fffdf8;
   min-height: 100vh;
-  background: radial-gradient(
-    circle at top,
-    rgba(255, 215, 0, 0.08),
-    transparent 35%
-  );
+  background:
+    radial-gradient(ellipse 90% 55% at 50% -15%, rgba(200, 147, 42, 0.22), transparent 58%),
+    radial-gradient(ellipse 50% 40% at 92% 8%, rgba(229, 57, 43, 0.08), transparent 52%),
+    radial-gradient(ellipse 40% 35% at 8% 12%, rgba(200, 147, 42, 0.1), transparent 48%),
+    var(--paper);
+}
+[data-look="broadcast"] .bracket-screen {
+  --bracket-line: rgba(200, 147, 42, 0.65);
+  --bracket-card-bg: var(--paper-2);
+  background:
+    radial-gradient(ellipse 90% 55% at 50% -15%, rgba(200, 147, 42, 0.28), transparent 58%),
+    radial-gradient(ellipse 50% 40% at 92% 8%, rgba(255, 92, 60, 0.12), transparent 52%),
+    var(--paper);
 }
 
 .bracket-hero {
-  padding: 52px 56px 40px;
+  padding: 52px 56px 32px;
   border-bottom: 1px solid var(--rule);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--paper) 55%, transparent),
+    transparent
+  );
+}
+
+.bracket-stages {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.bracket-stage-pill {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--rule-soft);
+  background: color-mix(in srgb, var(--paper-2) 80%, var(--paper));
+  color: var(--ink-3);
+}
+
+.bracket-stage-pill.is-active {
+  border-color: rgba(200, 147, 42, 0.45);
+  background: rgba(200, 147, 42, 0.14);
+  color: var(--ink);
+  font-weight: 700;
 }
 
 .bracket-headline {
@@ -789,16 +819,101 @@ body {
   line-height: 0.95;
 }
 
+.bracket-hero-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+}
+
 .bracket-hero-meta {
   font-size: 11px;
   color: var(--ink-3);
-  margin-top: 16px;
   letter-spacing: 0.08em;
+}
+
+.bracket-hero-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--pulse);
+  background: rgba(229, 57, 43, 0.1);
+  border: 1px solid rgba(229, 57, 43, 0.22);
+}
+
+.bracket-hero-live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--pulse);
+  animation: bracket-live-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes bracket-live-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.45;
+    transform: scale(0.85);
+  }
 }
 
 .bracket-scroll {
   padding: 48px 32px 90px;
   overflow-x: auto;
+  position: relative;
+}
+
+.bracket-scroll::before,
+.bracket-scroll::after {
+  content: '';
+  position: sticky;
+  top: 0;
+  width: 36px;
+  height: 100%;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.bracket-scroll::before {
+  left: 0;
+  float: left;
+  margin-left: -32px;
+  background: linear-gradient(90deg, var(--paper) 30%, transparent);
+}
+
+.bracket-scroll::after {
+  right: 0;
+  float: right;
+  margin-right: -32px;
+  background: linear-gradient(270deg, var(--paper) 30%, transparent);
+}
+
+.bracket-scroll-hint {
+  position: sticky;
+  left: 24px;
+  top: 8px;
+  display: inline-block;
+  margin: 0 0 16px;
+  width: max-content;
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(200, 147, 42, 0.35);
+  background: rgba(200, 147, 42, 0.12);
+  color: var(--ink);
+  letter-spacing: 0.14em;
+  font-size: 10px;
+  font-weight: 700;
+  z-index: 4;
 }
 
 .bracket-grid {
@@ -824,12 +939,26 @@ body {
 }
 
 .bracket-col-label {
-  font-size: 10px;
-  color: var(--ink-3);
-  letter-spacing: 0.16em;
+  display: block;
+  width: fit-content;
+  margin: 0 auto 18px;
+  font-size: 9px;
+  color: var(--ink);
+  letter-spacing: 0.18em;
   text-align: center;
-  padding-bottom: 16px;
-  min-height: 28px;
+  padding: 7px 14px;
+  min-height: 0;
+  border-radius: 999px;
+  border: 1px solid var(--rule);
+  background: var(--paper-2);
+  box-shadow: 0 2px 8px rgba(14, 22, 38, 0.06);
+}
+
+.bracket-col--final .bracket-col-label {
+  color: #8a6420;
+  border-color: rgba(200, 147, 42, 0.5);
+  background: rgba(200, 147, 42, 0.16);
+  box-shadow: 0 0 20px rgba(200, 147, 42, 0.15);
 }
 
 .bracket-col-label--spacer {
@@ -925,6 +1054,13 @@ body {
 
 .bracket-gutter-svg {
   display: block;
+  filter: drop-shadow(0 0 1px rgba(200, 147, 42, 0.25));
+}
+
+.bracket-card:has(.bracket-team-hint) {
+  border-style: dashed;
+  border-color: color-mix(in srgb, var(--bracket-line) 55%, var(--rule));
+  background: color-mix(in srgb, var(--bracket-card-bg) 92%, var(--paper-2));
 }
 
 .bracket-trophy-col .bracket-col-label {
@@ -938,11 +1074,13 @@ body {
 
 .bracket-card {
   position: relative;
-  border-radius: var(--r-card);
+  border-radius: 14px;
   overflow: hidden;
-  background: var(--paper-2);
-  border: 1px solid var(--rule);
-  box-shadow: 0 4px 18px rgba(14, 22, 38, 0.06);
+  background: var(--bracket-card-bg);
+  border: 1px solid color-mix(in srgb, var(--rule) 85%, white);
+  box-shadow:
+    0 2px 4px rgba(14, 22, 38, 0.04),
+    0 10px 28px rgba(14, 22, 38, 0.08);
   transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
   display: flex;
   flex-direction: column;
@@ -953,10 +1091,16 @@ body {
 }
 
 .bracket-card.is-final {
-  border-color: rgba(200, 147, 42, 0.45);
+  border-color: rgba(200, 147, 42, 0.55);
+  background: linear-gradient(
+    165deg,
+    rgba(200, 147, 42, 0.12) 0%,
+    var(--bracket-card-bg) 42%
+  );
   box-shadow:
-    0 4px 18px rgba(14, 22, 38, 0.06),
-    0 0 0 1px rgba(200, 147, 42, 0.12);
+    0 10px 32px rgba(14, 22, 38, 0.1),
+    0 0 0 1px rgba(200, 147, 42, 0.2),
+    0 0 40px rgba(200, 147, 42, 0.12);
 }
 
 .bracket-card.is-live {
@@ -990,9 +1134,13 @@ body {
 }
 
 .bracket-trophy {
-  background: linear-gradient(180deg, rgba(200, 147, 42, 0.14), transparent 70%);
-  border: 1px solid rgba(200, 147, 42, 0.28);
-  box-shadow: 0 0 48px rgba(200, 147, 42, 0.12);
+  width: 100%;
+  max-width: 140px;
+  background: linear-gradient(180deg, rgba(200, 147, 42, 0.22), rgba(200, 147, 42, 0.04));
+  border: 1px solid rgba(200, 147, 42, 0.45);
+  box-shadow:
+    0 0 48px rgba(200, 147, 42, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
 }
 
 .bracket-card-meta {
