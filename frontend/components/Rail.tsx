@@ -3,10 +3,9 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { matches, teams, pulses, stadiums } from '@/lib/data';
+import { teams } from '@/lib/data'; 
 import { Flag, FormDots, ago } from './Shared';
 import { useTweaks, useMyTeam } from './Providers';
-import type { Match as LocalMatch } from '@/lib/types';
 import type { Match } from '@/types/espn';
 
 interface StandingsRow {
@@ -14,6 +13,16 @@ interface StandingsRow {
   played: number; wins: number; draws: number; losses: number; gd: number; pts: number; rank: number;
 }
 interface StandingsGroup { name: string; abbreviation: string; rows: StandingsRow[]; }
+interface GoalPulseEvent {
+  id: string;
+  matchId: string;
+  minute: number;
+  scorer: string;
+  team: string;
+  venueCity: string;
+  timestamp: number; // ← changed from string to number
+}
+
 import { buildPredictionNarrative, fetchPrediction } from '@/lib/predict';
 import { useTypewriter } from '@/hooks/useTypewriter';
 
@@ -25,6 +34,7 @@ export function Rail() {
   const [standingsGroups, setStandingsGroups] = useState<StandingsGroup[]>([]);
   const [groupIdx, setGroupIdx] = useState(0);
   const [railNarrative, setRailNarrative] = useState('');
+  const [goalPulses, setGoalPulses] = useState<GoalPulseEvent[]>([]);
 
   useEffect(() => {
     if (!tweaks.aiSummary || liveMatches.length === 0) {
@@ -56,13 +66,46 @@ export function Rail() {
         const res = await fetch('/api/scores');
         const data = await res.json();
         const all: Match[] = data.matches ?? [];
-        setLiveMatches(all.filter((m) => m.state === 'in'));
+        
+        const live = all.filter((m) => m.state === 'in');
+        setLiveMatches(live);
+        
         const pre = all
           .filter((m) => m.state === 'pre')
           .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
         setUpcomingMatches(pre.slice(0, 5));
-      } catch {}
+
+        // ── DYNAMIC GOAL PULSE EXTRACTION ──────────────────────────────
+        const freshPulses: GoalPulseEvent[] = [];
+        live.forEach((match) => {
+          const events = (match as any).events ?? (match as any).details ?? [];
+          const currentCity = match.venue?.city ?? 'Live Match';
+          
+          if (Array.isArray(events)) {
+            events.forEach((evt: any, idx: number) => {
+              if (String(evt.type).toLowerCase() === 'goal') {
+                freshPulses.push({
+                  id: evt.id ?? `${match.id}-${evt.clock}-${evt.player?.id ?? idx}`,
+                  matchId: match.id,
+                  minute: parseInt(String(evt.clock ?? evt.minute ?? '0'), 10),
+                  scorer: evt.player?.displayName ?? evt.scorer ?? 'Goal Scored',
+                  team: String(evt.team?.id ?? '').toLowerCase(),
+                  venueCity: currentCity,
+                  // ← convert ISO string to numeric ms timestamp for ago()
+                  timestamp: evt.timestamp ? new Date(evt.timestamp).getTime() : Date.now(),
+                });
+              }
+            });
+          }
+        });
+
+        setGoalPulses(freshPulses.sort((a, b) => b.minute - a.minute));
+
+      } catch (err) {
+        console.error("Error streaming live updates:", err);
+      }
     }
+    
     async function loadStandings() {
       try {
         const res = await fetch('/api/wc/standings');
@@ -70,6 +113,7 @@ export function Rail() {
         setStandingsGroups(data.groups ?? []);
       } catch {}
     }
+    
     loadMatches();
     loadStandings();
     const interval = setInterval(loadMatches, 30000);
@@ -115,40 +159,46 @@ export function Rail() {
         </div>
       )}
 
+      {/* ── Goal Pulses Feed ── */}
       <div className="rail-section">
         <div className="rail-h">
           <span>GOAL PULSES</span>
-          <span style={{ fontSize: 9 }}>LAST 90 MIN</span>
+          <span style={{ fontSize: 9 }}>LIVE STREAM</span>
         </div>
-        {pulses.slice(0, 6).map((p) => {
-          const m = matches.find((x) => x.id === p.match);
-          const stadium = m && stadiums.find((x) => x.id === m.stadium);
-          return (
-            <Link key={p.id} href={`/match/${p.match}`}
-              style={{
-                textDecoration: 'none', color: 'inherit',
-                padding: '10px 0', borderTop: '1px dashed var(--rule-soft)',
-                display: 'grid', gridTemplateColumns: 'auto 1fr auto', alignItems: 'center', gap: 12,
-              }}>
-              <div style={{
-                width: 36, height: 36, borderRadius: '50%',
-                background: 'var(--pulse)', color: '#fff',
-                display: 'grid', placeItems: 'center',
-                fontFamily: 'var(--mono)', fontSize: 11, fontWeight: 600,
-              }}>{p.minute}&apos;</div>
-              <div style={{ minWidth: 0 }}>
-                <div className="serif" style={{ fontSize: 16, lineHeight: 1.1 }}>{p.scorer}</div>
-                <div className="mono" style={{ fontSize: 10, color: 'var(--ink-3)', letterSpacing: '0.06em', marginTop: 2 }}>
-                  {teams[p.team]?.name.toUpperCase()} · {stadium?.city.toUpperCase()}
+        {goalPulses.length === 0 ? (
+          <div className="mono" style={{ fontSize: 11, color: 'var(--ink-3)', padding: '8px 0' }}>
+            Waiting for live match events...
+          </div>
+        ) : (
+          goalPulses.slice(0, 6).map((p) => {
+            const teamName = teams[p.team]?.name ?? p.team;
+            return (
+              <Link key={p.id} href={`/match/${p.matchId}`}
+                style={{
+                  textDecoration: 'none', color: 'inherit',
+                  padding: '10px 0', borderTop: '1px dashed var(--rule-soft)',
+                  display: 'grid', gridTemplateColumns: 'auto 1fr auto', alignItems: 'center', gap: 12,
+                }}>
+                <div style={{
+                  width: 36, height: 36, borderRadius: '50%',
+                  background: 'var(--pulse)', color: '#fff',
+                  display: 'grid', placeItems: 'center',
+                  fontFamily: 'var(--mono)', fontSize: 11, fontWeight: 600,
+                }}>{p.minute}&apos;</div>
+                <div style={{ minWidth: 0 }}>
+                  <div className="serif" style={{ fontSize: 16, lineHeight: 1.1 }}>{p.scorer}</div>
+                  <div className="mono" style={{ fontSize: 10, color: 'var(--ink-3)', letterSpacing: '0.06em', marginTop: 2 }}>
+                    {teamName.toUpperCase()} · {p.venueCity.toUpperCase()}
+                  </div>
                 </div>
-              </div>
-              <div className="mono" style={{ fontSize: 10, color: 'var(--ink-3)' }}>{ago(p.t)}</div>
-            </Link>
-          );
-        })}
+                <div className="mono" style={{ fontSize: 10, color: 'var(--ink-3)' }}>{ago(p.timestamp)}</div>
+              </Link>
+            );
+          })
+        )}
       </div>
 
-      {/* Group standings — one at a time, flippable */}
+      {/* Group standings */}
       {standingsGroups.length > 0 && (() => {
         const group = standingsGroups[groupIdx % standingsGroups.length];
         return (
@@ -198,7 +248,7 @@ export function Rail() {
         );
       })()}
 
-      {/* Up next — real ESPN pre matches */}
+      {/* Up next */}
       <div className="rail-section">
         <div className="rail-h">
           <span>UP NEXT</span>
@@ -213,6 +263,8 @@ export function Rail() {
     </aside>
   );
 }
+
+// ── SUB-COMPONENTS ────────────────────────────────────────────────
 
 function MyTeamBanner({ myTeam }: { myTeam: string | null }) {
   const t = myTeam ? teams[myTeam] : null;
@@ -302,48 +354,6 @@ function UpcomingMatchRow({ m }: { m: Match }) {
         </div>
       </div>
       <div className="mono" style={{ fontSize: 11, color: 'var(--ink-3)' }}>—</div>
-    </div>
-  );
-}
-
-function MatchRow({ m }: { m: LocalMatch }) {
-  const router = useRouter();
-  const stadium = stadiums.find((s) => s.id === m.stadium);
-  return (
-    <div className="match-row" onClick={() => router.push(`/match/${m.id}`)}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-        <Flag code={m.home} />
-        <Flag code={m.away} />
-      </div>
-      <div style={{ minWidth: 0 }}>
-        <div className="team-name-sm">{teams[m.home]?.name}</div>
-        <div className="team-name-sm" style={{ opacity: 0.6 }}>{teams[m.away]?.name}</div>
-        <div className="mono" style={{ fontSize: 9, color: 'var(--ink-3)', marginTop: 4, letterSpacing: '0.08em' }}>
-          {m.status === 'upcoming' ? m.kickoff.toUpperCase() : `${stadium?.city.toUpperCase()} · ${m.stage}`}
-        </div>
-      </div>
-      <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
-        {m.status === 'live' && m.score && (
-          <>
-            <div className="score">{m.score[0]}</div>
-            <div className="score" style={{ opacity: 0.6 }}>{m.score[1]}</div>
-            <div className="mono" style={{ fontSize: 9, color: 'var(--live)', letterSpacing: '0.08em' }}>
-              <span className="status-dot live" style={{ display: 'inline-block', marginRight: 4 }} />
-              {m.minute}&apos;
-            </div>
-          </>
-        )}
-        {m.status === 'ft' && m.score && (
-          <>
-            <div className="score">{m.score[0]}</div>
-            <div className="score" style={{ opacity: 0.6 }}>{m.score[1]}</div>
-            <div className="mono" style={{ fontSize: 9, color: 'var(--ink-3)' }}>FT</div>
-          </>
-        )}
-        {m.status === 'upcoming' && (
-          <div className="mono" style={{ fontSize: 11, color: 'var(--ink-3)' }}>—</div>
-        )}
-      </div>
     </div>
   );
 }
