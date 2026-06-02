@@ -4,10 +4,13 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { useGoalCelebration } from '@/components/LiveGoalCelebration';
+import { MatchPrediction } from '@/components/MatchPrediction';
 import { PitchPulseToaster } from '@/components/PitchPulseToaster';
 import { buildGoalDataFromKeyEvent, isScoringGoalEvent } from '@/lib/goal-notification';
+import { fetchPrediction } from '@/lib/predict';
 import { showMatchEventToast } from '@/lib/match-toasts';
 import { stadiums } from '@/lib/data';
+import type { PredictResponse } from '@/types/predict';
 
 const POLL_LIVE = 12_000;
 const POLL_IDLE = 30_000;
@@ -1061,6 +1064,33 @@ export default function MatchPage({ params }: { params: { id: string } }) {
     return () => clearInterval(id);
   }, []);
 
+  useEffect(() => {
+    const homeName = match?.homeTeam.name;
+    const awayName = match?.awayTeam.name;
+    if (!homeName || !awayName) return;
+    let cancelled = false;
+    async function loadPrediction() {
+      setPredictionLoading(true);
+      setPredictionError(null);
+      try {
+        const p = await fetchPrediction(homeName, awayName);
+        if (!cancelled) setPrediction(p);
+      } catch (e) {
+        if (!cancelled) {
+          setPredictionError(
+            e instanceof Error ? e.message : 'Prediction failed'
+          );
+        }
+      } finally {
+        if (!cancelled) setPredictionLoading(false);
+      }
+    }
+    loadPrediction();
+    return () => {
+      cancelled = true;
+    };
+  }, [match?.homeTeam.name, match?.awayTeam.name]);
+
   if (loading) {
     return (
       <div className="screen" style={{ padding: isMobile ? 24 : 60 }} role="status" aria-live="polite">
@@ -1141,6 +1171,23 @@ export default function MatchPage({ params }: { params: { id: string } }) {
         </header>
 
         <ScoreHero match={match} liveClock={liveClock} isMobile={isMobile} />
+
+        <section
+          aria-label="AI match prediction"
+          style={{
+            padding: isMobile ? '20px 16px' : '28px 40px',
+            borderBottom: '1px solid var(--rule)',
+            background: 'var(--paper)',
+          }}
+        >
+          <MatchPrediction
+            homeLabel={match.homeTeam.name}
+            awayLabel={match.awayTeam.name}
+            prediction={prediction}
+            loading={predictionLoading}
+            error={predictionError}
+          />
+        </section>
 
         <div role="note" style={{
           margin: isMobile ? '16px 16px 0' : '20px 40px 0',
