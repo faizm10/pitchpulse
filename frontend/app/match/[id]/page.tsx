@@ -978,6 +978,9 @@ export default function MatchPage({ params }: { params: { id: string } }) {
   const [lastFetched, setLastFetched] = useState<number | null>(null);
   const [liveClock, setLiveClock] = useState('');
   const [, setTick] = useState(0);
+  const [prediction, setPrediction] = useState<PredictResponse | null>(null);
+  const [predictionLoading, setPredictionLoading] = useState(false);
+  const [predictionError, setPredictionError] = useState<string | null>(null);
   const clockBase = useRef<{ seconds: number; fetchedAt: number } | null>(null);
   const seenEventIds = useRef<Set<string>>(new Set());
 
@@ -1069,11 +1072,13 @@ export default function MatchPage({ params }: { params: { id: string } }) {
     const awayName = match?.awayTeam.name;
     if (!homeName || !awayName) return;
     let cancelled = false;
+    const home = homeName;
+    const away = awayName;
     async function loadPrediction() {
       setPredictionLoading(true);
       setPredictionError(null);
       try {
-        const p = await fetchPrediction(homeName, awayName);
+        const p = await fetchPrediction(home, away);
         if (!cancelled) setPrediction(p);
       } catch (e) {
         if (!cancelled) {
