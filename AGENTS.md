@@ -38,10 +38,16 @@ pitchpulse/
 - **Startup:** Loads trained artifact from disk (`TRAIN_ON_STARTUP=0` by default)
 - **Endpoints:** `GET /health`, `POST /predict` (team names normalized via `app/data/team_aliases.json`)
 - **Low confidence:** Teams with no WC history → 0.34 / 0.33 / 0.33 with `confidence: "low"`
+- **Production (Render):** `https://pitchpulse-api-dsye.onrender.com` — `GET /health`, `POST /predict`
+- **Deploy:** `render.yaml` at repo root; pushes to `main` redeploy when `backend/` changes
+- **Retrain + redeploy:** `python scripts/train_model.py` → commit `world_cup_rf.joblib` → push
+- **Smoke test:** `PREDICT_API_URL=https://pitchpulse-api-dsye.onrender.com npm run smoke:predict` (repo root)
 
 ## Frontend (`frontend/`)
 
-- **Env:** `PREDICT_API_URL=http://127.0.0.1:8001`, `FOTMOB_ENABLED=1` in `.env.local` (see `.env.example`)
+- **Env (local):** `PREDICT_API_URL=http://127.0.0.1:8001`, `FOTMOB_ENABLED=1` in `.env.local` (see `.env.example`)
+- **Env (Vercel):** `PREDICT_API_URL=https://pitchpulse-api-dsye.onrender.com` — redeploy after changes
+- **Predict proxy:** `app/api/predict/route.ts` — server-side only (no browser CORS to Render)
 - **API routes:** `/api/scores`, `/api/standings`, `/api/news`, `/api/match/[id]`, `/api/predict` (proxy to FastAPI); `/api/fotmob/league`, `/api/fotmob/team/[id]`, `/api/fotmob/team-by-code/[code]`, `/api/fotmob/match/resolve`
 
 ### Live (ESPN + ML)

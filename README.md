@@ -16,7 +16,7 @@ PitchPulse is a map-first dashboard for the 2026 World Cup: live scores, standin
 | AI prediction bars + narrative | FastAPI Random Forest |
 | Team squads & fixtures (`/team/[code]`) | FotMob (league 77) |
 | Match FotMob extras (group, xG when available) | FotMob |
-| Knockout bracket | Mock UI |
+| Knockout bracket | ESPN + static R32 hints |
 | Player stats leaderboard | Mock UI |
 | Stadium / country detail pages | Mock UI |
 | Match timeline & possession | Hidden (not wired) |
@@ -94,6 +94,56 @@ curl http://127.0.0.1:8001/health
 curl -X POST http://127.0.0.1:8001/predict -H "Content-Type: application/json" -d "{\"home_team\":\"Brazil\",\"away_team\":\"Germany\"}"
 curl -X POST http://localhost:3000/api/predict -H "Content-Type: application/json" -d "{\"home_team\":\"Brazil\",\"away_team\":\"Germany\"}"
 ```
+
+## Production — prediction API + Vercel
+
+The ML backend is deployed separately from the Next.js app. The browser **never** calls Render directly; Vercel’s server route `frontend/app/api/predict` proxies to FastAPI using `PREDICT_API_URL`.
+
+| Piece | URL / config |
+|-------|----------------|
+| **Render API** | `https://pitchpulse-api-dsye.onrender.com` |
+| **Health** | `GET …/health` → `{"status":"ok","model_loaded":true}` |
+| **Vercel env** | `PREDICT_API_URL=https://pitchpulse-api-dsye.onrender.com` (Production + Preview) |
+| **Redeploy** | Required after changing env vars |
+
+### Wire Vercel (one-time)
+
+1. Vercel project → **Settings → Environment Variables**
+2. Set `PREDICT_API_URL` = `https://pitchpulse-api-dsye.onrender.com` (no trailing slash)
+3. **Deployments → Redeploy** the latest production build
+4. Open a match on the live site → AI prediction bars should load
+
+### Smoke test
+
+From repo root (Node 18+):
+
+```bash
+# Backend only (local or Render)
+PREDICT_API_URL=https://pitchpulse-api-dsye.onrender.com npm run smoke:predict
+
+# Backend + deployed Next.js proxy
+PREDICT_API_URL=https://pitchpulse-api-dsye.onrender.com \
+SMOKE_FRONTEND_URL=https://your-app.vercel.app \
+npm run smoke:predict
+```
+
+### Redeploy backend after retraining
+
+```bash
+cd backend
+python scripts/train_model.py    # updates app/models/artifacts/world_cup_rf.joblib
+git add app/models/artifacts/world_cup_rf.joblib
+git commit -m "chore(backend): refresh prediction model artifact"
+git push
+```
+
+Render auto-deploys from `main` when `backend/` or `render.yaml` changes. Confirm with `GET /health` (`training_rows` unchanged is fine; `model_loaded` must be `true`).
+
+### Render plan note
+
+Free tier **sleeps** when idle; the first `/predict` after sleep can take **30–60 seconds**. For marketing / launch, use Render **Starter** (~$7/mo) or equivalent always-on hosting — set `plan: starter` in `render.yaml` or upgrade in the Render dashboard.
+
+See `backend/README.md` for API details and `render.yaml` for the Blueprint.
 
 ## ML pipeline (summary)
 

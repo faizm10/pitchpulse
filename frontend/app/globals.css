@@ -1203,3 +1203,27 @@ body {
   border: 1px solid var(--rule);
   opacity: 0.4;
 }
+
+/* match AI prediction */
+.match-prediction-unavailable {
+  margin-top: 12px;
+  padding: 14px 16px;
+  border-radius: var(--r-card);
+  border: 1px dashed var(--rule-soft);
+  background: color-mix(in srgb, var(--paper-2) 60%, var(--paper));
+}
+
+.match-prediction-unavailable-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.match-prediction-unavailable-detail {
+  margin: 8px 0 0;
+  font-size: 10px;
+  color: var(--ink-3);
+  letter-spacing: 0.04em;
+  line-height: 1.45;
+}

@@ -60,7 +60,7 @@ python scripts/train_model.py --dry-run
 
 ```bash
 python scripts/train_model.py
-uvicorn app.main:app --reload --port 8000
+uvicorn app.main:app --reload --port 8001
 ```
 
 Or set `TRAIN_ON_STARTUP=1` in `.env` (not recommended until features are approved).
@@ -68,11 +68,31 @@ Or set `TRAIN_ON_STARTUP=1` in `.env` (not recommended until features are approv
 ### Test standalone
 
 ```bash
-curl http://127.0.0.1:8000/health
-curl -X POST http://127.0.0.1:8000/predict ^
-  -H "Content-Type: application/json" ^
-  -d "{\"home_team\": \"Brazil\", \"away_team\": \"Germany\"}"
+curl http://127.0.0.1:8001/health
+curl -X POST http://127.0.0.1:8001/predict -H "Content-Type: application/json" -d "{\"home_team\":\"Brazil\",\"away_team\":\"Germany\"}"
 ```
+
+## Production (Render)
+
+| Item | Value |
+|------|--------|
+| Service | `pitchpulse-api` (see `render.yaml` at repo root) |
+| URL | `https://pitchpulse-api-dsye.onrender.com` |
+| Health | `GET /health` |
+| Env | `TRAIN_ON_STARTUP=0`, committed `world_cup_rf.joblib` |
+| Memory | ~512MB+ recommended for scikit-learn load at startup |
+
+**Frontend:** set `PREDICT_API_URL` on Vercel to the Render URL (no trailing slash) and redeploy Next.js.
+
+**Smoke test (from repo root):**
+
+```bash
+PREDICT_API_URL=https://pitchpulse-api-dsye.onrender.com npm run smoke:predict
+```
+
+**After retrain:** commit the updated `.joblib`, push to `main`, wait for Render deploy, verify `/health` shows `model_loaded: true`.
+
+**Launch note:** Render free tier sleeps when idle; use Starter plan for reliable latency under traffic.
 
 ## API
 
@@ -135,6 +155,6 @@ backend/
     └── train_model.py
 ```
 
-## Docker (later)
+## Docker (optional)
 
-`app.main:app` and a single `MODEL_PATH` volume mount are enough to add a `Dockerfile` without restructuring.
+`app.main:app` and a single `MODEL_PATH` volume mount are enough to add a `Dockerfile` without restructuring. Render uses `requirements.txt` + `uvicorn` directly (no Docker required today).
