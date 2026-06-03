@@ -228,7 +228,7 @@ const CSS = `
 
 /* ===== GOAT (Messi Easter egg) ===== */
 /* Argentina sky-blue + white stripes, GIF fills background */
-.gt-root { position:absolute; inset:0; overflow:hidden; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; padding-bottom:7vh; background:#74ACDF; }
+.gt-root { position:fixed; inset:0; overflow:hidden; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; padding-bottom:7vh; background:#74ACDF; z-index:99999; }
 .gt-bg-gif { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center 20%; z-index:0; opacity:0; transform:scale(1.06); transition:opacity .7s ease, transform 6s ease; }
 .gt-root[data-phase="1"] .gt-bg-gif,.gt-root[data-phase="2"] .gt-bg-gif,.gt-root[data-phase="3"] .gt-bg-gif { opacity:1; transform:scale(1); }
 .gt-root[data-phase="4"] .gt-bg-gif { opacity:0; transition:opacity .8s ease; }
@@ -254,7 +254,12 @@ const CSS = `
 
 function ensureStyles(): void {
   if (typeof document === 'undefined') return;
-  if (document.getElementById(STYLE_ID)) return;
+  const existing = document.getElementById(STYLE_ID);
+  if (existing) {
+    // Always sync in case CSS was updated (e.g. HMR adds new variant classes)
+    if (existing.textContent !== CSS) existing.textContent = CSS;
+    return;
+  }
   const el = document.createElement('style');
   el.id = STYLE_ID;
   el.textContent = CSS;
