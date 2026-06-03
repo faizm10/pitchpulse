@@ -206,22 +206,25 @@ const CSS = `
 }
 
 /* ===== SIUUU (Ronaldo Easter egg) ===== */
-.si-root { position:absolute; inset:0; overflow:hidden; display:flex; flex-direction:column; align-items:center; justify-content:center; background:linear-gradient(160deg,#006600 0%,#006600 30%,#E10600 30%,#E10600 100%); }
-.si-root::before { content:''; position:absolute; inset:0; background:linear-gradient(180deg,rgba(0,0,0,.35) 0%,transparent 60%); pointer-events:none; }
-.si-gif { position:relative; z-index:2; height:clamp(180px,35vh,320px); object-fit:contain; filter:drop-shadow(0 8px 32px rgba(0,0,0,.55)); opacity:0; transform:scale(.7) translateY(40px); transition:opacity .5s .1s ease, transform .6s .1s cubic-bezier(.2,1.4,.3,1); }
-.si-root[data-phase="1"] .si-gif, .si-root[data-phase="2"] .si-gif, .si-root[data-phase="3"] .si-gif { opacity:1; transform:scale(1) translateY(0); }
-.si-root[data-phase="4"] .si-gif { opacity:0; transform:scale(1.05) translateY(-20px); transition:opacity .7s ease, transform .7s ease; }
-.si-siuuu { position:relative; z-index:3; font-family:'Anton','Bebas Neue',Impact,sans-serif; font-size:clamp(72px,16vw,200px); color:#FFD700; text-shadow:0 6px 0 rgba(0,0,0,.45),0 0 60px rgba(255,215,0,.35); letter-spacing:-.01em; line-height:.85; transform:translateY(60px) scale(.6) rotate(-6deg); opacity:0; transition:all .55s cubic-bezier(.2,1.5,.3,1); }
-.si-root[data-phase="1"] .si-siuuu, .si-root[data-phase="2"] .si-siuuu, .si-root[data-phase="3"] .si-siuuu { opacity:1; transform:translateY(0) scale(1) rotate(-3deg); }
+/* GIF fills the background; Portugal flag gradient tints over it */
+.si-root { position:absolute; inset:0; overflow:hidden; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; padding-bottom:7vh; background:#000; }
+.si-bg-gif { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center 20%; z-index:0; opacity:0; transform:scale(1.06); transition:opacity .7s ease, transform 6s ease; }
+.si-root[data-phase="1"] .si-bg-gif,.si-root[data-phase="2"] .si-bg-gif,.si-root[data-phase="3"] .si-bg-gif { opacity:1; transform:scale(1); }
+.si-root[data-phase="4"] .si-bg-gif { opacity:0; transition:opacity .8s ease; }
+/* Portugal flag tint — two-tone colour wash over the GIF */
+.si-pt-overlay { position:absolute; inset:0; z-index:1; background:linear-gradient(105deg,rgba(0,90,0,.62) 0%,rgba(0,90,0,.62) 30%,rgba(200,0,0,.62) 30%,rgba(200,0,0,.62) 100%); pointer-events:none; }
+/* Bottom vignette — text legibility */
+.si-vignette { position:absolute; inset:0; z-index:2; background:linear-gradient(to top,rgba(0,0,0,.88) 0%,rgba(0,0,0,.3) 45%,transparent 100%); pointer-events:none; }
+.si-cr7 { position:absolute; top:16px; right:22px; z-index:4; font-family:'Anton','Bebas Neue',Impact,sans-serif; font-size:clamp(28px,5vw,64px); color:rgba(255,215,0,.22); letter-spacing:.04em; pointer-events:none; }
+.si-siuuu { position:relative; z-index:3; font-family:'Anton','Bebas Neue',Impact,sans-serif; font-size:clamp(80px,18vw,220px); color:#FFD700; text-shadow:0 8px 0 rgba(0,0,0,.6),0 0 80px rgba(255,215,0,.45); letter-spacing:-.01em; line-height:.85; transform:translateY(60px) scale(.6) rotate(-6deg); opacity:0; transition:all .55s cubic-bezier(.2,1.5,.3,1); }
+.si-root[data-phase="1"] .si-siuuu,.si-root[data-phase="2"] .si-siuuu,.si-root[data-phase="3"] .si-siuuu { opacity:1; transform:translateY(0) scale(1) rotate(-3deg); }
 .si-root[data-phase="4"] .si-siuuu { opacity:0; transform:translateY(-30px) scale(.95); transition:opacity .6s ease; }
-.si-cr7 { position:absolute; top:18px; right:24px; z-index:4; font-family:'Anton','Bebas Neue',Impact,sans-serif; font-size:clamp(32px,6vw,72px); color:rgba(255,215,0,.25); letter-spacing:.04em; pointer-events:none; }
-.si-player { position:relative; z-index:3; text-align:center; margin-top:14px; opacity:0; transform:translateY(20px); transition:all .5s .2s cubic-bezier(.16,1,.3,1); }
-.si-root[data-phase="2"] .si-player, .si-root[data-phase="3"] .si-player { opacity:1; transform:translateY(0); }
+.si-player { position:relative; z-index:3; text-align:center; margin-top:8px; opacity:0; transform:translateY(20px); transition:all .5s .2s cubic-bezier(.16,1,.3,1); }
+.si-root[data-phase="2"] .si-player,.si-root[data-phase="3"] .si-player { opacity:1; transform:translateY(0); }
 .si-root[data-phase="4"] .si-player { opacity:0; transition:opacity .5s ease; }
-.si-name { font-family:'Anton','Bebas Neue',Impact,sans-serif; font-size:clamp(26px,5vw,56px); color:#fff; letter-spacing:.02em; line-height:1; text-shadow:0 3px 0 rgba(0,0,0,.35); }
-.si-meta { font-family:'Roboto Mono',monospace; font-size:clamp(11px,1.8vw,18px); color:rgba(255,255,255,.7); letter-spacing:.15em; margin-top:8px; text-transform:uppercase; }
-.si-score { font-size:clamp(14px,2.2vw,22px); font-weight:700; color:#FFD700; }
-@keyframes si-shimmer { 0%,100%{opacity:.25} 50%{opacity:.45} }
+.si-name { font-family:'Anton','Bebas Neue',Impact,sans-serif; font-size:clamp(26px,5vw,58px); color:#fff; letter-spacing:.02em; line-height:1; text-shadow:0 3px 12px rgba(0,0,0,.7); }
+.si-meta { font-family:'Roboto Mono',monospace; font-size:clamp(11px,1.8vw,18px); color:rgba(255,255,255,.78); letter-spacing:.15em; margin-top:8px; text-transform:uppercase; }
+.si-score { font-weight:700; color:#FFD700; }
 `;
 
 
@@ -530,11 +533,14 @@ function SiuuuVariant({ data, onDone }: VariantProps) {
 
   return (
     <div className="si-root" data-phase={phase}>
+      {/* GIF as full-bleed background */}
+      <img className="si-bg-gif" src={RONALDO_GIF} alt="" aria-hidden="true" />
+      {/* Portugal flag colour tint over the GIF */}
+      <div className="si-pt-overlay" />
+      {/* Bottom vignette for text legibility */}
+      <div className="si-vignette" />
       {/* CR7 watermark */}
       <div className="si-cr7">CR7</div>
-
-      {/* Ronaldo GIF — self-hosted in /public */}
-      <img className="si-gif" src={RONALDO_GIF} alt="SIUUU!" />
 
       {/* SIUUUU! */}
       <div className="si-siuuu">SIUUU!</div>
