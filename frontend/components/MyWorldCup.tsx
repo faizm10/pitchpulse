@@ -31,11 +31,25 @@ export function MyWorldCup() {
                   <div className="mono" style={{ fontSize: 11, marginTop: 4, opacity: 0.65, letterSpacing: '0.14em' }}>GROUP {teams[myTeam].group}</div>
                 </div>
               </div>
-              <button onClick={() => setMyTeam(null)} style={{
-                marginTop: 16, background: 'transparent', border: '1px solid rgba(242,238,227,0.3)',
-                color: 'var(--paper)', padding: '8px 14px', borderRadius: 999,
-                fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '0.14em', cursor: 'pointer',
-              }}>CLEAR</button>
+              <div style={{ marginTop: 16, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                <Link
+                  href={`/team/${myTeam}`}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center',
+                    padding: '8px 14px', borderRadius: 999,
+                    background: 'rgba(242,238,227,0.15)', color: 'var(--paper)',
+                    fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '0.14em',
+                    textDecoration: 'none', border: '1px solid rgba(242,238,227,0.3)',
+                  }}
+                >
+                  VIEW SQUAD →
+                </Link>
+                <button onClick={() => setMyTeam(null)} style={{
+                  background: 'transparent', border: '1px solid rgba(242,238,227,0.3)',
+                  color: 'var(--paper)', padding: '8px 14px', borderRadius: 999,
+                  fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '0.14em', cursor: 'pointer',
+                }}>CLEAR</button>
+              </div>
             </div>
           )}
         </div>

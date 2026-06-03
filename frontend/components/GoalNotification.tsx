@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect, useRef, useMemo, type CSSProperties } from 'react';
+import React, { useState, useEffect, useRef, useMemo, type CSSProperties } from 'react';
 
 /* ------------------------------------------------------------
  * Public types
  * ------------------------------------------------------------ */
-export type GoalVariant = 'broadcast' | 'arcade' | 'cinematic' | 'stadium';
+export type GoalVariant = 'broadcast' | 'arcade' | 'cinematic' | 'stadium' | 'siuuu' | 'goat';
 
 export interface GoalData {
   given: string;
@@ -27,6 +27,8 @@ export interface GoalNotificationProps {
   /** Increment to trigger a celebration. Each new value fires once. */
   trigger: number;
   data: GoalData;
+  /** Which animation style to use. Omit to pick randomly. */
+  variant?: GoalVariant;
   onComplete?: () => void;
 }
 
@@ -202,11 +204,62 @@ const CSS = `
   .st-surname { font-size:36px; }
   .ci-surname { font-size:38px; letter-spacing:.2em; }
 }
+
+/* ===== SIUUU (Ronaldo Easter egg) ===== */
+/* GIF fills the background; Portugal flag gradient tints over it */
+.si-root { position:absolute; inset:0; overflow:hidden; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; padding-bottom:7vh; background:#000; }
+.si-bg-gif { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center 20%; z-index:0; opacity:0; transform:scale(1.06); transition:opacity .7s ease, transform 6s ease; }
+.si-root[data-phase="1"] .si-bg-gif,.si-root[data-phase="2"] .si-bg-gif,.si-root[data-phase="3"] .si-bg-gif { opacity:1; transform:scale(1); }
+.si-root[data-phase="4"] .si-bg-gif { opacity:0; transition:opacity .8s ease; }
+/* Portugal flag tint — two-tone colour wash over the GIF */
+.si-pt-overlay { position:absolute; inset:0; z-index:1; background:linear-gradient(105deg,rgba(0,90,0,.38) 0%,rgba(0,90,0,.38) 30%,rgba(200,0,0,.38) 30%,rgba(200,0,0,.38) 100%); pointer-events:none; }
+/* Bottom vignette — text legibility */
+.si-vignette { position:absolute; inset:0; z-index:2; background:linear-gradient(to top,rgba(0,0,0,.88) 0%,rgba(0,0,0,.3) 45%,transparent 100%); pointer-events:none; }
+.si-cr7 { position:absolute; top:16px; right:22px; z-index:4; font-family:'Anton','Bebas Neue',Impact,sans-serif; font-size:clamp(28px,5vw,64px); color:rgba(255,215,0,.22); letter-spacing:.04em; pointer-events:none; }
+.si-siuuu { position:relative; z-index:3; font-family:'Anton','Bebas Neue',Impact,sans-serif; font-size:clamp(80px,18vw,220px); color:#FFD700; text-shadow:0 8px 0 rgba(0,0,0,.6),0 0 80px rgba(255,215,0,.45); letter-spacing:-.01em; line-height:.85; transform:translateY(60px) scale(.6) rotate(-6deg); opacity:0; transition:all .55s cubic-bezier(.2,1.5,.3,1); }
+.si-root[data-phase="1"] .si-siuuu,.si-root[data-phase="2"] .si-siuuu,.si-root[data-phase="3"] .si-siuuu { opacity:1; transform:translateY(0) scale(1) rotate(-3deg); }
+.si-root[data-phase="4"] .si-siuuu { opacity:0; transform:translateY(-30px) scale(.95); transition:opacity .6s ease; }
+.si-player { position:relative; z-index:3; text-align:center; margin-top:8px; opacity:0; transform:translateY(20px); transition:all .5s .2s cubic-bezier(.16,1,.3,1); }
+.si-root[data-phase="2"] .si-player,.si-root[data-phase="3"] .si-player { opacity:1; transform:translateY(0); }
+.si-root[data-phase="4"] .si-player { opacity:0; transition:opacity .5s ease; }
+.si-name { font-family:'Anton','Bebas Neue',Impact,sans-serif; font-size:clamp(26px,5vw,58px); color:#fff; letter-spacing:.02em; line-height:1; text-shadow:0 3px 12px rgba(0,0,0,.7); }
+.si-meta { font-family:'Roboto Mono',monospace; font-size:clamp(11px,1.8vw,18px); color:rgba(255,255,255,.78); letter-spacing:.15em; margin-top:8px; text-transform:uppercase; }
+.si-score { font-weight:700; color:#FFD700; }
+
+/* ===== GOAT (Messi Easter egg) ===== */
+/* Argentina sky-blue + white stripes, GIF fills background */
+.gt-root { position:fixed; inset:0; overflow:hidden; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; padding-bottom:7vh; background:#74ACDF; z-index:99999; }
+.gt-bg-gif { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center 20%; z-index:0; opacity:0; transform:scale(1.06); transition:opacity .7s ease, transform 6s ease; }
+.gt-root[data-phase="1"] .gt-bg-gif,.gt-root[data-phase="2"] .gt-bg-gif,.gt-root[data-phase="3"] .gt-bg-gif { opacity:1; transform:scale(1); }
+.gt-root[data-phase="4"] .gt-bg-gif { opacity:0; transition:opacity .8s ease; }
+/* Argentina flag tint — sky-blue / white / sky-blue horizontal stripes */
+.gt-arg-overlay { position:absolute; inset:0; z-index:1; background:linear-gradient(180deg,rgba(116,172,223,.5) 0%,rgba(116,172,223,.5) 30%,rgba(255,255,255,.35) 30%,rgba(255,255,255,.35) 70%,rgba(116,172,223,.5) 70%,rgba(116,172,223,.5) 100%); pointer-events:none; }
+/* Bottom vignette for text legibility */
+.gt-vignette { position:absolute; inset:0; z-index:2; background:linear-gradient(to top,rgba(0,20,60,.88) 0%,rgba(0,20,60,.25) 45%,transparent 100%); pointer-events:none; }
+/* M10 watermark */
+.gt-m10 { position:absolute; top:16px; right:22px; z-index:4; font-family:'Anton','Bebas Neue',Impact,sans-serif; font-size:clamp(28px,5vw,64px); color:rgba(116,172,223,.3); letter-spacing:.04em; pointer-events:none; }
+/* GOAT! text */
+.gt-goat { position:relative; z-index:3; font-family:'Anton','Bebas Neue',Impact,sans-serif; font-size:clamp(80px,18vw,220px); color:#fff; text-shadow:0 8px 0 rgba(0,20,80,.55),0 0 80px rgba(116,172,223,.6); letter-spacing:-.01em; line-height:.85; transform:translateY(60px) scale(.6); opacity:0; transition:all .55s cubic-bezier(.2,1.5,.3,1); }
+.gt-root[data-phase="1"] .gt-goat,.gt-root[data-phase="2"] .gt-goat,.gt-root[data-phase="3"] .gt-goat { opacity:1; transform:translateY(0) scale(1); }
+.gt-root[data-phase="4"] .gt-goat { opacity:0; transform:translateY(-30px) scale(.95); transition:opacity .6s ease; }
+/* Player info */
+.gt-player { position:relative; z-index:3; text-align:center; margin-top:10px; opacity:0; transform:translateY(20px); transition:all .5s .2s cubic-bezier(.16,1,.3,1); }
+.gt-root[data-phase="2"] .gt-player,.gt-root[data-phase="3"] .gt-player { opacity:1; transform:translateY(0); }
+.gt-root[data-phase="4"] .gt-player { opacity:0; transition:opacity .5s ease; }
+.gt-name { font-family:'Anton','Bebas Neue',Impact,sans-serif; font-size:clamp(26px,5vw,58px); color:#fff; letter-spacing:.02em; line-height:1; text-shadow:0 3px 12px rgba(0,0,0,.6); }
+.gt-meta { font-family:'Roboto Mono',monospace; font-size:clamp(11px,1.8vw,18px); color:rgba(255,255,255,.78); letter-spacing:.15em; margin-top:8px; text-transform:uppercase; }
+.gt-score { font-weight:700; color:#74ACDF; }
 `;
+
 
 function ensureStyles(): void {
   if (typeof document === 'undefined') return;
-  if (document.getElementById(STYLE_ID)) return;
+  const existing = document.getElementById(STYLE_ID);
+  if (existing) {
+    // Always sync in case CSS was updated (e.g. HMR adds new variant classes)
+    if (existing.textContent !== CSS) existing.textContent = CSS;
+    return;
+  }
   const el = document.createElement('style');
   el.id = STYLE_ID;
   el.textContent = CSS;
@@ -485,11 +538,119 @@ function StadiumVariant({ data, onDone }: VariantProps) {
 }
 
 /* ------------------------------------------------------------
+ * SIUUU — Ronaldo Easter egg
+ * ------------------------------------------------------------ */
+// Self-hosted in /public/gifs/
+const RONALDO_GIF = '/gifs/ronaldo.gif';
+const MESSI_GIF   = '/gifs/messi.gif';
+
+function SiuuuVariant({ data, onDone }: VariantProps) {
+  const [phase, setPhase] = useState(0);
+
+  useEffect(() => {
+    const timers = [
+      setTimeout(() => setPhase(1), 100),   // GIF + colors in
+      setTimeout(() => setPhase(2), 900),   // player name in
+      setTimeout(() => setPhase(3), 1800),  // linger
+      setTimeout(() => setPhase(4), 4600),  // fade out
+      setTimeout(() => onDone(), 5400),
+    ];
+    return () => timers.forEach(clearTimeout);
+  }, [onDone]);
+
+  const fullName = [data.given, data.surname].filter(Boolean).join(' ') || 'Ronaldo';
+  const scoreStr = `${data.homeTeam} ${data.homeScore}–${data.awayScore} ${data.awayTeam}`;
+
+  return (
+    <div className="si-root" data-phase={phase}>
+      {/* GIF as full-bleed background */}
+      <img className="si-bg-gif" src={RONALDO_GIF} alt="" aria-hidden="true" />
+      {/* Portugal flag colour tint over the GIF */}
+      <div className="si-pt-overlay" />
+      {/* Bottom vignette for text legibility */}
+      <div className="si-vignette" />
+      {/* CR7 watermark */}
+      <div className="si-cr7">CR7</div>
+
+      {/* SIUUUU! */}
+      <div className="si-siuuu">SIUUU!</div>
+
+      {/* Player info */}
+      <div className="si-player">
+        <div className="si-name">#{data.number} {fullName}</div>
+        <div className="si-meta">
+          {data.minute}&apos; · <span className="si-score">{scoreStr}</span>
+        </div>
+        {data.assist && (
+          <div className="si-meta" style={{ marginTop: 4, fontSize: 'clamp(10px,1.4vw,14px)' }}>
+            ASS. {data.assist}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------
+ * GOAT — Messi Easter egg
+ * ------------------------------------------------------------ */
+function GoatVariant({ data, onDone }: VariantProps) {
+  const [phase, setPhase] = useState(0);
+
+  useEffect(() => {
+    const timers = [
+      setTimeout(() => setPhase(1), 100),
+      setTimeout(() => setPhase(2), 900),
+      setTimeout(() => setPhase(3), 1800),
+      setTimeout(() => setPhase(4), 4600),
+      setTimeout(() => onDone(), 5400),
+    ];
+    return () => timers.forEach(clearTimeout);
+  }, [onDone]);
+
+  const fullName = [data.given, data.surname].filter(Boolean).join(' ') || 'Messi';
+  const scoreStr = `${data.homeTeam} ${data.homeScore}–${data.awayScore} ${data.awayTeam}`;
+
+  return (
+    <div className="gt-root" data-phase={phase}>
+      <img className="gt-bg-gif" src={MESSI_GIF} alt="" aria-hidden="true" />
+      <div className="gt-arg-overlay" />
+      <div className="gt-vignette" />
+      <div className="gt-m10">M10</div>
+
+      <div className="gt-goat">GOAT!</div>
+
+      <div className="gt-player">
+        <div className="gt-name">#{data.number} {fullName}</div>
+        <div className="gt-meta">
+          {data.minute}&apos; · <span className="gt-score">{scoreStr}</span>
+        </div>
+        {data.assist && (
+          <div className="gt-meta" style={{ marginTop: 4, fontSize: 'clamp(10px,1.4vw,14px)' }}>
+            ASS. {data.assist}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------
  * Main exported component
  * ------------------------------------------------------------ */
-export function GoalNotification({ trigger, data, onComplete }: GoalNotificationProps) {
+const VARIANTS: GoalVariant[] = ['broadcast', 'arcade', 'cinematic', 'stadium'];
+const VARIANT_MAP: Record<GoalVariant, React.ComponentType<VariantProps>> = {
+  broadcast: BroadcastVariant,
+  arcade: ArcadeVariant,
+  cinematic: CinematicVariant,
+  stadium: StadiumVariant,
+  siuuu: SiuuuVariant,
+  goat: GoatVariant,
+};
+
+export function GoalNotification({ trigger, data, variant, onComplete }: GoalNotificationProps) {
   ensureStyles();
-  const [active, setActive] = useState<null | { key: number; data: GoalData }>(null);
+  const [active, setActive] = useState<null | { key: number; data: GoalData; variant: GoalVariant }>(null);
   const keyRef = useRef(0);
   const dataRef = useRef(data);
   dataRef.current = data;
@@ -497,17 +658,16 @@ export function GoalNotification({ trigger, data, onComplete }: GoalNotification
   useEffect(() => {
     if (!trigger) return;
     keyRef.current += 1;
-    setActive({
-      key: keyRef.current,
-      data: dataRef.current,
-    });
-  }, [trigger]);
+    const chosen = variant ?? VARIANTS[Math.floor(Math.random() * VARIANTS.length)];
+    setActive({ key: keyRef.current, data: dataRef.current, variant: chosen });
+  }, [trigger, variant]);
 
   if (!active) return null;
+  const VariantComponent = VARIANT_MAP[active.variant];
   const done = () => { setActive(null); onComplete?.(); };
   return (
     <div className="gn-host" key={active.key}>
-      <BroadcastVariant data={active.data} onDone={done} />
+      <VariantComponent data={active.data} onDone={done} />
     </div>
   );
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { initPostHog } from '@/lib/posthog';
 import type { Tweaks } from '@/lib/types';
 
 // ───────── Tweaks ─────────
@@ -46,6 +47,8 @@ export function useMyTeam(): MyTeamContextValue {
 export function Providers({ children }: { children: ReactNode }) {
   const [tweaks, setTweaks] = useState<Tweaks>(DEFAULT_TWEAKS);
   const [myTeam, setMyTeamState] = useState<string | null>(null);
+
+  useEffect(() => { initPostHog(); }, []);
 
   // Hydrate from localStorage
   useEffect(() => {

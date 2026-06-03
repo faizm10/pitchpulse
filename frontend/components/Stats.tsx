@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { Flag, Big } from './Shared';
 
 interface TopScorer {
@@ -265,7 +266,9 @@ export function Stats() {
                 <div className="serif tnum" style={{ fontSize: 22, color: s.rank === 1 ? 'var(--pulse)' : 'var(--ink-2)' }}>
                   {String(s.rank).padStart(2, '0')}
                 </div>
-                <Flag code={s.team} w={24} h={16} />
+                <Link href={`/team/${s.team}`} style={{ display: 'contents' }}>
+                  <Flag code={s.team} w={24} h={16} />
+                </Link>
                 <div className="serif" style={{ fontSize: 18 }}>{s.player}</div>
                 <div style={{ height: 8, background: 'var(--rule-soft)', borderRadius: 4, position: 'relative', overflow: 'hidden' }}>
                   <div style={{ position: 'absolute', inset: 0, width: `${(s.goals / maxGoals) * 100}%`, background: 'var(--pulse)' }} />
