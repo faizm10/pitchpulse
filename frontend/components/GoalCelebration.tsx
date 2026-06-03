@@ -15,30 +15,26 @@
 
 import { useCallback, useState } from 'react';
 import { GoalNotification } from '@/components/GoalNotification';
-import type { GoalData } from '@/components/GoalNotification';
+import type { GoalData, GoalVariant } from '@/components/GoalNotification';
 
-export type { GoalData };
-
-export interface FireGoalOptions extends GoalData {}
+export type { GoalData, GoalVariant };
 
 export function useGoalCelebration() {
   const [trigger, setTrigger] = useState(0);
   const [data, setData] = useState<GoalData | null>(null);
+  const [variant, setVariant] = useState<GoalVariant | undefined>(undefined);
 
-  /** Call this to fire the celebration with the provided goal data. */
-  const fireGoal = useCallback((goalData: GoalData) => {
+  const fireGoal = useCallback((goalData: GoalData, goalVariant?: GoalVariant) => {
     setData(goalData);
+    // Easter egg: Ronaldo always gets the SIUUU variant regardless of what's selected
+    const fullName = `${goalData.given} ${goalData.surname}`.toLowerCase();
+    const isRonaldo = fullName.includes('ronaldo');
+    setVariant(isRonaldo ? 'siuuu' : goalVariant);
     setTrigger(n => n + 1);
   }, []);
 
-  /**
-   * Render this node once in your component tree.
-   * Returning JSX (not a component function) keeps the same
-   * GoalNotification instance alive across renders — React reconciles
-   * by position, so trigger increments reach the existing effect once.
-   */
   const celebrationNode = data
-    ? <GoalNotification trigger={trigger} data={data} />
+    ? <GoalNotification trigger={trigger} data={data} variant={variant} />
     : null;
 
   return { fireGoal, celebrationNode };

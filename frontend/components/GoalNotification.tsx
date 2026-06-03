@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect, useRef, useMemo, type CSSProperties } from 'react';
+import React, { useState, useEffect, useRef, useMemo, type CSSProperties } from 'react';
 
 /* ------------------------------------------------------------
  * Public types
  * ------------------------------------------------------------ */
-export type GoalVariant = 'broadcast' | 'arcade' | 'cinematic' | 'stadium';
+export type GoalVariant = 'broadcast' | 'arcade' | 'cinematic' | 'stadium' | 'siuuu';
 
 export interface GoalData {
   given: string;
@@ -27,6 +27,8 @@ export interface GoalNotificationProps {
   /** Increment to trigger a celebration. Each new value fires once. */
   trigger: number;
   data: GoalData;
+  /** Which animation style to use. Omit to pick randomly. */
+  variant?: GoalVariant;
   onComplete?: () => void;
 }
 
@@ -202,7 +204,26 @@ const CSS = `
   .st-surname { font-size:36px; }
   .ci-surname { font-size:38px; letter-spacing:.2em; }
 }
+
+/* ===== SIUUU (Ronaldo Easter egg) ===== */
+.si-root { position:absolute; inset:0; overflow:hidden; display:flex; flex-direction:column; align-items:center; justify-content:center; background:linear-gradient(160deg,#006600 0%,#006600 30%,#E10600 30%,#E10600 100%); }
+.si-root::before { content:''; position:absolute; inset:0; background:linear-gradient(180deg,rgba(0,0,0,.35) 0%,transparent 60%); pointer-events:none; }
+.si-gif { position:relative; z-index:2; height:clamp(180px,35vh,320px); object-fit:contain; filter:drop-shadow(0 8px 32px rgba(0,0,0,.55)); opacity:0; transform:scale(.7) translateY(40px); transition:opacity .5s .1s ease, transform .6s .1s cubic-bezier(.2,1.4,.3,1); }
+.si-root[data-phase="1"] .si-gif, .si-root[data-phase="2"] .si-gif, .si-root[data-phase="3"] .si-gif { opacity:1; transform:scale(1) translateY(0); }
+.si-root[data-phase="4"] .si-gif { opacity:0; transform:scale(1.05) translateY(-20px); transition:opacity .7s ease, transform .7s ease; }
+.si-siuuu { position:relative; z-index:3; font-family:'Anton','Bebas Neue',Impact,sans-serif; font-size:clamp(72px,16vw,200px); color:#FFD700; text-shadow:0 6px 0 rgba(0,0,0,.45),0 0 60px rgba(255,215,0,.35); letter-spacing:-.01em; line-height:.85; transform:translateY(60px) scale(.6) rotate(-6deg); opacity:0; transition:all .55s cubic-bezier(.2,1.5,.3,1); }
+.si-root[data-phase="1"] .si-siuuu, .si-root[data-phase="2"] .si-siuuu, .si-root[data-phase="3"] .si-siuuu { opacity:1; transform:translateY(0) scale(1) rotate(-3deg); }
+.si-root[data-phase="4"] .si-siuuu { opacity:0; transform:translateY(-30px) scale(.95); transition:opacity .6s ease; }
+.si-cr7 { position:absolute; top:18px; right:24px; z-index:4; font-family:'Anton','Bebas Neue',Impact,sans-serif; font-size:clamp(32px,6vw,72px); color:rgba(255,215,0,.25); letter-spacing:.04em; pointer-events:none; }
+.si-player { position:relative; z-index:3; text-align:center; margin-top:14px; opacity:0; transform:translateY(20px); transition:all .5s .2s cubic-bezier(.16,1,.3,1); }
+.si-root[data-phase="2"] .si-player, .si-root[data-phase="3"] .si-player { opacity:1; transform:translateY(0); }
+.si-root[data-phase="4"] .si-player { opacity:0; transition:opacity .5s ease; }
+.si-name { font-family:'Anton','Bebas Neue',Impact,sans-serif; font-size:clamp(26px,5vw,56px); color:#fff; letter-spacing:.02em; line-height:1; text-shadow:0 3px 0 rgba(0,0,0,.35); }
+.si-meta { font-family:'Roboto Mono',monospace; font-size:clamp(11px,1.8vw,18px); color:rgba(255,255,255,.7); letter-spacing:.15em; margin-top:8px; text-transform:uppercase; }
+.si-score { font-size:clamp(14px,2.2vw,22px); font-weight:700; color:#FFD700; }
+@keyframes si-shimmer { 0%,100%{opacity:.25} 50%{opacity:.45} }
 `;
+
 
 function ensureStyles(): void {
   if (typeof document === 'undefined') return;
@@ -485,11 +506,83 @@ function StadiumVariant({ data, onDone }: VariantProps) {
 }
 
 /* ------------------------------------------------------------
+ * SIUUU — Ronaldo Easter egg
+ * ------------------------------------------------------------ */
+// Multiple GIF sources for resilience — first one that loads wins
+const RONALDO_GIFS = [
+  'https://media.giphy.com/media/a5Wp5VBJkBIek/giphy.gif',         // SIUU celebration
+  'https://media.giphy.com/media/3o6Zt4d9CX2pEWopO0/giphy.gif',   // alternate
+  'https://media.tenor.com/images/bda9b0c57a96d19ca72b55e3b5a9f0f5/tenor.gif',
+];
+
+function SiuuuVariant({ data, onDone }: VariantProps) {
+  const [phase, setPhase] = useState(0);
+  const [gifIdx, setGifIdx] = useState(0);
+
+  useEffect(() => {
+    const timers = [
+      setTimeout(() => setPhase(1), 100),   // GIF + colors in
+      setTimeout(() => setPhase(2), 900),   // player name in
+      setTimeout(() => setPhase(3), 1800),  // linger
+      setTimeout(() => setPhase(4), 4600),  // fade out
+      setTimeout(() => onDone(), 5400),
+    ];
+    return () => timers.forEach(clearTimeout);
+  }, [onDone]);
+
+  const fullName = [data.given, data.surname].filter(Boolean).join(' ') || 'Ronaldo';
+  const scoreStr = `${data.homeTeam} ${data.homeScore}–${data.awayScore} ${data.awayTeam}`;
+
+  return (
+    <div className="si-root" data-phase={phase}>
+      {/* CR7 watermark */}
+      <div className="si-cr7">CR7</div>
+
+      {/* Ronaldo GIF */}
+      {gifIdx < RONALDO_GIFS.length && (
+        <img
+          key={gifIdx}
+          className="si-gif"
+          src={RONALDO_GIFS[gifIdx]}
+          alt="SIUUU!"
+          onError={() => setGifIdx(i => i + 1)}
+        />
+      )}
+
+      {/* SIUUUU! */}
+      <div className="si-siuuu">SIUUU!</div>
+
+      {/* Player info */}
+      <div className="si-player">
+        <div className="si-name">#{data.number} {fullName}</div>
+        <div className="si-meta">
+          {data.minute}&apos; · <span className="si-score">{scoreStr}</span>
+        </div>
+        {data.assist && (
+          <div className="si-meta" style={{ marginTop: 4, fontSize: 'clamp(10px,1.4vw,14px)' }}>
+            ASS. {data.assist}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------
  * Main exported component
  * ------------------------------------------------------------ */
-export function GoalNotification({ trigger, data, onComplete }: GoalNotificationProps) {
+const VARIANTS: GoalVariant[] = ['broadcast', 'arcade', 'cinematic', 'stadium'];
+const VARIANT_MAP: Record<GoalVariant, React.ComponentType<VariantProps>> = {
+  broadcast: BroadcastVariant,
+  arcade: ArcadeVariant,
+  cinematic: CinematicVariant,
+  stadium: StadiumVariant,
+  siuuu: SiuuuVariant,
+};
+
+export function GoalNotification({ trigger, data, variant, onComplete }: GoalNotificationProps) {
   ensureStyles();
-  const [active, setActive] = useState<null | { key: number; data: GoalData }>(null);
+  const [active, setActive] = useState<null | { key: number; data: GoalData; variant: GoalVariant }>(null);
   const keyRef = useRef(0);
   const dataRef = useRef(data);
   dataRef.current = data;
@@ -497,17 +590,16 @@ export function GoalNotification({ trigger, data, onComplete }: GoalNotification
   useEffect(() => {
     if (!trigger) return;
     keyRef.current += 1;
-    setActive({
-      key: keyRef.current,
-      data: dataRef.current,
-    });
-  }, [trigger]);
+    const chosen = variant ?? VARIANTS[Math.floor(Math.random() * VARIANTS.length)];
+    setActive({ key: keyRef.current, data: dataRef.current, variant: chosen });
+  }, [trigger, variant]);
 
   if (!active) return null;
+  const VariantComponent = VARIANT_MAP[active.variant];
   const done = () => { setActive(null); onComplete?.(); };
   return (
     <div className="gn-host" key={active.key}>
-      <BroadcastVariant data={active.data} onDone={done} />
+      <VariantComponent data={active.data} onDone={done} />
     </div>
   );
 }
