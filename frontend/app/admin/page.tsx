@@ -280,7 +280,7 @@ function ServiceHealthPanel() {
 
 // ── Goal scorer test panel ────────────────────────────────────────────────────
 
-const GOAL_VARIANTS: GoalVariant[] = ['broadcast', 'arcade', 'cinematic', 'stadium', 'siuuu'];
+const GOAL_VARIANTS: GoalVariant[] = ['broadcast', 'arcade', 'cinematic', 'stadium', 'siuuu', 'goat'];
 
 const CR7_PRESET = {
   playerName: 'Cristiano Ronaldo',
@@ -288,6 +288,14 @@ const CR7_PRESET = {
   flag: '🇵🇹',
   assist: '',
   minute: 77,
+};
+
+const MESSI_PRESET = {
+  playerName: 'Lionel Messi',
+  number: 10,
+  flag: '🇦🇷',
+  assist: '',
+  minute: 73,
 };
 
 function GoalTestPanel({
@@ -444,21 +452,23 @@ function GoalTestPanel({
               </div>
             </label>
 
-            {/* CR7 Easter egg preset */}
-            <button
-              type="button"
-              onClick={() => {
-                setPlayerName(CR7_PRESET.playerName);
-                setNumber(CR7_PRESET.number);
-                setFlag(CR7_PRESET.flag);
-                setAssist(CR7_PRESET.assist);
-                setMinute(CR7_PRESET.minute);
-                setVariant('siuuu');
-              }}
-              style={{ padding: '8px 0', borderRadius: 7, border: '2px solid #E10600', cursor: 'pointer', background: 'linear-gradient(135deg, #006600, #E10600)', color: '#FFD700', fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '0.14em', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
-            >
-              🇵🇹 CR7 SIUUU PRESET
-            </button>
+            {/* Legend presets */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+              <button
+                type="button"
+                onClick={() => { setPlayerName(CR7_PRESET.playerName); setNumber(CR7_PRESET.number); setFlag(CR7_PRESET.flag); setAssist(CR7_PRESET.assist); setMinute(CR7_PRESET.minute); setVariant('siuuu'); }}
+                style={{ padding: '8px 0', borderRadius: 7, border: '2px solid #E10600', cursor: 'pointer', background: 'linear-gradient(135deg, #006600, #E10600)', color: '#FFD700', fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '0.1em', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+              >
+                🇵🇹 CR7 SIUUU
+              </button>
+              <button
+                type="button"
+                onClick={() => { setPlayerName(MESSI_PRESET.playerName); setNumber(MESSI_PRESET.number); setFlag(MESSI_PRESET.flag); setAssist(MESSI_PRESET.assist); setMinute(MESSI_PRESET.minute); setVariant('goat'); }}
+                style={{ padding: '8px 0', borderRadius: 7, border: '2px solid #74ACDF', cursor: 'pointer', background: 'linear-gradient(135deg, #74ACDF, #fff)', color: '#003087', fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '0.1em', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+              >
+                🇦🇷 MESSI GOAT
+              </button>
+            </div>
 
             <button
               type="button"
@@ -1021,22 +1031,23 @@ function SimulateTab({
                   ))}
                 </div>
 
-                {/* CR7 Easter egg preset */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setPlayerName(CR7_PRESET.playerName);
-                    setNumber(CR7_PRESET.number);
-                    setFlag(CR7_PRESET.flag);
-                    setAssist(CR7_PRESET.assist);
-                    setMinute(CR7_PRESET.minute);
-                    setVariant('siuuu');
-                    setScoringSide('home');
-                  }}
-                  style={{ padding: '8px 0', borderRadius: 7, border: '2px solid #E10600', cursor: 'pointer', background: 'linear-gradient(135deg, #006600, #E10600)', color: '#FFD700', fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '0.14em', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
-                >
-                  🇵🇹 CR7 SIUUU PRESET
-                </button>
+                {/* Legend presets */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+                  <button
+                    type="button"
+                    onClick={() => { setPlayerName(CR7_PRESET.playerName); setNumber(CR7_PRESET.number); setFlag(CR7_PRESET.flag); setAssist(CR7_PRESET.assist); setMinute(CR7_PRESET.minute); setVariant('siuuu'); setScoringSide('home'); }}
+                    style={{ padding: '8px 0', borderRadius: 7, border: '2px solid #E10600', cursor: 'pointer', background: 'linear-gradient(135deg, #006600, #E10600)', color: '#FFD700', fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '0.1em', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+                  >
+                    🇵🇹 CR7 SIUUU
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setPlayerName(MESSI_PRESET.playerName); setNumber(MESSI_PRESET.number); setFlag(MESSI_PRESET.flag); setAssist(MESSI_PRESET.assist); setMinute(MESSI_PRESET.minute); setVariant('goat'); setScoringSide('home'); }}
+                    style={{ padding: '8px 0', borderRadius: 7, border: '2px solid #74ACDF', cursor: 'pointer', background: 'linear-gradient(135deg, #74ACDF, #fff)', color: '#003087', fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '0.1em', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+                  >
+                    🇦🇷 MESSI GOAT
+                  </button>
+                </div>
 
                 <button
                   type="button"

@@ -26,10 +26,11 @@ export function useGoalCelebration() {
 
   const fireGoal = useCallback((goalData: GoalData, goalVariant?: GoalVariant) => {
     setData(goalData);
-    // Easter egg: Ronaldo always gets the SIUUU variant regardless of what's selected
+    // Easter eggs: override variant for legendary players
     const fullName = `${goalData.given} ${goalData.surname}`.toLowerCase();
     const isRonaldo = fullName.includes('ronaldo');
-    setVariant(isRonaldo ? 'siuuu' : goalVariant);
+    const isMessi   = fullName.includes('messi');
+    setVariant(isRonaldo ? 'siuuu' : isMessi ? 'goat' : goalVariant);
     setTrigger(n => n + 1);
   }, []);
 

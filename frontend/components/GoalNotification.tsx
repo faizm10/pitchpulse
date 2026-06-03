@@ -5,7 +5,7 @@ import React, { useState, useEffect, useRef, useMemo, type CSSProperties } from 
 /* ------------------------------------------------------------
  * Public types
  * ------------------------------------------------------------ */
-export type GoalVariant = 'broadcast' | 'arcade' | 'cinematic' | 'stadium' | 'siuuu';
+export type GoalVariant = 'broadcast' | 'arcade' | 'cinematic' | 'stadium' | 'siuuu' | 'goat';
 
 export interface GoalData {
   given: string;
@@ -225,6 +225,30 @@ const CSS = `
 .si-name { font-family:'Anton','Bebas Neue',Impact,sans-serif; font-size:clamp(26px,5vw,58px); color:#fff; letter-spacing:.02em; line-height:1; text-shadow:0 3px 12px rgba(0,0,0,.7); }
 .si-meta { font-family:'Roboto Mono',monospace; font-size:clamp(11px,1.8vw,18px); color:rgba(255,255,255,.78); letter-spacing:.15em; margin-top:8px; text-transform:uppercase; }
 .si-score { font-weight:700; color:#FFD700; }
+
+/* ===== GOAT (Messi Easter egg) ===== */
+/* Argentina sky-blue + white stripes, GIF fills background */
+.gt-root { position:absolute; inset:0; overflow:hidden; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; padding-bottom:7vh; background:#74ACDF; }
+.gt-bg-gif { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center 20%; z-index:0; opacity:0; transform:scale(1.06); transition:opacity .7s ease, transform 6s ease; }
+.gt-root[data-phase="1"] .gt-bg-gif,.gt-root[data-phase="2"] .gt-bg-gif,.gt-root[data-phase="3"] .gt-bg-gif { opacity:1; transform:scale(1); }
+.gt-root[data-phase="4"] .gt-bg-gif { opacity:0; transition:opacity .8s ease; }
+/* Argentina flag tint — sky-blue / white / sky-blue horizontal stripes */
+.gt-arg-overlay { position:absolute; inset:0; z-index:1; background:linear-gradient(180deg,rgba(116,172,223,.5) 0%,rgba(116,172,223,.5) 30%,rgba(255,255,255,.35) 30%,rgba(255,255,255,.35) 70%,rgba(116,172,223,.5) 70%,rgba(116,172,223,.5) 100%); pointer-events:none; }
+/* Bottom vignette for text legibility */
+.gt-vignette { position:absolute; inset:0; z-index:2; background:linear-gradient(to top,rgba(0,20,60,.88) 0%,rgba(0,20,60,.25) 45%,transparent 100%); pointer-events:none; }
+/* M10 watermark */
+.gt-m10 { position:absolute; top:16px; right:22px; z-index:4; font-family:'Anton','Bebas Neue',Impact,sans-serif; font-size:clamp(28px,5vw,64px); color:rgba(116,172,223,.3); letter-spacing:.04em; pointer-events:none; }
+/* GOAT! text */
+.gt-goat { position:relative; z-index:3; font-family:'Anton','Bebas Neue',Impact,sans-serif; font-size:clamp(80px,18vw,220px); color:#fff; text-shadow:0 8px 0 rgba(0,20,80,.55),0 0 80px rgba(116,172,223,.6); letter-spacing:-.01em; line-height:.85; transform:translateY(60px) scale(.6); opacity:0; transition:all .55s cubic-bezier(.2,1.5,.3,1); }
+.gt-root[data-phase="1"] .gt-goat,.gt-root[data-phase="2"] .gt-goat,.gt-root[data-phase="3"] .gt-goat { opacity:1; transform:translateY(0) scale(1); }
+.gt-root[data-phase="4"] .gt-goat { opacity:0; transform:translateY(-30px) scale(.95); transition:opacity .6s ease; }
+/* Player info */
+.gt-player { position:relative; z-index:3; text-align:center; margin-top:10px; opacity:0; transform:translateY(20px); transition:all .5s .2s cubic-bezier(.16,1,.3,1); }
+.gt-root[data-phase="2"] .gt-player,.gt-root[data-phase="3"] .gt-player { opacity:1; transform:translateY(0); }
+.gt-root[data-phase="4"] .gt-player { opacity:0; transition:opacity .5s ease; }
+.gt-name { font-family:'Anton','Bebas Neue',Impact,sans-serif; font-size:clamp(26px,5vw,58px); color:#fff; letter-spacing:.02em; line-height:1; text-shadow:0 3px 12px rgba(0,0,0,.6); }
+.gt-meta { font-family:'Roboto Mono',monospace; font-size:clamp(11px,1.8vw,18px); color:rgba(255,255,255,.78); letter-spacing:.15em; margin-top:8px; text-transform:uppercase; }
+.gt-score { font-weight:700; color:#74ACDF; }
 `;
 
 
@@ -511,8 +535,9 @@ function StadiumVariant({ data, onDone }: VariantProps) {
 /* ------------------------------------------------------------
  * SIUUU — Ronaldo Easter egg
  * ------------------------------------------------------------ */
-// Self-hosted in /public — no third-party dependency
-const RONALDO_GIF = '/ronaldo.gif';
+// Self-hosted in /public/gifs/
+const RONALDO_GIF = '/gifs/ronaldo.gif';
+const MESSI_GIF   = '/gifs/messi.gif';
 
 function SiuuuVariant({ data, onDone }: VariantProps) {
   const [phase, setPhase] = useState(0);
@@ -562,6 +587,50 @@ function SiuuuVariant({ data, onDone }: VariantProps) {
 }
 
 /* ------------------------------------------------------------
+ * GOAT — Messi Easter egg
+ * ------------------------------------------------------------ */
+function GoatVariant({ data, onDone }: VariantProps) {
+  const [phase, setPhase] = useState(0);
+
+  useEffect(() => {
+    const timers = [
+      setTimeout(() => setPhase(1), 100),
+      setTimeout(() => setPhase(2), 900),
+      setTimeout(() => setPhase(3), 1800),
+      setTimeout(() => setPhase(4), 4600),
+      setTimeout(() => onDone(), 5400),
+    ];
+    return () => timers.forEach(clearTimeout);
+  }, [onDone]);
+
+  const fullName = [data.given, data.surname].filter(Boolean).join(' ') || 'Messi';
+  const scoreStr = `${data.homeTeam} ${data.homeScore}–${data.awayScore} ${data.awayTeam}`;
+
+  return (
+    <div className="gt-root" data-phase={phase}>
+      <img className="gt-bg-gif" src={MESSI_GIF} alt="" aria-hidden="true" />
+      <div className="gt-arg-overlay" />
+      <div className="gt-vignette" />
+      <div className="gt-m10">M10</div>
+
+      <div className="gt-goat">GOAT!</div>
+
+      <div className="gt-player">
+        <div className="gt-name">#{data.number} {fullName}</div>
+        <div className="gt-meta">
+          {data.minute}&apos; · <span className="gt-score">{scoreStr}</span>
+        </div>
+        {data.assist && (
+          <div className="gt-meta" style={{ marginTop: 4, fontSize: 'clamp(10px,1.4vw,14px)' }}>
+            ASS. {data.assist}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------
  * Main exported component
  * ------------------------------------------------------------ */
 const VARIANTS: GoalVariant[] = ['broadcast', 'arcade', 'cinematic', 'stadium'];
@@ -571,6 +640,7 @@ const VARIANT_MAP: Record<GoalVariant, React.ComponentType<VariantProps>> = {
   cinematic: CinematicVariant,
   stadium: StadiumVariant,
   siuuu: SiuuuVariant,
+  goat: GoatVariant,
 };
 
 export function GoalNotification({ trigger, data, variant, onComplete }: GoalNotificationProps) {
