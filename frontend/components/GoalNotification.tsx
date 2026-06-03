@@ -212,7 +212,7 @@ const CSS = `
 .si-root[data-phase="1"] .si-bg-gif,.si-root[data-phase="2"] .si-bg-gif,.si-root[data-phase="3"] .si-bg-gif { opacity:1; transform:scale(1); }
 .si-root[data-phase="4"] .si-bg-gif { opacity:0; transition:opacity .8s ease; }
 /* Portugal flag tint — two-tone colour wash over the GIF */
-.si-pt-overlay { position:absolute; inset:0; z-index:1; background:linear-gradient(105deg,rgba(0,90,0,.62) 0%,rgba(0,90,0,.62) 30%,rgba(200,0,0,.62) 30%,rgba(200,0,0,.62) 100%); pointer-events:none; }
+.si-pt-overlay { position:absolute; inset:0; z-index:1; background:linear-gradient(105deg,rgba(0,90,0,.38) 0%,rgba(0,90,0,.38) 30%,rgba(200,0,0,.38) 30%,rgba(200,0,0,.38) 100%); pointer-events:none; }
 /* Bottom vignette — text legibility */
 .si-vignette { position:absolute; inset:0; z-index:2; background:linear-gradient(to top,rgba(0,0,0,.88) 0%,rgba(0,0,0,.3) 45%,transparent 100%); pointer-events:none; }
 .si-cr7 { position:absolute; top:16px; right:22px; z-index:4; font-family:'Anton','Bebas Neue',Impact,sans-serif; font-size:clamp(28px,5vw,64px); color:rgba(255,215,0,.22); letter-spacing:.04em; pointer-events:none; }
