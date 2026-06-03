@@ -508,16 +508,11 @@ function StadiumVariant({ data, onDone }: VariantProps) {
 /* ------------------------------------------------------------
  * SIUUU — Ronaldo Easter egg
  * ------------------------------------------------------------ */
-// Multiple GIF sources for resilience — first one that loads wins
-const RONALDO_GIFS = [
-  'https://media.giphy.com/media/a5Wp5VBJkBIek/giphy.gif',         // SIUU celebration
-  'https://media.giphy.com/media/3o6Zt4d9CX2pEWopO0/giphy.gif',   // alternate
-  'https://media.tenor.com/images/bda9b0c57a96d19ca72b55e3b5a9f0f5/tenor.gif',
-];
+// Self-hosted in /public — no third-party dependency
+const RONALDO_GIF = '/ronaldo.gif';
 
 function SiuuuVariant({ data, onDone }: VariantProps) {
   const [phase, setPhase] = useState(0);
-  const [gifIdx, setGifIdx] = useState(0);
 
   useEffect(() => {
     const timers = [
@@ -538,16 +533,8 @@ function SiuuuVariant({ data, onDone }: VariantProps) {
       {/* CR7 watermark */}
       <div className="si-cr7">CR7</div>
 
-      {/* Ronaldo GIF */}
-      {gifIdx < RONALDO_GIFS.length && (
-        <img
-          key={gifIdx}
-          className="si-gif"
-          src={RONALDO_GIFS[gifIdx]}
-          alt="SIUUU!"
-          onError={() => setGifIdx(i => i + 1)}
-        />
-      )}
+      {/* Ronaldo GIF — self-hosted in /public */}
+      <img className="si-gif" src={RONALDO_GIF} alt="SIUUU!" />
 
       {/* SIUUUU! */}
       <div className="si-siuuu">SIUUU!</div>
