@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 
 interface Article {
   id: string;
@@ -15,6 +15,57 @@ interface Article {
   category?: string;
 }
 
+const COUNTRIES = [
+  { name: 'Algeria', code: 'ALG' },
+  { name: 'Argentina', code: 'ARG' },
+  { name: 'Australia', code: 'AUS' },
+  { name: 'Austria', code: 'AUT' },
+  { name: 'Belgium', code: 'BEL' },
+  { name: 'Bosnia and Herzegovina', code: 'BIH' },
+  { name: 'Brazil', code: 'BRA' },
+  { name: 'Canada', code: 'CAN' },
+  { name: 'Cape Verde', code: 'CPV' },
+  { name: 'Colombia', code: 'COL' },
+  { name: 'Congo DR', code: 'COD' },
+  { name: 'Croatia', code: 'CRO' },
+  { name: 'Curaçao', code: 'CUW' },
+  { name: 'Czechia', code: 'CZE' },
+  { name: 'Ecuador', code: 'ECU' },
+  { name: 'Egypt', code: 'EGY' },
+  { name: 'England', code: 'ENG' },
+  { name: 'France', code: 'FRA' },
+  { name: 'Germany', code: 'GER' },
+  { name: 'Ghana', code: 'GHA' },
+  { name: 'Haiti', code: 'HAI' },
+  { name: 'Iran', code: 'IRN' },
+  { name: 'Iraq', code: 'IRQ' },
+  { name: 'Ivory Coast', code: 'CIV' },
+  { name: 'Japan', code: 'JPN' },
+  { name: 'Jordan', code: 'JOR' },
+  { name: 'Mexico', code: 'MEX' },
+  { name: 'Morocco', code: 'MAR' },
+  { name: 'Netherlands', code: 'NED' },
+  { name: 'New Zealand', code: 'NZL' },
+  { name: 'Norway', code: 'NOR' },
+  { name: 'Panama', code: 'PAN' },
+  { name: 'Paraguay', code: 'PAR' },
+  { name: 'Portugal', code: 'POR' },
+  { name: 'Qatar', code: 'QAT' },
+  { name: 'Saudi Arabia', code: 'KSA' },
+  { name: 'Scotland', code: 'SCO' },
+  { name: 'Senegal', code: 'SEN' },
+  { name: 'South Africa', code: 'RSA' },
+  { name: 'South Korea', code: 'KOR' },
+  { name: 'Spain', code: 'ESP' },
+  { name: 'Sweden', code: 'SWE' },
+  { name: 'Switzerland', code: 'SUI' },
+  { name: 'Tunisia', code: 'TUN' },
+  { name: 'Turkey', code: 'TUR' },
+  { name: 'United States', code: 'USA' },
+  { name: 'Uruguay', code: 'URU' },
+  { name: 'Uzbekistan', code: 'UZB' },
+].sort((a, b) => a.name.localeCompare(b.name));
+
 function relativeTime(iso: string) {
   const diff = (Date.now() - new Date(iso).getTime()) / 1000;
   if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
@@ -22,35 +73,15 @@ function relativeTime(iso: string) {
   return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
 }
 
-function readTime(text: string) {
-  const words = (text || '').split(' ').length;
-  return `${Math.max(1, Math.round(words / 200))} min read`;
-}
-
 function articleHref(article: Article): string | undefined {
-  const href = article.link ?? article.url;
-  if (!href || href === '#') return undefined;
-  return href;
+  return article.link ?? article.url ?? undefined;
 }
 
-function ArticleLink({
-  article,
-  style,
-  children,
-}: {
-  article: Article;
-  style?: React.CSSProperties;
-  children: React.ReactNode;
-}) {
+function ArticleLink({ article, style, children }: { article: Article; style?: React.CSSProperties; children: React.ReactNode }) {
   const href = articleHref(article);
-  if (href) {
+  if (href && href !== '#') {
     return (
-      <a
-        href={href}
-        target="_blank"
-        rel="noopener noreferrer"
-        style={{ textDecoration: 'none', color: 'inherit', ...style }}
-      >
+      <a href={href} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit', display: 'block', ...style }}>
         {children}
       </a>
     );
@@ -58,24 +89,17 @@ function ArticleLink({
   return <div style={style}>{children}</div>;
 }
 
-function ReadLink({ article }: { article: Article }) {
-  if (!articleHref(article)) return null;
-  return (
-    <span className="mono" style={{ fontSize: 10, letterSpacing: '0.12em', color: 'var(--ink-1)' }}>
-      Read on ESPN →
-    </span>
-  );
-}
-
 export function News() {
   const [news, setNews] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedCountry, setSelectedCountry] = useState('ALL');
 
   useEffect(() => {
     async function loadNews() {
       try {
         const res = await fetch('/api/news');
         const data = await res.json();
+        console.log("Total articles received from backend:", data.articles?.length);
         const articles: Article[] = (data.articles || []).map((a: Article) => ({
           ...a,
           link: a.link ?? a.url,
@@ -91,91 +115,129 @@ export function News() {
     loadNews();
   }, []);
 
+  const filteredNews = useMemo(() => {
+    if (selectedCountry === 'ALL') return news;
+    const target = COUNTRIES.find(c => c.code === selectedCountry);
+    if (!target) return news;
+    
+    const name = target.name.toLowerCase();
+    const code = target.code.toLowerCase();
+
+    return news.filter(art => {
+      const h = String(art.headline ?? '').toLowerCase();
+      const d = String(art.description ?? '').toLowerCase();
+      return h.includes(name) || d.includes(name); // just match full country name
+    });
+  }, [news, selectedCountry]);
+
   if (loading) {
     return (
-      <div
-        className="screen"
-        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', flexDirection: 'column', gap: 16 }}
-      >
-        <div className="mono" style={{ fontSize: 11, letterSpacing: '0.18em', color: 'var(--ink-3)', textTransform: 'uppercase' }}>
-          Loading News
-        </div>
+      <div className="screen" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', flexDirection: 'column', gap: 16 }}>
+        <div className="mono" style={{ fontSize: 11, letterSpacing: '0.18em', color: 'var(--ink-3)', textTransform: 'uppercase' }}>Loading Wire Feeds</div>
         <div style={{ width: 200, height: 1, background: 'var(--rule)', position: 'relative', overflow: 'hidden' }}>
-          <div style={{
-            position: 'absolute', top: 0, left: '-40%', width: '40%', height: '100%',
-            background: 'var(--ink-1)', animation: 'slide 1s linear infinite',
-          }} />
+          <div style={{ position: 'absolute', top: 0, left: '-40%', width: '40%', height: '100%', background: 'var(--ink-1)', animation: 'slide 1s linear infinite' }} />
         </div>
         <style>{`@keyframes slide { to { left: 100%; } }`}</style>
       </div>
     );
   }
 
-  const [hero, feature, ...rest] = news;
-  const dispatches = rest.slice(0, 2);
-  const shorts = rest.slice(2);
+  const heroArticle = filteredNews[0];
+  const sideHeadlines = filteredNews.slice(1, 5); 
+  const streamStories = filteredNews.slice(5);
 
   return (
     <div className="screen">
       {/* MASTHEAD */}
-      <div style={{
-        padding: '32px 48px 28px',
-        borderBottom: '2px solid var(--ink-1)',
-        display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 24,
-      }}>
+      <div style={{ padding: '24px 40px', borderBottom: '1px solid var(--rule)', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 24 }}>
         <div>
-          <div className="mono" style={{ fontSize: 10, letterSpacing: '0.22em', color: 'var(--ink-3)', textTransform: 'uppercase', marginBottom: 6 }}>
-            World Cup · Aggregated Wire + Editorial
-          </div>
-          <div className="serif" style={{ fontSize: 58, lineHeight: 1.0, letterSpacing: '-0.025em' }}>
-            The world is <em>watching.</em>
-          </div>
+          <div className="mono" style={{ fontSize: 9, letterSpacing: '0.22em', color: 'var(--ink-3)', textTransform: 'uppercase', marginBottom: 4 }}>World Cup Hub Feed</div>
+          <div className="serif" style={{ fontSize: 40, lineHeight: 1.0, fontWeight: 700, letterSpacing: '-0.025em' }}>The world is <em>watching.</em></div>
         </div>
         <div style={{ textAlign: 'right', flexShrink: 0 }}>
-          <div className="mono" style={{ fontSize: 10, letterSpacing: '0.12em', color: 'var(--ink-3)', textTransform: 'uppercase', lineHeight: 1.8 }}>
-            {new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-            <br />Updated every 30 minutes
-            <br />ESPN World Cup Feed
+          <div className="mono" style={{ fontSize: 9, letterSpacing: '0.12em', color: 'var(--ink-3)', textTransform: 'uppercase', lineHeight: 1.6 }}>
+            {new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
+            <br />ESPN Aggregate Wire
           </div>
-          <LiveBadge />
         </div>
       </div>
 
-      {/* NAV STRIP */}
-      <NavStrip />
+      {/* FILTER STRIP */}
+      <div style={{ display: 'flex', alignItems: 'center', padding: '12px 40px', borderBottom: '1px solid var(--rule)', background: 'var(--paper-2)', gap: 12 }}>
+        <div className="mono" style={{ fontSize: 9, letterSpacing: '0.14em', color: 'var(--ink-2)', textTransform: 'uppercase', fontWeight: 600 }}>Filter By Nation:</div>
+        <select value={selectedCountry} onChange={(e) => setSelectedCountry(e.target.value)} style={{ fontFamily: "'Courier New', monospace", fontSize: 11, padding: '4px 10px', background: 'var(--paper)', border: '1px solid var(--rule)', borderRadius: 4, color: 'var(--ink)', cursor: 'pointer', outline: 'none', minWidth: 220 }}>
+          <option value="ALL">ALL TOURNAMENT NEWS</option>
+          {COUNTRIES.map((c) => <option key={c.code} value={c.code}>{c.name.toUpperCase()} ({c.code})</option>)}
+        </select>
+      </div>
 
-      {/* BODY */}
-      <div style={{ padding: '40px 48px 64px' }}>
-
-        {/* HERO GRID */}
-        {hero && (
-          <div style={{
-            display: 'grid', gridTemplateColumns: '1fr 340px',
-            border: '1px solid var(--rule)', marginBottom: 40,
-            background: 'var(--paper-2)',
-          }}>
-            <HeroMain article={hero} />
-            <HeroSidebar feature={feature} dispatches={dispatches} />
+      {/* COMPONENT BODY */}
+      <div style={{ padding: '32px 40px 80px' }}>
+        {filteredNews.length === 0 ? (
+          <div style={{ padding: '64px 0', textAlign: 'center' }}>
+            <div className="serif" style={{ fontSize: 20, fontStyle: 'italic', color: 'var(--ink-3)' }}>No matching bulletins found right now.</div>
+            <button onClick={() => setSelectedCountry('ALL')} className="mono" style={{ background: 'none', border: 'none', color: 'var(--pulse)', textDecoration: 'underline', marginTop: 12, cursor: 'pointer', fontSize: 11 }}>Return to global wire</button>
           </div>
-        )}
-
-        {/* LATEST */}
-        {shorts.length > 0 && (
+        ) : (
           <>
-            <div style={{
-              display: 'flex', alignItems: 'baseline', justifyContent: 'space-between',
-              borderTop: '2px solid var(--ink-1)', paddingTop: 16, marginBottom: 24,
-            }}>
-              <div className="serif" style={{ fontSize: 28, fontStyle: 'italic' }}>Latest</div>
-              <div className="mono" style={{ fontSize: 10, letterSpacing: '0.14em', color: 'var(--ink-3)', textTransform: 'uppercase' }}>
-                {shorts.length} stories
+            {/* HERO SPLIT SECTION */}
+            {selectedCountry === 'ALL' && heroArticle && (
+              <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: 'minmax(0, 1fr) 420px', 
+                gap: 32, 
+                marginBottom: 40, 
+                background: 'var(--paper-2)',
+                border: '1px solid var(--rule)',
+                borderRadius: 8,
+                overflow: 'hidden'
+              }}>
+                <HeroCard article={heroArticle} />
+
+                <div style={{ padding: '24px 24px 24px 0', display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  {sideHeadlines.map((art) => (
+                    <ArticleLink key={art.id} article={art} style={{ 
+                      display: 'grid', 
+                      gridTemplateColumns: '1fr 80px', 
+                      gap: 16, 
+                      paddingBottom: 16, 
+                      borderBottom: '1px solid var(--rule-soft)',
+                      alignItems: 'start'
+                    }}>
+                      <div>
+                        <InteractiveHeadline text={art.headline} fontSize={14} />
+                        <div className="mono" style={{ fontSize: 9, color: 'var(--ink-3)', marginTop: 6 }}>
+                          {art.source?.toUpperCase()} · {relativeTime(art.published)}
+                        </div>
+                      </div>
+                      {art.image && (
+                        <div style={{ width: 80, height: 54, borderRadius: 4, overflow: 'hidden', background: 'var(--paper-3)', border: '1px solid var(--rule-soft)' }}>
+                          <img src={art.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        </div>
+                      )}
+                    </ArticleLink>
+                  ))}
+                </div>
               </div>
-            </div>
-            <div style={{
-              display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
-              border: '1px solid var(--rule)',
-            }}>
-              {shorts.map((n) => <ShortCard key={n.id} article={n} />)}
+            )}
+
+            {/* DUAL COLUMN BOTTOM GRID */}
+            <div style={{ marginTop: 24 }}>
+              {selectedCountry !== 'ALL' && (
+                <div className="serif" style={{ fontSize: 24, fontStyle: 'italic', marginBottom: 24, borderBottom: '1px solid var(--rule)', paddingBottom: 12 }}>
+                  News Feed for {COUNTRIES.find(c => c.code === selectedCountry)?.name}
+                </div>
+              )}
+              
+              <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: 'repeat(auto-fill, minmax(480px, 1fr))', 
+                gap: 24 
+              }}>
+                {(selectedCountry === 'ALL' ? streamStories : filteredNews).map((art) => (
+                  <HorizontalStreamRow key={art.id} article={art} />
+                ))}
+              </div>
             </div>
           </>
         )}
@@ -184,201 +246,77 @@ export function News() {
   );
 }
 
-/* ── Sub-components ─────────────────────────────────────────────── */
+/* ── SUB-COMPONENTS ──────────────────────────────────────────────── */
 
-function LiveBadge() {
+function InteractiveHeadline({ text, fontSize }: { text: string; fontSize: number }) {
+  const [hovered, setHovered] = useState(false);
   return (
-    <>
-      <style>{`
-        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
-        .live-dot { width:5px;height:5px;border-radius:50%;background:#fff;animation:blink 1.2s ease-in-out infinite; }
-      `}</style>
-      <div style={{
-        display: 'inline-flex', alignItems: 'center', gap: 6,
-        background: 'var(--pulse)', color: '#fff',
-        fontFamily: "'Courier New', monospace", fontSize: 9,
-        letterSpacing: '0.2em', padding: '4px 10px', marginTop: 8,
-        textTransform: 'uppercase',
-      }}>
-        <span className="live-dot" />
-        Live
-      </div>
-    </>
-  );
-}
-
-const NAV_TABS = ['All', 'Match Reports', 'Analysis', 'Stats', 'Fixtures', 'Standings'];
-
-function NavStrip() {
-  const [active, setActive] = useState('All');
-  return (
-    <div style={{ display: 'flex', padding: '0 48px', borderBottom: '1px solid var(--rule)', overflowX: 'auto' }}>
-      {NAV_TABS.map((tab) => (
-        <button
-          key={tab}
-          onClick={() => setActive(tab)}
-          style={{
-            fontFamily: "'Courier New', monospace", fontSize: 10,
-            letterSpacing: '0.18em', textTransform: 'uppercase',
-            color: active === tab ? 'var(--ink-1)' : 'var(--ink-3)',
-            padding: '14px 16px', background: 'none', border: 'none',
-            borderBottom: active === tab ? '2px solid var(--ink-1)' : '2px solid transparent',
-            cursor: 'pointer', whiteSpace: 'nowrap',
-          }}
-        >
-          {tab}
-        </button>
-      ))}
-    </div>
-  );
-}
-
-function Tag({ label, variant = 'filled' }: { label: string; variant?: 'filled' | 'outline' | 'live' }) {
-  const styles: Record<string, React.CSSProperties> = {
-    filled: { background: 'var(--ink-1)', color: 'var(--paper-1)' },
-    live:   { background: 'var(--pulse)', color: '#fff' },
-    outline:{ background: 'transparent', color: 'var(--ink-3)', border: '1px solid var(--rule)' },
-  };
-  return (
-    <span style={{
-      fontFamily: "'Courier New', monospace", fontSize: 9,
-      letterSpacing: '0.2em', textTransform: 'uppercase',
-      padding: variant === 'outline' ? '2px 7px' : '3px 8px',
-      ...styles[variant],
-    }}>
-      {label}
-    </span>
-  );
-}
-
-function ArticleImage({ src, alt }: { src?: string; alt: string }) {
-  if (src) return <img src={src} alt={alt} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />;
-  return (
-    <div style={{
-      width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontFamily: "'Courier New', monospace", fontSize: 9, letterSpacing: '0.16em',
-      color: 'var(--ink-3)', textTransform: 'uppercase',
-    }}>
-      No image available
-    </div>
-  );
-}
-
-function HeroMain({ article: n }: { article: Article }) {
-  return (
-    <ArticleLink
-      article={n}
-      style={{ borderRight: '1px solid var(--rule)', display: 'flex', flexDirection: 'column' }}
-    >
-      <div style={{ width: '100%', aspectRatio: '16/9', background: 'var(--paper-3)', overflow: 'hidden' }}>
-        <ArticleImage src={n.image} alt={n.headline} />
-      </div>
-      <div style={{ padding: '28px 32px 32px', flex: 1, display: 'flex', flexDirection: 'column', gap: 14 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <Tag label="Live Coverage" variant="live" />
-          <Tag label={n.category || 'World Cup'} variant="outline" />
-        </div>
-        <div className="serif" style={{ fontSize: 38, lineHeight: 1.08, letterSpacing: '-0.02em' }}>
-          {n.headline}
-        </div>
-        <div style={{ fontSize: 15, color: 'var(--ink-2)', lineHeight: 1.6 }}>
-          {n.description}
-        </div>
-        <div className="mono" style={{
-          fontSize: 10, letterSpacing: '0.1em', color: 'var(--ink-3)',
-          textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 8, marginTop: 'auto',
-        }}>
-          <span>{(n.source || 'ESPN').toUpperCase()}</span>
-          <Dot />
-          <span>{relativeTime(n.published)}</span>
-          <Dot />
-          <span>{readTime(n.description)}</span>
-          {articleHref(n) && (
-            <>
-              <Dot />
-              <ReadLink article={n} />
-            </>
-          )}
-        </div>
-      </div>
-    </ArticleLink>
-  );
-}
-
-function HeroSidebar({ feature, dispatches }: { feature?: Article; dispatches: Article[] }) {
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column' }}>
-      {feature && (
-        <ArticleLink
-          article={feature}
-          style={{
-            padding: 24,
-            borderBottom: '1px solid var(--rule)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 10,
-          }}
-        >
-          <div style={{ width: '100%', aspectRatio: '16/9', overflow: 'hidden', background: 'var(--paper-3)', marginBottom: 4 }}>
-            <ArticleImage src={feature.image} alt={feature.headline} />
-          </div>
-          <Tag label={feature.category || 'News'} variant="filled" />
-          <div className="serif" style={{ fontSize: 22, lineHeight: 1.15 }}>{feature.headline}</div>
-          <div style={{ fontSize: 13, color: 'var(--ink-2)', lineHeight: 1.5 }}>{feature.description}</div>
-          <div className="mono" style={{ fontSize: 9, letterSpacing: '0.12em', color: 'var(--ink-3)', textTransform: 'uppercase' }}>
-            {(feature.source || 'ESPN').toUpperCase()} · {relativeTime(feature.published)}
-            {articleHref(feature) && <> · <ReadLink article={feature} /></>}
-          </div>
-        </ArticleLink>
-      )}
-      <div style={{ padding: 20, flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 6 }}>
-        <div className="mono" style={{ fontSize: 9, letterSpacing: '0.2em', color: 'var(--pulse)', textTransform: 'uppercase', marginBottom: 8 }}>
-          Quick Dispatches
-        </div>
-        {dispatches.map((n) => (
-          <ArticleLink
-            key={n.id}
-            article={n}
-            style={{ display: 'block', padding: '12px 0', borderTop: '1px solid var(--rule-soft)' }}
-          >
-            <div className="mono" style={{ fontSize: 9, letterSpacing: '0.14em', color: 'var(--ink-3)', textTransform: 'uppercase', marginBottom: 4 }}>
-              {n.category || 'News'} · {relativeTime(n.published)}
-            </div>
-            <div className="serif" style={{ fontSize: 15, lineHeight: 1.25 }}>{n.headline}</div>
-            <div style={{ marginTop: 6 }}>
-              <ReadLink article={n} />
-            </div>
-          </ArticleLink>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function ShortCard({ article: n }: { article: Article }) {
-  return (
-    <ArticleLink
-      article={n}
-      style={{
-        padding: 20,
-        borderRight: '1px solid var(--rule-soft)',
-        borderBottom: '1px solid var(--rule-soft)',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 8,
+    <div 
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      className="serif" 
+      style={{ 
+        fontSize, 
+        lineHeight: 1.3, 
+        fontWeight: 600, 
+        color: hovered ? 'var(--pulse)' : 'var(--ink)', 
+        transition: 'color 0.15s ease',
+        cursor: 'pointer'
       }}
     >
-      <Tag label={n.category || 'News'} variant="outline" />
-      <div className="serif" style={{ fontSize: 18, lineHeight: 1.2 }}>{n.headline}</div>
-      <div style={{ fontSize: 13, color: 'var(--ink-2)', lineHeight: 1.45, flex: 1 }}>{n.description}</div>
-      <div className="mono" style={{ fontSize: 9, letterSpacing: '0.12em', color: 'var(--ink-3)', textTransform: 'uppercase', marginTop: 4 }}>
-        {(n.source || 'ESPN').toUpperCase()} · {relativeTime(n.published)} · {readTime(n.description)}
+      {text}
+    </div>
+  );
+}
+
+function HeroCard({ article: n }: { article: Article }) {
+  return (
+    <ArticleLink article={n} style={{ display: 'flex', flexDirection: 'column', background: 'rgba(0,0,0,0.02)' }}>
+      <div style={{ width: '100%', aspectRatio: '16/9', overflow: 'hidden', borderBottom: '1px solid var(--rule)' }}>
+        <img src={n.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
       </div>
-      <ReadLink article={n} />
+      <div style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ fontFamily: 'monospace', fontSize: 8, color: 'var(--pulse)', fontWeight: 700, letterSpacing: '0.1em' }}>FEATURED STORY</div>
+        <div className="serif" style={{ fontSize: 26, lineHeight: 1.2, fontWeight: 700 }}>{n.headline}</div>
+        <div style={{ fontSize: 13, color: 'var(--ink-2)', lineHeight: 1.45 }}>{n.description}</div>
+        <div className="mono" style={{ fontSize: 9, color: 'var(--ink-3)' }}>
+          {n.source?.toUpperCase()} · {relativeTime(n.published)}
+        </div>
+      </div>
     </ArticleLink>
   );
 }
 
-function Dot() {
-  return <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'var(--ink-3)', display: 'inline-block' }} />;
+function HorizontalStreamRow({ article: n }: { article: Article }) {
+  return (
+    <ArticleLink article={n} style={{ 
+      display: 'grid', 
+      gridTemplateColumns: '1fr 120px', 
+      gap: 20, 
+      padding: 20, 
+      background: 'var(--paper)', 
+      border: '1px solid var(--rule-soft)', 
+      borderRadius: 6,
+      alignItems: 'center',
+      height: '100%'
+    }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <div style={{ fontFamily: 'monospace', fontSize: 8, color: 'var(--ink-3)', letterSpacing: '0.05em' }}>
+          {n.category?.toUpperCase() || 'NEWS'}
+        </div>
+        <InteractiveHeadline text={n.headline} fontSize={16} />
+        <div style={{ fontSize: 12, color: 'var(--ink-2)', lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+          {n.description}
+        </div>
+        <div className="mono" style={{ fontSize: 8, color: 'var(--ink-3)', marginTop: 4 }}>
+          {n.source?.toUpperCase()} · {relativeTime(n.published)}
+        </div>
+      </div>
+      {n.image && (
+        <div style={{ width: 120, aspectRatio: '4/3', borderRadius: 4, overflow: 'hidden', background: 'var(--paper-3)', border: '1px solid var(--rule-soft)' }}>
+          <img src={n.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        </div>
+      )}
+    </ArticleLink>
+  );
 }
