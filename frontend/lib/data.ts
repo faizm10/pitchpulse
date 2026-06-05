@@ -203,414 +203,54 @@ export const stadiums: Stadium[] = [
 ];
 
 export const teams: Record<string, Team> = {
-  "BRA": {
-    "code": "BRA",
-    "name": "Brazil",
-    "flag": [
-      "#009C3B",
-      "#FFDF00",
-      "#002776"
-    ],
-    "group": "A",
-    "form": [
-      "W",
-      "W",
-      "D",
-      "W",
-      "W"
-    ]
-  },
-  "ARG": {
-    "code": "ARG",
-    "name": "Argentina",
-    "flag": [
-      "#75AADB",
-      "#FFFFFF",
-      "#75AADB"
-    ],
-    "group": "C",
-    "form": [
-      "W",
-      "D",
-      "W",
-      "W",
-      "L"
-    ]
-  },
-  "ENG": {
-    "code": "ENG",
-    "name": "England",
-    "flag": [
-      "#FFFFFF",
-      "#CE1124",
-      "#FFFFFF"
-    ],
-    "group": "B",
-    "form": [
-      "W",
-      "W",
-      "W",
-      "D",
-      "W"
-    ]
-  },
-  "FRA": {
-    "code": "FRA",
-    "name": "France",
-    "flag": [
-      "#0055A4",
-      "#FFFFFF",
-      "#EF4135"
-    ],
-    "group": "F",
-    "form": [
-      "W",
-      "L",
-      "W",
-      "W",
-      "W"
-    ]
-  },
-  "GER": {
-    "code": "GER",
-    "name": "Germany",
-    "flag": [
-      "#000000",
-      "#DD0000",
-      "#FFCE00"
-    ],
-    "group": "D",
-    "form": [
-      "D",
-      "W",
-      "W",
-      "L",
-      "W"
-    ]
-  },
-  "ESP": {
-    "code": "ESP",
-    "name": "Spain",
-    "flag": [
-      "#AA151B",
-      "#F1BF00",
-      "#AA151B"
-    ],
-    "group": "E",
-    "form": [
-      "W",
-      "W",
-      "D",
-      "W",
-      "W"
-    ]
-  },
-  "POR": {
-    "code": "POR",
-    "name": "Portugal",
-    "flag": [
-      "#006600",
-      "#FF0000",
-      "#FF0000"
-    ],
-    "group": "H",
-    "form": [
-      "W",
-      "D",
-      "W",
-      "W",
-      "D"
-    ]
-  },
-  "NED": {
-    "code": "NED",
-    "name": "Netherlands",
-    "flag": [
-      "#AE1C28",
-      "#FFFFFF",
-      "#21468B"
-    ],
-    "group": "B",
-    "form": [
-      "W",
-      "W",
-      "L",
-      "W",
-      "D"
-    ]
-  },
-  "BEL": {
-    "code": "BEL",
-    "name": "Belgium",
-    "flag": [
-      "#000000",
-      "#FAE042",
-      "#ED2939"
-    ],
-    "group": "F",
-    "form": [
-      "L",
-      "D",
-      "W",
-      "W",
-      "W"
-    ]
-  },
-  "ITA": {
-    "code": "ITA",
-    "name": "Italy",
-    "flag": [
-      "#008C45",
-      "#F4F5F0",
-      "#CD212A"
-    ],
-    "group": "A",
-    "form": [
-      "D",
-      "W",
-      "W",
-      "W",
-      "D"
-    ]
-  },
-  "USA": {
-    "code": "USA",
-    "name": "USA",
-    "flag": [
-      "#B22234",
-      "#FFFFFF",
-      "#3C3B6E"
-    ],
-    "group": "D",
-    "form": [
-      "W",
-      "D",
-      "W",
-      "L",
-      "W"
-    ]
-  },
-  "MEX": {
-    "code": "MEX",
-    "name": "Mexico",
-    "flag": [
-      "#006847",
-      "#FFFFFF",
-      "#CE1126"
-    ],
-    "group": "A",
-    "form": [
-      "W",
-      "W",
-      "D",
-      "W",
-      "W"
-    ]
-  },
-  "CAN": {
-    "code": "CAN",
-    "name": "Canada",
-    "flag": [
-      "#FF0000",
-      "#FFFFFF",
-      "#FF0000"
-    ],
-    "group": "E",
-    "form": [
-      "D",
-      "W",
-      "L",
-      "D",
-      "W"
-    ]
-  },
-  "JPN": {
-    "code": "JPN",
-    "name": "Japan",
-    "flag": [
-      "#FFFFFF",
-      "#BC002D",
-      "#FFFFFF"
-    ],
-    "group": "C",
-    "form": [
-      "W",
-      "W",
-      "W",
-      "D",
-      "W"
-    ]
-  },
-  "KOR": {
-    "code": "KOR",
-    "name": "Korea Rep.",
-    "flag": [
-      "#FFFFFF",
-      "#0047A0",
-      "#CD2E3A"
-    ],
-    "group": "G",
-    "form": [
-      "W",
-      "D",
-      "L",
-      "W",
-      "W"
-    ]
-  },
-  "AUS": {
-    "code": "AUS",
-    "name": "Australia",
-    "flag": [
-      "#012169",
-      "#FFFFFF",
-      "#E4002B"
-    ],
-    "group": "H",
-    "form": [
-      "L",
-      "D",
-      "W",
-      "W",
-      "D"
-    ]
-  },
-  "MAR": {
-    "code": "MAR",
-    "name": "Morocco",
-    "flag": [
-      "#C1272D",
-      "#006233",
-      "#C1272D"
-    ],
-    "group": "G",
-    "form": [
-      "W",
-      "D",
-      "W",
-      "W",
-      "D"
-    ]
-  },
-  "SEN": {
-    "code": "SEN",
-    "name": "Senegal",
-    "flag": [
-      "#00853F",
-      "#FDEF42",
-      "#E31B23"
-    ],
-    "group": "E",
-    "form": [
-      "D",
-      "W",
-      "W",
-      "L",
-      "W"
-    ]
-  },
-  "CRO": {
-    "code": "CRO",
-    "name": "Croatia",
-    "flag": [
-      "#FF0000",
-      "#FFFFFF",
-      "#171796"
-    ],
-    "group": "D",
-    "form": [
-      "W",
-      "D",
-      "D",
-      "W",
-      "L"
-    ]
-  },
-  "URU": {
-    "code": "URU",
-    "name": "Uruguay",
-    "flag": [
-      "#FFFFFF",
-      "#0038A8",
-      "#FFFFFF"
-    ],
-    "group": "F",
-    "form": [
-      "W",
-      "L",
-      "W",
-      "D",
-      "W"
-    ]
-  },
-  "SUI": {
-    "code": "SUI",
-    "name": "Switzerland",
-    "flag": [
-      "#FF0000",
-      "#FFFFFF",
-      "#FF0000"
-    ],
-    "group": "B",
-    "form": [
-      "D",
-      "W",
-      "D",
-      "W",
-      "L"
-    ]
-  },
-  "DEN": {
-    "code": "DEN",
-    "name": "Denmark",
-    "flag": [
-      "#C60C30",
-      "#FFFFFF",
-      "#C60C30"
-    ],
-    "group": "C",
-    "form": [
-      "W",
-      "D",
-      "W",
-      "D",
-      "W"
-    ]
-  },
-  "POL": {
-    "code": "POL",
-    "name": "Poland",
-    "flag": [
-      "#FFFFFF",
-      "#DC143C",
-      "#DC143C"
-    ],
-    "group": "G",
-    "form": [
-      "L",
-      "W",
-      "D",
-      "W",
-      "D"
-    ]
-  },
-  "COL": {
-    "code": "COL",
-    "name": "Colombia",
-    "flag": [
-      "#FCD116",
-      "#003893",
-      "#CE1126"
-    ],
-    "group": "H",
-    "form": [
-      "W",
-      "W",
-      "D",
-      "W",
-      "D"
-    ]
-  }
+  "ALG": { "code": "ALG", "name": "Algeria",                "flag": ["#006233","#FFFFFF","#D21034"], "group": "J", "form": ["W","D","L","W","D"] },
+  "ARG": { "code": "ARG", "name": "Argentina",              "flag": ["#75AADB","#FFFFFF","#75AADB"], "group": "J", "form": ["W","D","W","W","L"] },
+  "AUS": { "code": "AUS", "name": "Australia",              "flag": ["#012169","#FFFFFF","#E4002B"], "group": "D", "form": ["L","D","W","W","D"] },
+  "AUT": { "code": "AUT", "name": "Austria",                "flag": ["#ED2939","#FFFFFF","#ED2939"], "group": "J", "form": ["W","W","D","L","W"] },
+  "BEL": { "code": "BEL", "name": "Belgium",                "flag": ["#000000","#FAE042","#ED2939"], "group": "G", "form": ["L","D","W","W","W"] },
+  "BIH": { "code": "BIH", "name": "Bosnia and Herzegovina", "flag": ["#002395","#FFCD00","#002395"], "group": "B", "form": ["D","W","L","D","W"] },
+  "BRA": { "code": "BRA", "name": "Brazil",                 "flag": ["#009C3B","#FFDF00","#002776"], "group": "C", "form": ["W","W","D","W","W"] },
+  "CAN": { "code": "CAN", "name": "Canada",                 "flag": ["#FF0000","#FFFFFF","#FF0000"], "group": "B", "form": ["D","W","L","D","W"] },
+  "CPV": { "code": "CPV", "name": "Cape Verde",             "flag": ["#003893","#CF2027","#003893"], "group": "H", "form": ["W","L","D","W","D"] },
+  "COL": { "code": "COL", "name": "Colombia",               "flag": ["#FCD116","#003893","#CE1126"], "group": "K", "form": ["W","W","D","W","D"] },
+  "COD": { "code": "COD", "name": "Congo DR",               "flag": ["#007FFF","#F7D618","#CE1021"], "group": "K", "form": ["D","L","W","D","W"] },
+  "CRO": { "code": "CRO", "name": "Croatia",                "flag": ["#FF0000","#FFFFFF","#171796"], "group": "L", "form": ["W","D","D","W","L"] },
+  "CUW": { "code": "CUW", "name": "Curaçao",                "flag": ["#002B7F","#F9E814","#002B7F"], "group": "E", "form": ["L","D","W","L","D"] },
+  "CZE": { "code": "CZE", "name": "Czechia",                "flag": ["#D7141A","#FFFFFF","#11457E"], "group": "A", "form": ["W","D","L","W","D"] },
+  "ECU": { "code": "ECU", "name": "Ecuador",                "flag": ["#FFD100","#034DA1","#E4001B"], "group": "E", "form": ["W","D","W","L","W"] },
+  "EGY": { "code": "EGY", "name": "Egypt",                  "flag": ["#CE1126","#FFFFFF","#000000"], "group": "G", "form": ["D","W","D","W","L"] },
+  "ENG": { "code": "ENG", "name": "England",                "flag": ["#FFFFFF","#CE1124","#FFFFFF"], "group": "L", "form": ["W","W","W","D","W"] },
+  "FRA": { "code": "FRA", "name": "France",                 "flag": ["#0055A4","#FFFFFF","#EF4135"], "group": "I", "form": ["W","L","W","W","W"] },
+  "GER": { "code": "GER", "name": "Germany",                "flag": ["#000000","#DD0000","#FFCE00"], "group": "E", "form": ["D","W","W","L","W"] },
+  "GHA": { "code": "GHA", "name": "Ghana",                  "flag": ["#006B3F","#FCD116","#EE1C25"], "group": "L", "form": ["W","L","D","W","L"] },
+  "HAI": { "code": "HAI", "name": "Haiti",                  "flag": ["#00209F","#D21034","#00209F"], "group": "C", "form": ["L","D","L","W","D"] },
+  "IRN": { "code": "IRN", "name": "Iran",                   "flag": ["#239F40","#FFFFFF","#DA0000"], "group": "G", "form": ["W","D","W","L","D"] },
+  "IRQ": { "code": "IRQ", "name": "Iraq",                   "flag": ["#CE1126","#FFFFFF","#007A3D"], "group": "I", "form": ["D","W","L","D","W"] },
+  "CIV": { "code": "CIV", "name": "Ivory Coast",            "flag": ["#F77F00","#FFFFFF","#009A44"], "group": "E", "form": ["W","D","W","W","L"] },
+  "JPN": { "code": "JPN", "name": "Japan",                  "flag": ["#FFFFFF","#BC002D","#FFFFFF"], "group": "F", "form": ["W","W","W","D","W"] },
+  "JOR": { "code": "JOR", "name": "Jordan",                 "flag": ["#007A3D","#FFFFFF","#CE1126"], "group": "J", "form": ["D","L","W","D","L"] },
+  "MEX": { "code": "MEX", "name": "Mexico",                 "flag": ["#006847","#FFFFFF","#CE1126"], "group": "A", "form": ["W","W","D","W","W"] },
+  "MAR": { "code": "MAR", "name": "Morocco",                "flag": ["#C1272D","#006233","#C1272D"], "group": "C", "form": ["W","D","W","W","D"] },
+  "NED": { "code": "NED", "name": "Netherlands",            "flag": ["#AE1C28","#FFFFFF","#21468B"], "group": "F", "form": ["W","W","L","W","D"] },
+  "NZL": { "code": "NZL", "name": "New Zealand",            "flag": ["#012169","#FFFFFF","#CC142B"], "group": "G", "form": ["L","D","L","W","D"] },
+  "NOR": { "code": "NOR", "name": "Norway",                 "flag": ["#EF2B2D","#FFFFFF","#002868"], "group": "I", "form": ["W","W","D","W","L"] },
+  "PAN": { "code": "PAN", "name": "Panama",                 "flag": ["#FFFFFF","#DA121A","#0033A0"], "group": "L", "form": ["D","L","W","D","L"] },
+  "PAR": { "code": "PAR", "name": "Paraguay",               "flag": ["#D52B1E","#FFFFFF","#0038A8"], "group": "D", "form": ["W","L","D","W","D"] },
+  "POR": { "code": "POR", "name": "Portugal",               "flag": ["#006600","#FF0000","#FF0000"], "group": "K", "form": ["W","D","W","W","D"] },
+  "QAT": { "code": "QAT", "name": "Qatar",                  "flag": ["#8D1B3D","#FFFFFF","#8D1B3D"], "group": "B", "form": ["L","D","L","W","D"] },
+  "KSA": { "code": "KSA", "name": "Saudi Arabia",           "flag": ["#006C35","#FFFFFF","#006C35"], "group": "H", "form": ["D","W","L","D","W"] },
+  "SCO": { "code": "SCO", "name": "Scotland",               "flag": ["#003DA5","#FFFFFF","#003DA5"], "group": "C", "form": ["L","D","W","D","W"] },
+  "SEN": { "code": "SEN", "name": "Senegal",                "flag": ["#00853F","#FDEF42","#E31B23"], "group": "I", "form": ["D","W","W","L","W"] },
+  "RSA": { "code": "RSA", "name": "South Africa",           "flag": ["#007A4D","#FFB81C","#DE3831"], "group": "A", "form": ["W","D","L","W","D"] },
+  "KOR": { "code": "KOR", "name": "South Korea",            "flag": ["#FFFFFF","#0047A0","#CD2E3A"], "group": "A", "form": ["W","D","L","W","W"] },
+  "ESP": { "code": "ESP", "name": "Spain",                  "flag": ["#AA151B","#F1BF00","#AA151B"], "group": "H", "form": ["W","W","D","W","W"] },
+  "SWE": { "code": "SWE", "name": "Sweden",                 "flag": ["#006AA7","#FECC02","#006AA7"], "group": "F", "form": ["D","W","L","W","D"] },
+  "SUI": { "code": "SUI", "name": "Switzerland",            "flag": ["#FF0000","#FFFFFF","#FF0000"], "group": "B", "form": ["D","W","D","W","L"] },
+  "TUN": { "code": "TUN", "name": "Tunisia",                "flag": ["#E70013","#FFFFFF","#E70013"], "group": "F", "form": ["D","L","W","D","L"] },
+  "TUR": { "code": "TUR", "name": "Turkey",                 "flag": ["#E30A17","#FFFFFF","#E30A17"], "group": "D", "form": ["D","W","W","D","L"] },
+  "USA": { "code": "USA", "name": "United States",          "flag": ["#B22234","#FFFFFF","#3C3B6E"], "group": "D", "form": ["W","D","W","L","W"] },
+  "URU": { "code": "URU", "name": "Uruguay",                "flag": ["#FFFFFF","#0038A8","#FFFFFF"], "group": "H", "form": ["W","L","W","D","W"] },
+  "UZB": { "code": "UZB", "name": "Uzbekistan",             "flag": ["#1EB53A","#FFFFFF","#CE1126"], "group": "K", "form": ["W","D","L","W","D"] },
 };
 
 export const matches: Match[] = [
