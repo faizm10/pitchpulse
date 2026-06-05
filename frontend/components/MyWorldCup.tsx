@@ -55,7 +55,7 @@ export function MyWorldCup() {
         </div>
 
         <div>
-          <div className="eyebrow">All teams · 24 of 48 shown</div>
+          <div className="eyebrow">All teams · 48 of 48 shown</div>
           <div style={{
             marginTop: 18,
             display: 'grid',
