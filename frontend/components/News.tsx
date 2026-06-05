@@ -89,17 +89,34 @@ function ArticleLink({ article, style, children }: { article: Article; style?: R
   return <div style={style}>{children}</div>;
 }
 
+// Simple hook to track viewport width
+function useWindowWidth() {
+  const [width, setWidth] = useState(
+    typeof window !== 'undefined' ? window.innerWidth : 1024
+  );
+  useEffect(() => {
+    const handler = () => setWidth(window.innerWidth);
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, []);
+  return width;
+}
+
 export function News() {
   const [news, setNews] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCountry, setSelectedCountry] = useState('ALL');
+  const width = useWindowWidth();
+
+  const isMobile = width < 640;
+  const isTablet = width >= 640 && width < 1024;
+  const pad = isMobile ? '16px' : isTablet ? '24px' : '40px';
 
   useEffect(() => {
     async function loadNews() {
       try {
         const res = await fetch('/api/news');
         const data = await res.json();
-        console.log("Total articles received from backend:", data.articles?.length);
         const articles: Article[] = (data.articles || []).map((a: Article) => ({
           ...a,
           link: a.link ?? a.url,
@@ -119,14 +136,11 @@ export function News() {
     if (selectedCountry === 'ALL') return news;
     const target = COUNTRIES.find(c => c.code === selectedCountry);
     if (!target) return news;
-    
     const name = target.name.toLowerCase();
-    const code = target.code.toLowerCase();
-
     return news.filter(art => {
       const h = String(art.headline ?? '').toLowerCase();
       const d = String(art.description ?? '').toLowerCase();
-      return h.includes(name) || d.includes(name); // just match full country name
+      return h.includes(name) || d.includes(name);
     });
   }, [news, selectedCountry]);
 
@@ -143,18 +157,31 @@ export function News() {
   }
 
   const heroArticle = filteredNews[0];
-  const sideHeadlines = filteredNews.slice(1, 5); 
+  const sideHeadlines = filteredNews.slice(1, 5);
   const streamStories = filteredNews.slice(5);
 
   return (
     <div className="screen">
       {/* MASTHEAD */}
-      <div style={{ padding: '24px 40px', borderBottom: '1px solid var(--rule)', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 24 }}>
+      <div style={{
+        padding: isMobile ? '16px' : isTablet ? '20px 24px' : '24px 40px',
+        borderBottom: '1px solid var(--rule)',
+        display: 'flex',
+        alignItems: isMobile ? 'flex-start' : 'flex-end',
+        justifyContent: 'space-between',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? 8 : 24,
+      }}>
         <div>
           <div className="mono" style={{ fontSize: 9, letterSpacing: '0.22em', color: 'var(--ink-3)', textTransform: 'uppercase', marginBottom: 4 }}>World Cup Hub Feed</div>
-          <div className="serif" style={{ fontSize: 40, lineHeight: 1.0, fontWeight: 700, letterSpacing: '-0.025em' }}>The world is <em>watching.</em></div>
+          <div className="serif" style={{
+            fontSize: isMobile ? 26 : isTablet ? 32 : 40,
+            lineHeight: 1.0,
+            fontWeight: 700,
+            letterSpacing: '-0.025em',
+          }}>The world is <em>watching.</em></div>
         </div>
-        <div style={{ textAlign: 'right', flexShrink: 0 }}>
+        <div style={{ textAlign: isMobile ? 'left' : 'right', flexShrink: 0 }}>
           <div className="mono" style={{ fontSize: 9, letterSpacing: '0.12em', color: 'var(--ink-3)', textTransform: 'uppercase', lineHeight: 1.6 }}>
             {new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
             <br />ESPN Aggregate Wire
@@ -163,16 +190,40 @@ export function News() {
       </div>
 
       {/* FILTER STRIP */}
-      <div style={{ display: 'flex', alignItems: 'center', padding: '12px 40px', borderBottom: '1px solid var(--rule)', background: 'var(--paper-2)', gap: 12 }}>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        padding: `12px ${pad}`,
+        borderBottom: '1px solid var(--rule)',
+        background: 'var(--paper-2)',
+        gap: 12,
+        flexWrap: 'wrap',
+      }}>
         <div className="mono" style={{ fontSize: 9, letterSpacing: '0.14em', color: 'var(--ink-2)', textTransform: 'uppercase', fontWeight: 600 }}>Filter By Nation:</div>
-        <select value={selectedCountry} onChange={(e) => setSelectedCountry(e.target.value)} style={{ fontFamily: "'Courier New', monospace", fontSize: 11, padding: '4px 10px', background: 'var(--paper)', border: '1px solid var(--rule)', borderRadius: 4, color: 'var(--ink)', cursor: 'pointer', outline: 'none', minWidth: 220 }}>
+        <select
+          value={selectedCountry}
+          onChange={(e) => setSelectedCountry(e.target.value)}
+          style={{
+            fontFamily: "'Courier New', monospace",
+            fontSize: 11,
+            padding: '4px 10px',
+            background: 'var(--paper)',
+            border: '1px solid var(--rule)',
+            borderRadius: 4,
+            color: 'var(--ink)',
+            cursor: 'pointer',
+            outline: 'none',
+            minWidth: isMobile ? '100%' : 220,
+            flex: isMobile ? '1 1 100%' : undefined,
+          }}
+        >
           <option value="ALL">ALL TOURNAMENT NEWS</option>
           {COUNTRIES.map((c) => <option key={c.code} value={c.code}>{c.name.toUpperCase()} ({c.code})</option>)}
         </select>
       </div>
 
       {/* COMPONENT BODY */}
-      <div style={{ padding: '32px 40px 80px' }}>
+      <div style={{ padding: `32px ${pad} 80px` }}>
         {filteredNews.length === 0 ? (
           <div style={{ padding: '64px 0', textAlign: 'center' }}>
             <div className="serif" style={{ fontSize: 20, fontStyle: 'italic', color: 'var(--ink-3)' }}>No matching bulletins found right now.</div>
@@ -180,62 +231,87 @@ export function News() {
           </div>
         ) : (
           <>
-            {/* HERO SPLIT SECTION */}
+            {/* HERO SPLIT SECTION — stacks on mobile/tablet */}
             {selectedCountry === 'ALL' && heroArticle && (
-              <div style={{ 
-                display: 'grid', 
-                gridTemplateColumns: 'minmax(0, 1fr) 420px', 
-                gap: 32, 
-                marginBottom: 40, 
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: isMobile || isTablet ? '1fr' : 'minmax(0, 1fr) 380px',
+                gap: isMobile ? 0 : 32,
+                marginBottom: 40,
                 background: 'var(--paper-2)',
                 border: '1px solid var(--rule)',
                 borderRadius: 8,
-                overflow: 'hidden'
+                overflow: 'hidden',
               }}>
-                <HeroCard article={heroArticle} />
+                <HeroCard article={heroArticle} isMobile={isMobile} />
 
-                <div style={{ padding: '24px 24px 24px 0', display: 'flex', flexDirection: 'column', gap: 16 }}>
-                  {sideHeadlines.map((art) => (
-                    <ArticleLink key={art.id} article={art} style={{ 
-                      display: 'grid', 
-                      gridTemplateColumns: '1fr 80px', 
-                      gap: 16, 
-                      paddingBottom: 16, 
-                      borderBottom: '1px solid var(--rule-soft)',
-                      alignItems: 'start'
-                    }}>
-                      <div>
-                        <InteractiveHeadline text={art.headline} fontSize={14} />
-                        <div className="mono" style={{ fontSize: 9, color: 'var(--ink-3)', marginTop: 6 }}>
-                          {art.source?.toUpperCase()} · {relativeTime(art.published)}
+                {/* Side headlines — hidden on mobile to keep it clean */}
+                {!isMobile && (
+                  <div style={{
+                    padding: isTablet ? '20px' : '24px 24px 24px 0',
+                    display: 'flex',
+                    flexDirection: isTablet ? 'row' : 'column',
+                    flexWrap: isTablet ? 'wrap' : undefined,
+                    gap: 16,
+                    borderTop: isTablet ? '1px solid var(--rule)' : undefined,
+                  }}>
+                    {sideHeadlines.map((art) => (
+                      <ArticleLink
+                        key={art.id}
+                        article={art}
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns: '1fr 80px',
+                          gap: 16,
+                          paddingBottom: 16,
+                          borderBottom: '1px solid var(--rule-soft)',
+                          alignItems: 'start',
+                          flex: isTablet ? '1 1 calc(50% - 8px)' : undefined,
+                        }}
+                      >
+                        <div>
+                          <InteractiveHeadline text={art.headline} fontSize={isTablet ? 13 : 14} />
+                          <div className="mono" style={{ fontSize: 9, color: 'var(--ink-3)', marginTop: 6 }}>
+                            {art.source?.toUpperCase()} · {relativeTime(art.published)}
+                          </div>
                         </div>
-                      </div>
-                      {art.image && (
-                        <div style={{ width: 80, height: 54, borderRadius: 4, overflow: 'hidden', background: 'var(--paper-3)', border: '1px solid var(--rule-soft)' }}>
-                          <img src={art.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                        </div>
-                      )}
-                    </ArticleLink>
-                  ))}
-                </div>
+                        {art.image && (
+                          <div style={{ width: 80, height: 54, borderRadius: 4, overflow: 'hidden', background: 'var(--paper-3)', border: '1px solid var(--rule-soft)' }}>
+                            <img src={art.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          </div>
+                        )}
+                      </ArticleLink>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
-            {/* DUAL COLUMN BOTTOM GRID */}
+            {/* ARTICLE GRID */}
             <div style={{ marginTop: 24 }}>
               {selectedCountry !== 'ALL' && (
-                <div className="serif" style={{ fontSize: 24, fontStyle: 'italic', marginBottom: 24, borderBottom: '1px solid var(--rule)', paddingBottom: 12 }}>
+                <div className="serif" style={{
+                  fontSize: isMobile ? 18 : 24,
+                  fontStyle: 'italic',
+                  marginBottom: 24,
+                  borderBottom: '1px solid var(--rule)',
+                  paddingBottom: 12,
+                }}>
                   News Feed for {COUNTRIES.find(c => c.code === selectedCountry)?.name}
                 </div>
               )}
-              
-              <div style={{ 
-                display: 'grid', 
-                gridTemplateColumns: 'repeat(auto-fill, minmax(480px, 1fr))', 
-                gap: 24 
+
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: isMobile
+                  ? '1fr'
+                  : isTablet
+                  ? 'repeat(auto-fill, minmax(280px, 1fr))'
+                  : 'repeat(auto-fill, minmax(480px, 1fr))',
+                gap: isMobile ? 16 : 24,
               }}>
                 {(selectedCountry === 'ALL' ? streamStories : filteredNews).map((art) => (
-                  <HorizontalStreamRow key={art.id} article={art} />
+                  <HorizontalStreamRow key={art.id} article={art} isMobile={isMobile} />
                 ))}
               </div>
             </div>
@@ -251,17 +327,17 @@ export function News() {
 function InteractiveHeadline({ text, fontSize }: { text: string; fontSize: number }) {
   const [hovered, setHovered] = useState(false);
   return (
-    <div 
+    <div
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className="serif" 
-      style={{ 
-        fontSize, 
-        lineHeight: 1.3, 
-        fontWeight: 600, 
-        color: hovered ? 'var(--pulse)' : 'var(--ink)', 
+      className="serif"
+      style={{
+        fontSize,
+        lineHeight: 1.3,
+        fontWeight: 600,
+        color: hovered ? 'var(--pulse)' : 'var(--ink)',
         transition: 'color 0.15s ease',
-        cursor: 'pointer'
+        cursor: 'pointer',
       }}
     >
       {text}
@@ -269,16 +345,16 @@ function InteractiveHeadline({ text, fontSize }: { text: string; fontSize: numbe
   );
 }
 
-function HeroCard({ article: n }: { article: Article }) {
+function HeroCard({ article: n, isMobile }: { article: Article; isMobile: boolean }) {
   return (
     <ArticleLink article={n} style={{ display: 'flex', flexDirection: 'column', background: 'rgba(0,0,0,0.02)' }}>
       <div style={{ width: '100%', aspectRatio: '16/9', overflow: 'hidden', borderBottom: '1px solid var(--rule)' }}>
         <img src={n.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
       </div>
-      <div style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div style={{ padding: isMobile ? 16 : 24, display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div style={{ fontFamily: 'monospace', fontSize: 8, color: 'var(--pulse)', fontWeight: 700, letterSpacing: '0.1em' }}>FEATURED STORY</div>
-        <div className="serif" style={{ fontSize: 26, lineHeight: 1.2, fontWeight: 700 }}>{n.headline}</div>
-        <div style={{ fontSize: 13, color: 'var(--ink-2)', lineHeight: 1.45 }}>{n.description}</div>
+        <div className="serif" style={{ fontSize: isMobile ? 18 : 26, lineHeight: 1.2, fontWeight: 700 }}>{n.headline}</div>
+        <div style={{ fontSize: isMobile ? 12 : 13, color: 'var(--ink-2)', lineHeight: 1.45 }}>{n.description}</div>
         <div className="mono" style={{ fontSize: 9, color: 'var(--ink-3)' }}>
           {n.source?.toUpperCase()} · {relativeTime(n.published)}
         </div>
@@ -287,24 +363,36 @@ function HeroCard({ article: n }: { article: Article }) {
   );
 }
 
-function HorizontalStreamRow({ article: n }: { article: Article }) {
+function HorizontalStreamRow({ article: n, isMobile }: { article: Article; isMobile: boolean }) {
   return (
-    <ArticleLink article={n} style={{ 
-      display: 'grid', 
-      gridTemplateColumns: '1fr 120px', 
-      gap: 20, 
-      padding: 20, 
-      background: 'var(--paper)', 
-      border: '1px solid var(--rule-soft)', 
-      borderRadius: 6,
-      alignItems: 'center',
-      height: '100%'
-    }}>
+    <ArticleLink
+      article={n}
+      style={{
+        display: 'grid',
+        // On mobile: image goes on top, text below (single column, image full-width)
+        gridTemplateColumns: isMobile ? '1fr' : '1fr 120px',
+        gap: isMobile ? 0 : 20,
+        padding: isMobile ? 14 : 20,
+        background: 'var(--paper)',
+        border: '1px solid var(--rule-soft)',
+        borderRadius: 6,
+        alignItems: 'center',
+        height: '100%',
+        overflow: 'hidden',
+      }}
+    >
+      {/* On mobile: show image on top */}
+      {isMobile && n.image && (
+        <div style={{ width: '100%', aspectRatio: '16/9', overflow: 'hidden', borderRadius: '4px 4px 0 0', marginBottom: 12 }}>
+          <img src={n.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        </div>
+      )}
+
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
         <div style={{ fontFamily: 'monospace', fontSize: 8, color: 'var(--ink-3)', letterSpacing: '0.05em' }}>
           {n.category?.toUpperCase() || 'NEWS'}
         </div>
-        <InteractiveHeadline text={n.headline} fontSize={16} />
+        <InteractiveHeadline text={n.headline} fontSize={isMobile ? 14 : 16} />
         <div style={{ fontSize: 12, color: 'var(--ink-2)', lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
           {n.description}
         </div>
@@ -312,7 +400,9 @@ function HorizontalStreamRow({ article: n }: { article: Article }) {
           {n.source?.toUpperCase()} · {relativeTime(n.published)}
         </div>
       </div>
-      {n.image && (
+
+      {/* On desktop/tablet: image on the right */}
+      {!isMobile && n.image && (
         <div style={{ width: 120, aspectRatio: '4/3', borderRadius: 4, overflow: 'hidden', background: 'var(--paper-3)', border: '1px solid var(--rule-soft)' }}>
           <img src={n.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         </div>
