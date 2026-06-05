@@ -24,17 +24,7 @@ function stateColor(state: MatchState) {
   return state === 'in' ? 'var(--live)' : 'var(--ink-3)';
 }
 
-function useIsMobile(bp = 768) {
-  const [v, setV] = useState(false);
-  useEffect(() => {
-    const mq = window.matchMedia(`(max-width: ${bp - 1}px)`);
-    setV(mq.matches);
-    const h = (e: MediaQueryListEvent) => setV(e.matches);
-    mq.addEventListener('change', h);
-    return () => mq.removeEventListener('change', h);
-  }, [bp]);
-  return v;
-}
+import { useIsMobile } from '@/hooks/useWindowWidth';
 
 // ── Stat card ─────────────────────────────────────────────────────────────────
 
@@ -1071,7 +1061,7 @@ function SimulateTab({
 type AdminTab = 'monitor' | 'simulate';
 
 export default function AdminDashboard() {
-  const isMobile = useIsMobile();
+  const isMobile = useIsMobile(768);
   const router = useRouter();
 
   const [activeTab, setActiveTab] = useState<AdminTab>('monitor');

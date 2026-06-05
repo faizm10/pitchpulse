@@ -4,18 +4,23 @@ import Link from 'next/link';
 import { teams } from '@/lib/data';
 import { Flag, BackBar } from './Shared';
 import { useMyTeam } from './Providers';
+import { useWindowWidth } from '@/hooks/useWindowWidth';
 
 export function MyWorldCup() {
   const { myTeam, setMyTeam } = useMyTeam();
   const all = Object.values(teams);
+  const width = useWindowWidth();
+  const isMobile = width < 640;
+  const isTablet = width < 1024;
+  const pad = isMobile ? '16px' : isTablet ? '24px' : '56px';
 
   return (
     <div className="screen" style={{ minHeight: 'calc(100vh - 64px)' }}>
       <BackBar label="MY WORLD CUP" />
-      <div style={{ padding: '48px 56px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 56 }}>
+      <div style={{ padding: `48px ${pad}`, display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 32 : 56 }}>
         <div>
           <div className="eyebrow">My World Cup</div>
-          <div className="headline" style={{ fontSize: 64, marginTop: 12 }}>
+          <div className="headline" style={{ fontSize: isMobile ? 40 : isTablet ? 52 : 64, marginTop: 12 }}>
             Pick a team.<br /><em>The whole app adapts.</em>
           </div>
           <div className="serif it" style={{ fontSize: 19, color: 'var(--ink-3)', marginTop: 22, maxWidth: 480, lineHeight: 1.5 }}>
@@ -59,8 +64,8 @@ export function MyWorldCup() {
           <div style={{
             marginTop: 18,
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))',
-            gap: 8, maxHeight: 560, overflow: 'auto', paddingRight: 4,
+            gridTemplateColumns: 'repeat(auto-fill, minmax(min(140px, 100%), 1fr))',
+            gap: 8, maxHeight: isMobile ? 'none' : 560, overflow: isMobile ? 'visible' : 'auto', paddingRight: 4,
           }}>
             {all.map((t) => (
               <div key={t.code} onClick={() => setMyTeam(t.code)} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter') setMyTeam(t.code); }} style={{

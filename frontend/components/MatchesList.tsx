@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 
 import { stadiums } from '@/lib/data';
 import { Flag } from './Shared';
+import { useWindowWidth } from '@/hooks/useWindowWidth';
 
 const filters = [
   { id: 'all', label: 'All' },
@@ -27,17 +28,6 @@ const ROUNDS = [
 
 type FilterId = 'all' | 'live' | 'upcoming' | 'ft';
 
-function useWindowWidth() {
-  const [width, setWidth] = useState(
-    typeof window !== 'undefined' ? window.innerWidth : 1024
-  );
-  useEffect(() => {
-    const handler = () => setWidth(window.innerWidth);
-    window.addEventListener('resize', handler);
-    return () => window.removeEventListener('resize', handler);
-  }, []);
-  return width;
-}
 
 export function MatchesList() {
   const [filter, setFilter] = useState<FilterId>('all');

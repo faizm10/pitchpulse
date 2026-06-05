@@ -7,6 +7,7 @@ import type { StandingsGroupBlock, GroupStandingEntry } from '@/types/espn';
 import { teamCodeFromDisplayName } from '@/lib/team-codes';
 import { StandingsSkeleton } from '@/components/skeleton/TeamPagesSkeleton';
 import { teams } from '@/lib/data';
+import { useWindowWidth } from '@/hooks/useWindowWidth';
 
 // ── Colour helpers ────────────────────────────────────────────────────────────
 
@@ -29,19 +30,6 @@ interface ThirdPlaceEntry extends GroupStandingEntry {
   groupName: string;
 }
 
-// ── Responsive hook ───────────────────────────────────────────────────────────
-
-function useWindowWidth() {
-  const [width, setWidth] = useState(
-    typeof window !== 'undefined' ? window.innerWidth : 1024
-  );
-  useEffect(() => {
-    const handler = () => setWidth(window.innerWidth);
-    window.addEventListener('resize', handler);
-    return () => window.removeEventListener('resize', handler);
-  }, []);
-  return width;
-}
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 

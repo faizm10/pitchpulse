@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { BackBar } from './Shared';
+import { useWindowWidth } from '@/hooks/useWindowWidth';
 import { MatchPrediction } from './MatchPrediction';
 import { useTweaks } from './Providers';
 import { useTypewriter } from '@/hooks/useTypewriter';
@@ -16,6 +17,10 @@ import { FotmobMatchExtrasBlock } from './FotmobMatchExtras';
 
 export function MatchDetail({ id }: { id: string }) {
   const { tweaks } = useTweaks();
+  const width = useWindowWidth();
+  const isMobile = width < 640;
+  const isTablet = width < 1024;
+  const pad = isMobile ? '16px' : isTablet ? '32px' : '56px';
   const [detail, setDetail] = useState<EspnMatchDetail | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [loadingMatch, setLoadingMatch] = useState(true);
@@ -160,17 +165,29 @@ export function MatchDetail({ id }: { id: string }) {
 
       <div
         style={{
-          padding: '48px 56px 40px',
+          padding: isMobile ? '24px 16px 20px' : `48px ${pad} 40px`,
           display: 'grid',
-          gridTemplateColumns: '1fr auto 1fr',
-          gap: 40,
+          gridTemplateColumns: isMobile ? '1fr' : '1fr auto 1fr',
+          gap: isMobile ? 0 : 40,
           alignItems: 'center',
           borderBottom: '1px solid var(--rule)',
         }}
       >
-        <TeamHero team={detail.homeTeam} side="left" state={detail.state} />
-        <StatusCenter detail={detail} />
-        <TeamHero team={detail.awayTeam} side="right" state={detail.state} />
+        {isMobile ? (
+          <>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, textAlign: 'center' }}>
+              <TeamHero team={detail.homeTeam} side="left" state={detail.state} />
+              <StatusCenter detail={detail} />
+              <TeamHero team={detail.awayTeam} side="right" state={detail.state} />
+            </div>
+          </>
+        ) : (
+          <>
+            <TeamHero team={detail.homeTeam} side="left" state={detail.state} />
+            <StatusCenter detail={detail} />
+            <TeamHero team={detail.awayTeam} side="right" state={detail.state} />
+          </>
+        )}
       </div>
 
       <div
@@ -182,7 +199,7 @@ export function MatchDetail({ id }: { id: string }) {
         }}
       >
 
-        <div style={{ padding: '32px 48px', display: 'flex', flexDirection: 'column', gap: 32 }}>
+        <div style={{ padding: isMobile ? `24px 16px` : `32px ${pad}`, display: 'flex', flexDirection: 'column', gap: 32 }}>
           {tweaks.aiSummary && narrativeText && (
             <div style={{ background: 'var(--ink)', color: 'var(--paper)', padding: 24, borderRadius: 14 }}>
               <div

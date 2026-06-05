@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { BackBar, Flag } from "./Shared";
+import { useWindowWidth } from "@/hooks/useWindowWidth";
 import type { FotmobFixture, FotmobSquadMember, FotmobTeamProfile } from "@/types/fotmob";
 import { getTeamMapEntry } from "@/lib/fotmob/team-map";
 import { TeamHubHeaderSkeleton, TeamHubSkeleton } from "@/components/skeleton/TeamPagesSkeleton";
@@ -460,6 +461,10 @@ function HeroStandingBadge({ row }: { row: StandingRow }) {
 export function TeamHub({ code }: { code: string }) {
   const upper = code.toUpperCase();
   const mapEntry = getTeamMapEntry(upper);
+  const width = useWindowWidth();
+  const isMobile = width < 640;
+  const isTablet = width < 1024;
+  const pad = isMobile ? '16px' : isTablet ? '24px' : '40px';
 
   const [profile, setProfile] = useState<FotmobTeamProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -514,7 +519,7 @@ export function TeamHub({ code }: { code: string }) {
     return (
       <div className="screen">
         <BackBar label="TEAM" />
-        <div style={{ padding: "40px 56px" }}>
+        <div style={{ padding: `40px ${pad}` }}>
           <div className="serif" style={{ fontSize: 28 }}>Unknown team: {upper}</div>
         </div>
       </div>
@@ -532,7 +537,7 @@ export function TeamHub({ code }: { code: string }) {
       <BackBar label={`TEAM · ${upper}`} />
 
       {/* Hero */}
-      <div style={{ padding: "32px 40px 28px", borderBottom: "1px solid var(--rule)" }}>
+      <div style={{ padding: isMobile ? `24px 16px 20px` : `32px ${pad} 28px`, borderBottom: "1px solid var(--rule)" }}>
         <div style={{ display: "flex", alignItems: "flex-start", gap: 24, flexWrap: "wrap" }}>
           <div style={{ flexShrink: 0 }}><Flag code={upper} w={80} h={54} /></div>
           <div style={{ flex: 1, minWidth: 200 }}>
@@ -578,10 +583,12 @@ export function TeamHub({ code }: { code: string }) {
 
       {/* Tab bar */}
       <div style={{
-        padding: "0 40px",
+        padding: isMobile ? "0 8px" : `0 ${pad}`,
         borderBottom: "1px solid var(--rule)",
         display: "flex",
         gap: 0,
+        overflowX: "auto",
+        scrollbarWidth: "none",
       }}>
         {TABS.map(t => (
           <button
@@ -608,7 +615,7 @@ export function TeamHub({ code }: { code: string }) {
       </div>
 
       {/* Tab content */}
-      <div style={{ padding: "32px 40px 80px" }}>
+      <div style={{ padding: isMobile ? `24px 16px 64px` : `32px ${pad} 80px` }}>
         {loading && <TeamHubSkeleton />}
 
         {!loading && error && (
