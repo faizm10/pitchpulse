@@ -8,15 +8,13 @@ import { teamCodeFromDisplayName } from '@/lib/team-codes';
 import { StandingsSkeleton } from '@/components/skeleton/TeamPagesSkeleton';
 import { teams } from '@/lib/data';
 
-// ── Colour helpers ─────────────────────────────────────────────────────────────
+// ── Colour helpers ────────────────────────────────────────────────────────────
 
-/** Returns the primary flag colour for a team code, e.g. "#006847" for MEX */
 function teamPrimaryColor(code: string | null | undefined): string | null {
   if (!code) return null;
   return (teams as Record<string, { flag?: string[] }>)[code]?.flag?.[0] ?? null;
 }
 
-/** Hex "#RRGGBB" → CSS rgba(...) */
 function hexRgba(hex: string, alpha: number): string {
   const h = hex.replace('#', '');
   const r = parseInt(h.slice(0, 2), 16);
@@ -31,12 +29,30 @@ interface ThirdPlaceEntry extends GroupStandingEntry {
   groupName: string;
 }
 
-// ── Page ─────────────────────────────────────────────────────────────────────
+// ── Responsive hook ───────────────────────────────────────────────────────────
+
+function useWindowWidth() {
+  const [width, setWidth] = useState(
+    typeof window !== 'undefined' ? window.innerWidth : 1024
+  );
+  useEffect(() => {
+    const handler = () => setWidth(window.innerWidth);
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, []);
+  return width;
+}
+
+// ── Page ──────────────────────────────────────────────────────────────────────
 
 export function Standings() {
   const [groups, setGroups] = useState<StandingsGroupBlock[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const width = useWindowWidth();
+  const isMobile = width < 640;
+  const isTablet = width >= 640 && width < 1024;
+  const pad = isMobile ? '16px' : isTablet ? '24px' : '56px';
 
   useEffect(() => {
     async function load() {
@@ -53,7 +69,6 @@ export function Standings() {
     load();
   }, []);
 
-  // ── Dynamic 3rd-place rankings ────────────────────────────────────────────
   const thirdPlaceEntries: ThirdPlaceEntry[] = groups
     .map((g) => {
       const thirdRow = g.entries?.[2];
@@ -72,18 +87,21 @@ export function Standings() {
   return (
     <div className="screen">
       {/* Header */}
-      <div style={{ padding: '40px 56px 24px', borderBottom: '1px solid var(--rule)' }}>
+      <div style={{
+        padding: isMobile ? '24px 16px 20px' : isTablet ? '32px 24px 20px' : '40px 56px 24px',
+        borderBottom: '1px solid var(--rule)',
+      }}>
         <div className="eyebrow">Group Stage · 12 Groups</div>
-        <div className="headline" style={{ fontSize: 64, marginTop: 8 }}>
+        <div className="headline" style={{ fontSize: isMobile ? 36 : isTablet ? 48 : 64, marginTop: 8 }}>
           The road to <em>the final.</em>
         </div>
-        <div className="mono" style={{ marginTop: 14, fontSize: 11, color: 'var(--ink-3)', letterSpacing: '0.08em' }}>
+        <div className="mono" style={{ marginTop: 14, fontSize: isMobile ? 10 : 11, color: 'var(--ink-3)', letterSpacing: '0.08em' }}>
           Top 2 from each group + 8 best third-placed teams advance · Final Jul 19 · MetLife
         </div>
       </div>
 
       {/* Body */}
-      <div style={{ padding: '40px 56px 80px' }}>
+      <div style={{ padding: `32px ${pad} 80px` }}>
         {loading && <StandingsSkeleton />}
 
         {!loading && error && (
@@ -120,14 +138,19 @@ export function Standings() {
               ))}
             </div>
 
+            {/* Group tables grid — single col on mobile, 2 col on tablet, auto on desktop */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(480px, 1fr))',
-              gap: 32,
+              gridTemplateColumns: isMobile
+                ? '1fr'
+                : isTablet
+                ? 'repeat(2, 1fr)'
+                : 'repeat(auto-fill, minmax(480px, 1fr))',
+              gap: isMobile ? 20 : 32,
               marginBottom: 56,
             }}>
               {groups.map((group) => (
-                <GroupTable key={group.header} group={group} />
+                <GroupTable key={group.header} group={group} isMobile={isMobile} />
               ))}
             </div>
 
@@ -135,7 +158,7 @@ export function Standings() {
             {thirdPlaceEntries.length > 0 && (
               <div style={{ maxWidth: 800, margin: '0 auto' }}>
                 <div style={{ padding: '12px 0', borderBottom: '1px solid var(--rule)', marginBottom: 16 }}>
-                  <div className="mono" style={{ fontSize: 11, letterSpacing: '0.14em', color: 'var(--ink)' }}>
+                  <div className="mono" style={{ fontSize: isMobile ? 10 : 11, letterSpacing: '0.14em', color: 'var(--ink)' }}>
                     RANKINGS OF THIRD-PLACED TEAMS
                   </div>
                   <div style={{ fontSize: 13, color: 'var(--ink-3)', marginTop: 4, fontFamily: 'var(--serif)', fontStyle: 'italic' }}>
@@ -143,17 +166,43 @@ export function Standings() {
                   </div>
                 </div>
                 <div style={{ border: '1px solid var(--rule)', borderRadius: 12, overflow: 'hidden' }}>
-                  <div style={{ padding: '12px 20px', borderBottom: '1px solid var(--rule)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--paper-2)' }}>
-                    <span className="mono" style={{ fontSize: 9, color: 'var(--ink-3)', letterSpacing: '0.12em' }}>RANK · TEAM (GRP)</span>
-                    <div style={{ display: 'grid', gridTemplateColumns: '28px 28px 28px 28px 36px 52px 36px', gap: 0, textAlign: 'right' }}>
-                      {['GRP', 'P', 'W', 'D', 'L', 'GF:GA', 'PTS'].map((h) => (
-                        <span key={h} className="mono" style={{ fontSize: 9, color: 'var(--ink-3)', letterSpacing: '0.12em' }}>{h}</span>
-                      ))}
-                    </div>
+                  {/* Third-place table header */}
+                  <div style={{
+                    padding: '12px 20px',
+                    borderBottom: '1px solid var(--rule)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    background: 'var(--paper-2)',
+                  }}>
+                    <span className="mono" style={{ fontSize: 9, color: 'var(--ink-3)', letterSpacing: '0.12em' }}>
+                      RANK · TEAM (GRP)
+                    </span>
+                    {isMobile ? (
+                      <div style={{ display: 'grid', gridTemplateColumns: '28px 36px 36px', gap: 0, textAlign: 'right' }}>
+                        {['GRP', 'GF:GA', 'PTS'].map((h) => (
+                          <span key={h} className="mono" style={{ fontSize: 9, color: 'var(--ink-3)', letterSpacing: '0.12em' }}>{h}</span>
+                        ))}
+                      </div>
+                    ) : (
+                      <div style={{ display: 'grid', gridTemplateColumns: '28px 28px 28px 28px 36px 52px 36px', gap: 0, textAlign: 'right' }}>
+                        {['GRP', 'P', 'W', 'D', 'L', 'GF:GA', 'PTS'].map((h) => (
+                          <span key={h} className="mono" style={{ fontSize: 9, color: 'var(--ink-3)', letterSpacing: '0.12em' }}>{h}</span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   {thirdPlaceEntries.map((entry, idx) => {
                     const rank = idx + 1;
-                    return <ThirdPlaceRow key={entry.teamId} entry={entry} rank={rank} advances={rank <= 8} />;
+                    return (
+                      <ThirdPlaceRow
+                        key={entry.teamId}
+                        entry={entry}
+                        rank={rank}
+                        advances={rank <= 8}
+                        isMobile={isMobile}
+                      />
+                    );
                   })}
                 </div>
               </div>
@@ -167,14 +216,14 @@ export function Standings() {
 
 // ── Group table ───────────────────────────────────────────────────────────────
 
-function GroupTable({ group }: { group: StandingsGroupBlock }) {
+function GroupTable({ group, isMobile }: { group: StandingsGroupBlock; isMobile: boolean }) {
   const leader = group.entries[0];
   const leaderCode = leader ? teamCodeFromDisplayName(leader.name, leader.abbreviation) : null;
   const leaderColor = teamPrimaryColor(leaderCode);
 
   return (
     <div style={{ border: '1px solid var(--rule)', borderRadius: 12, overflow: 'hidden' }}>
-      {/* Header — bottom border tinted with leader's colour */}
+      {/* Header */}
       <div style={{
         padding: '12px 20px',
         borderBottom: leaderColor
@@ -191,16 +240,30 @@ function GroupTable({ group }: { group: StandingsGroupBlock }) {
             {group.header.toUpperCase()}
           </span>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '28px 28px 28px 36px 52px 36px', gap: 0, textAlign: 'right' }}>
-          {['P', 'W', 'D', 'L', 'GF:GA', 'PTS'].map((h) => (
-            <span key={h} className="mono" style={{ fontSize: 9, color: 'var(--ink-3)', letterSpacing: '0.12em' }}>{h}</span>
-          ))}
-        </div>
+        {/* Mobile: show fewer columns */}
+        {isMobile ? (
+          <div style={{ display: 'grid', gridTemplateColumns: '28px 36px 36px', gap: 0, textAlign: 'right' }}>
+            {['W/D/L', 'GF:GA', 'PTS'].map((h) => (
+              <span key={h} className="mono" style={{ fontSize: 9, color: 'var(--ink-3)', letterSpacing: '0.12em' }}>{h}</span>
+            ))}
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: '28px 28px 28px 36px 52px 36px', gap: 0, textAlign: 'right' }}>
+            {['P', 'W', 'D', 'L', 'GF:GA', 'PTS'].map((h) => (
+              <span key={h} className="mono" style={{ fontSize: 9, color: 'var(--ink-3)', letterSpacing: '0.12em' }}>{h}</span>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* Rows */}
       {group.entries.map((entry, i) => (
-        <GroupRow key={entry.teamId} entry={entry} rank={i + 1} total={group.entries.length} />
+        <GroupRow
+          key={entry.teamId}
+          entry={entry}
+          rank={i + 1}
+          total={group.entries.length}
+          isMobile={isMobile}
+        />
       ))}
     </div>
   );
@@ -208,7 +271,7 @@ function GroupTable({ group }: { group: StandingsGroupBlock }) {
 
 // ── Group row ─────────────────────────────────────────────────────────────────
 
-function GroupRow({ entry, rank }: { entry: GroupStandingEntry; rank: number; total: number }) {
+function GroupRow({ entry, rank, isMobile }: { entry: GroupStandingEntry; rank: number; total: number; isMobile: boolean }) {
   const code = teamCodeFromDisplayName(entry.name, entry.abbreviation);
   const color = teamPrimaryColor(code);
 
@@ -216,24 +279,17 @@ function GroupRow({ entry, rank }: { entry: GroupStandingEntry; rank: number; to
   const isFirst = rank === 1;
   const isThird = rank === 3;
 
-  const gd = entry.goalDifference ?? (entry.goalsFor - entry.goalsAgainst);
-  const gdStr = gd > 0 ? `+${gd}` : String(gd);
-
-  // Left qualification bar
   const barColor = isFirst && color
     ? color
     : advances && color
     ? hexRgba(color, 0.65)
-    : advances
-    ? 'var(--ink)'
-    : isThird
-    ? 'var(--ink-3)'
+    : advances ? 'var(--ink)'
+    : isThird ? 'var(--ink-3)'
     : 'transparent';
 
   const barWidth = isFirst ? 4 : advances ? 3 : isThird ? 3 : 0;
   const barOpacity = isFirst ? 1 : advances ? 0.85 : isThird ? 0.4 : 0;
 
-  // Row background tint
   const bgColor = isFirst && color
     ? hexRgba(color, 0.07)
     : advances && color
@@ -243,16 +299,19 @@ function GroupRow({ entry, rank }: { entry: GroupStandingEntry; rank: number; to
   return (
     <div style={{
       display: 'grid',
-      gridTemplateColumns: '20px 24px 1fr 28px 28px 28px 36px 52px 36px',
+      // Mobile: rank | flag | name | W/D/L combined | GF:GA | PTS
+      // Desktop: rank | flag | name | P | W | D | L | GF:GA | PTS
+      gridTemplateColumns: isMobile
+        ? '16px 22px 1fr 52px 40px 32px'
+        : '20px 24px 1fr 28px 28px 28px 36px 52px 36px',
       gap: 0,
       alignItems: 'center',
-      padding: '11px 20px',
+      padding: isMobile ? '10px 16px' : '11px 20px',
       borderTop: rank === 1 ? 'none' : '1px solid var(--rule-soft)',
       background: bgColor,
       position: 'relative',
       transition: 'background 0.2s',
     }}>
-      {/* Qualification indicator bar */}
       <div style={{
         position: 'absolute', left: 0, top: 0, bottom: 0,
         width: barWidth,
@@ -260,7 +319,6 @@ function GroupRow({ entry, rank }: { entry: GroupStandingEntry; rank: number; to
         opacity: barOpacity,
         borderStyle: isThird ? 'dashed' : 'solid',
         borderColor: isThird ? 'var(--ink-3)' : 'transparent',
-        transition: 'background 0.2s',
       }} />
 
       {/* Rank */}
@@ -274,33 +332,51 @@ function GroupRow({ entry, rank }: { entry: GroupStandingEntry; rank: number; to
 
       {/* Flag */}
       <div style={{ display: 'flex', alignItems: 'center' }}>
-        <Flag code={code} w={18} h={12} />
+        <Flag code={code} w={isMobile ? 16 : 18} h={isMobile ? 10 : 12} />
       </div>
 
       {/* Team name */}
-      <TeamNameLink entry={entry} advances={advances} color={isFirst ? color : null} />
+      <TeamNameLink entry={entry} advances={advances} color={isFirst ? color : null} isMobile={isMobile} />
 
-      {/* Stats */}
-      {[entry.played, entry.wins, entry.draws, entry.losses].map((v, i) => (
-        <span key={i} className="mono tnum" style={{ fontSize: 12, textAlign: 'right', color: 'var(--ink-2)', paddingRight: 4 }}>
-          {v}
-        </span>
-      ))}
-
-      {/* GF:GA */}
-      <span className="mono tnum" style={{ fontSize: 12, textAlign: 'right', color: 'var(--ink-3)', paddingRight: 4 }}>
-        {entry.goalsFor}:{entry.goalsAgainst}
-      </span>
-
-      {/* Points */}
-      <span className="serif tnum" style={{
-        fontSize: 16,
-        textAlign: 'right',
-        fontWeight: isFirst ? 700 : advances ? 600 : 400,
-        color: isFirst && color ? color : advances ? 'var(--ink)' : 'var(--ink-2)',
-      }}>
-        {entry.points}
-      </span>
+      {isMobile ? (
+        // Compact W-D-L combined
+        <>
+          <span className="mono tnum" style={{ fontSize: 11, textAlign: 'right', color: 'var(--ink-2)', paddingRight: 4 }}>
+            {entry.wins}-{entry.draws}-{entry.losses}
+          </span>
+          <span className="mono tnum" style={{ fontSize: 11, textAlign: 'right', color: 'var(--ink-3)', paddingRight: 4 }}>
+            {entry.goalsFor}:{entry.goalsAgainst}
+          </span>
+          <span className="serif tnum" style={{
+            fontSize: 15,
+            textAlign: 'right',
+            fontWeight: isFirst ? 700 : advances ? 600 : 400,
+            color: isFirst && color ? color : advances ? 'var(--ink)' : 'var(--ink-2)',
+          }}>
+            {entry.points}
+          </span>
+        </>
+      ) : (
+        // Full P W D L GF:GA PTS
+        <>
+          {[entry.played, entry.wins, entry.draws, entry.losses].map((v, i) => (
+            <span key={i} className="mono tnum" style={{ fontSize: 12, textAlign: 'right', color: 'var(--ink-2)', paddingRight: 4 }}>
+              {v}
+            </span>
+          ))}
+          <span className="mono tnum" style={{ fontSize: 12, textAlign: 'right', color: 'var(--ink-3)', paddingRight: 4 }}>
+            {entry.goalsFor}:{entry.goalsAgainst}
+          </span>
+          <span className="serif tnum" style={{
+            fontSize: 16,
+            textAlign: 'right',
+            fontWeight: isFirst ? 700 : advances ? 600 : 400,
+            color: isFirst && color ? color : advances ? 'var(--ink)' : 'var(--ink-2)',
+          }}>
+            {entry.points}
+          </span>
+        </>
+      )}
     </div>
   );
 }
@@ -308,16 +384,17 @@ function GroupRow({ entry, rank }: { entry: GroupStandingEntry; rank: number; to
 // ── Team name with optional link ──────────────────────────────────────────────
 
 function TeamNameLink({
-  entry, advances, color,
+  entry, advances, color, isMobile,
 }: {
   entry: GroupStandingEntry;
   advances: boolean;
   color: string | null;
+  isMobile: boolean;
 }) {
   const code = teamCodeFromDisplayName(entry.name, entry.abbreviation);
   const style = {
-    fontSize: 15,
-    paddingLeft: 10,
+    fontSize: isMobile ? 13 : 15,
+    paddingLeft: isMobile ? 8 : 10,
     color: color ?? (advances ? 'var(--ink)' : 'var(--ink-2)'),
     fontWeight: color ? 600 : advances ? 500 : 400,
     whiteSpace: 'nowrap' as const,
@@ -339,17 +416,24 @@ function TeamNameLink({
 
 // ── Third-place row ───────────────────────────────────────────────────────────
 
-function ThirdPlaceRow({ entry, rank, advances }: { entry: ThirdPlaceEntry; rank: number; advances: boolean }) {
+function ThirdPlaceRow({ entry, rank, advances, isMobile }: {
+  entry: ThirdPlaceEntry;
+  rank: number;
+  advances: boolean;
+  isMobile: boolean;
+}) {
   const code = teamCodeFromDisplayName(entry.name, entry.abbreviation);
   const color = teamPrimaryColor(code);
 
   return (
     <div style={{
       display: 'grid',
-      gridTemplateColumns: '20px 24px 1fr 28px 28px 28px 28px 36px 52px 36px',
+      gridTemplateColumns: isMobile
+        ? '16px 22px 1fr 28px 40px 32px'
+        : '20px 24px 1fr 28px 28px 28px 28px 36px 52px 36px',
       gap: 0,
       alignItems: 'center',
-      padding: '11px 20px',
+      padding: isMobile ? '10px 16px' : '11px 20px',
       borderTop: rank === 1 ? 'none' : '1px solid var(--rule-soft)',
       background: advances && color ? hexRgba(color, 0.04) : 'var(--paper)',
       position: 'relative',
@@ -363,26 +447,37 @@ function ThirdPlaceRow({ entry, rank, advances }: { entry: ThirdPlaceEntry; rank
       <span className="mono tnum" style={{ fontSize: 11, color: 'var(--ink)' }}>{rank}</span>
 
       <div style={{ display: 'flex', alignItems: 'center' }}>
-        <Flag code={code} w={18} h={12} />
+        <Flag code={code} w={isMobile ? 16 : 18} h={isMobile ? 10 : 12} />
       </div>
 
-      <TeamNameLink entry={entry} advances={advances} color={null} />
+      <TeamNameLink entry={entry} advances={advances} color={null} isMobile={isMobile} />
 
       <span className="mono" style={{ fontSize: 11, textAlign: 'right', color: 'var(--ink-3)', fontWeight: 600, paddingRight: 4 }}>
         {entry.groupName}
       </span>
 
-      {[entry.played, entry.wins, entry.draws, entry.losses].map((v, i) => (
-        <span key={i} className="mono tnum" style={{ fontSize: 12, textAlign: 'right', color: 'var(--ink-2)', paddingRight: 4 }}>{v}</span>
-      ))}
-
-      <span className="mono tnum" style={{ fontSize: 12, textAlign: 'right', color: 'var(--ink-3)', paddingRight: 4 }}>
-        {entry.goalsFor}:{entry.goalsAgainst}
-      </span>
-
-      <span className="serif tnum" style={{ fontSize: 16, textAlign: 'right', fontWeight: 600, color: 'var(--ink)' }}>
-        {entry.points}
-      </span>
+      {isMobile ? (
+        <>
+          <span className="mono tnum" style={{ fontSize: 11, textAlign: 'right', color: 'var(--ink-3)', paddingRight: 4 }}>
+            {entry.goalsFor}:{entry.goalsAgainst}
+          </span>
+          <span className="serif tnum" style={{ fontSize: 15, textAlign: 'right', fontWeight: 600, color: 'var(--ink)' }}>
+            {entry.points}
+          </span>
+        </>
+      ) : (
+        <>
+          {[entry.played, entry.wins, entry.draws, entry.losses].map((v, i) => (
+            <span key={i} className="mono tnum" style={{ fontSize: 12, textAlign: 'right', color: 'var(--ink-2)', paddingRight: 4 }}>{v}</span>
+          ))}
+          <span className="mono tnum" style={{ fontSize: 12, textAlign: 'right', color: 'var(--ink-3)', paddingRight: 4 }}>
+            {entry.goalsFor}:{entry.goalsAgainst}
+          </span>
+          <span className="serif tnum" style={{ fontSize: 16, textAlign: 'right', fontWeight: 600, color: 'var(--ink)' }}>
+            {entry.points}
+          </span>
+        </>
+      )}
     </div>
   );
 }
