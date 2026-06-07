@@ -4,9 +4,14 @@ import Link from 'next/link';
 import { countries, stadiums, matches } from '@/lib/data';
 import { BackBar } from './Shared';
 import type { CountryCode } from '@/lib/types';
+import { useWindowWidth } from '@/hooks/useWindowWidth';
 
 export function CountryView({ code }: { code: string }) {
   const c = countries[code as CountryCode];
+  const width = useWindowWidth();
+  const isMobile = width < 640;
+  const isTablet = width < 1024;
+  const pad = isMobile ? '16px' : isTablet ? '24px' : '56px';
   if (!c) return <div style={{ padding: 60 }}>Country not found</div>;
   const cs = stadiums.filter((s) => s.country === code);
   const matchesHere = matches.filter((m) => cs.some((s) => s.id === m.stadium));
@@ -17,18 +22,18 @@ export function CountryView({ code }: { code: string }) {
 
       <div style={{
         position: 'relative',
-        padding: '64px 56px',
+        padding: isMobile ? '40px 16px' : `64px ${pad}`,
         background: `linear-gradient(135deg, ${c.colors[0]} 0%, ${c.colors[1] || c.colors[0]} 100%)`,
         color: '#fff', overflow: 'hidden',
       }}>
         <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(rgba(255,255,255,0.05) 1px, transparent 1px)', backgroundSize: '6px 6px', opacity: 0.5 }} />
-        <div style={{ position: 'relative', display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 48, alignItems: 'flex-end' }}>
+        <div style={{ position: 'relative', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '2fr 1fr', gap: isMobile ? 24 : 48, alignItems: 'flex-end' }}>
           <div>
             <div className="mono" style={{ fontSize: 10, letterSpacing: '0.22em', opacity: 0.85 }}>HOST NATION</div>
-            <div className="serif" style={{ fontSize: 120, lineHeight: 0.92, marginTop: 14, letterSpacing: '-0.03em' }}>{c.name}</div>
-            <div className="serif it" style={{ fontSize: 26, marginTop: 18, opacity: 0.9 }}>&ldquo;{c.tagline}&rdquo;</div>
+            <div className="serif" style={{ fontSize: isMobile ? 64 : isTablet ? 88 : 120, lineHeight: 0.92, marginTop: 14, letterSpacing: '-0.03em' }}>{c.name}</div>
+            <div className="serif it" style={{ fontSize: isMobile ? 18 : 26, marginTop: 18, opacity: 0.9 }}>&ldquo;{c.tagline}&rdquo;</div>
           </div>
-          <div style={{ borderLeft: '1px solid rgba(255,255,255,0.3)', paddingLeft: 28 }}>
+          <div style={{ borderLeft: isMobile ? 'none' : '1px solid rgba(255,255,255,0.3)', borderTop: isMobile ? '1px solid rgba(255,255,255,0.3)' : 'none', paddingLeft: isMobile ? 0 : 28, paddingTop: isMobile ? 20 : 0 }}>
             <KV label="Cities" v={cs.length} />
             <KV label="Stadia" v={cs.length} />
             <KV label="Population" v={c.population} />
@@ -38,7 +43,7 @@ export function CountryView({ code }: { code: string }) {
         </div>
       </div>
 
-      <div style={{ padding: '48px 56px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 56 }}>
+      <div style={{ padding: isMobile ? '32px 16px' : `48px ${pad}`, display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 32 : 56 }}>
         <div>
           <div className="eyebrow">What to eat</div>
           <div className="serif it" style={{ fontSize: 26, marginTop: 6, marginBottom: 22 }}>Food worth a detour</div>
@@ -72,9 +77,9 @@ export function CountryView({ code }: { code: string }) {
         </div>
       </div>
 
-      <div style={{ padding: '0 56px 64px' }}>
+      <div style={{ padding: isMobile ? `0 16px 48px` : `0 ${pad} 64px` }}>
         <div className="eyebrow">{cs.length} {cs.length === 1 ? 'stadium' : 'stadia'} in {c.name}</div>
-        <div style={{ marginTop: 18, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 14 }}>
+        <div style={{ marginTop: 18, display: 'grid', gridTemplateColumns: `repeat(auto-fill, minmax(min(220px, 100%), 1fr))`, gap: 14 }}>
           {cs.map((s) => (
             <Link key={s.id} href={`/stadium/${s.id}`} style={{
               cursor: 'pointer', textDecoration: 'none', color: 'inherit',

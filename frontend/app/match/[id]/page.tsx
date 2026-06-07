@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useCallback, useRef } from 'react';
+import { useIsMobile } from '@/hooks/useWindowWidth';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { useGoalCelebration } from '@/components/LiveGoalCelebration';
@@ -129,17 +130,6 @@ interface H2HGame {
 
 // ── Hooks ─────────────────────────────────────────────────────────────────────
 
-function useIsMobile(breakpoint = 640) {
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const mq = window.matchMedia(`(max-width: ${breakpoint - 1}px)`);
-    setIsMobile(mq.matches);
-    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
-  }, [breakpoint]);
-  return isMobile;
-}
 
 function useCountdown(dateStr: string): number | null {
   const [ms, setMs] = useState<number | null>(null);

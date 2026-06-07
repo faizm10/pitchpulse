@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { BackBar, Flag } from "./Shared";
+import { useWindowWidth } from "@/hooks/useWindowWidth";
 import type { FotmobPlayerDetail } from "@/types/fotmob";
 import { PlayerProfileSkeleton } from "@/components/skeleton/TeamPagesSkeleton";
 
@@ -11,6 +12,10 @@ export function PlayerProfile({ playerId, teamCode }: { playerId: string; teamCo
   const [detail, setDetail] = useState<FotmobPlayerDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const width = useWindowWidth();
+  const isMobile = width < 640;
+  const isTablet = width < 1024;
+  const pad = isMobile ? '16px' : isTablet ? '24px' : '40px';
 
   useEffect(() => {
     if (!upper) {
@@ -54,7 +59,7 @@ export function PlayerProfile({ playerId, teamCode }: { playerId: string; teamCo
 
       <div
         style={{
-          padding: "40px 24px 72px",
+          padding: `40px ${pad} 72px`,
           maxWidth: 1040,
           width: "100%",
           margin: "0 auto",
@@ -80,8 +85,8 @@ export function PlayerProfile({ playerId, teamCode }: { playerId: string; teamCo
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)",
-              gap: 48,
+              gridTemplateColumns: isMobile ? "1fr" : "minmax(0, 1fr) minmax(0, 1fr)",
+              gap: isMobile ? 32 : 48,
               alignItems: "start",
             }}
           >
@@ -113,7 +118,7 @@ export function PlayerProfile({ playerId, teamCode }: { playerId: string; teamCo
               <div
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
+                  gridTemplateColumns: "repeat(auto-fill, minmax(min(160px, 100%), 1fr))",
                   gap: 14,
                   marginTop: 14,
                 }}

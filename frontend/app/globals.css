@@ -767,6 +767,20 @@ body {
   .my-team-name { max-width: 84px; }
 }
 
+/* ── mobile polish ── */
+@media (max-width: 640px) {
+  /* Bracket hero */
+  .bracket-hero { padding: 28px 16px 20px !important; }
+  .bracket-headline { font-size: 40px !important; }
+  .bracket-stages { gap: 6px !important; }
+
+  /* Tab bars with overflow-x scroll */
+  .topbar-mid { -webkit-overflow-scrolling: touch; }
+
+  /* Ensure no page content bleeds outside viewport */
+  .screen { max-width: 100vw; overflow-x: hidden; }
+}
+
 /* knockout bracket */
 .bracket-screen {
   --bracket-line: rgba(200, 147, 42, 0.55);

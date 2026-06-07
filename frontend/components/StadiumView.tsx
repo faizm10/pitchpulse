@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useWindowWidth } from '@/hooks/useWindowWidth';
 import Link from 'next/link';
 import { stadiums } from '@/lib/data';
 import { BackBar, Stat } from './Shared';
@@ -33,6 +34,10 @@ export function StadiumView({ id }: { id: string }) {
   const s = stadiums.find((x) => x.id === id);
   const [enrichment, setEnrichment] = useState<StadiumEnrichment | null>(null);
   const [imgError, setImgError] = useState(false);
+  const width = useWindowWidth();
+  const isMobile = width < 640;
+  const isTablet = width < 1024;
+  const pad = isMobile ? '16px' : isTablet ? '24px' : '56px';
 
   useEffect(() => {
     fetch(`/api/stadium/${id}`)
@@ -72,7 +77,7 @@ export function StadiumView({ id }: { id: string }) {
         </div>
       )}
 
-      <div style={{ padding: heroImg ? '0 56px 48px' : '48px 56px', display: 'grid', gridTemplateColumns: '1fr 380px', gap: 48, alignItems: 'start' }}>
+      <div style={{ padding: heroImg ? `0 ${pad} 48px` : `48px ${pad}`, display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 380px', gap: isMobile ? 0 : 48, alignItems: 'start' }}>
         {/* Left: info column */}
         <div>
           {/* Name + description */}
@@ -93,7 +98,7 @@ export function StadiumView({ id }: { id: string }) {
           </div>
 
           {/* Stats row */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 24, borderTop: '1px solid var(--rule)', paddingTop: 22, marginBottom: 48 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: 24, borderTop: '1px solid var(--rule)', paddingTop: 22, marginBottom: 48 }}>
             <Stat n={s.capacity.toLocaleString()} l="Capacity" />
             <Stat n={String(s.opened)} l="Opened" />
             <Stat n={s.surface} l="Surface" />
@@ -112,15 +117,15 @@ export function StadiumView({ id }: { id: string }) {
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {sortedMatches.map((m) => (
-                  <MatchRow key={m.id} match={m} />
+                  <MatchRow key={m.id} match={m} isMobile={isMobile} />
                 ))}
               </div>
             )}
           </div>
         </div>
 
-        {/* Right: sticky mini-map */}
-        <div style={{ position: 'sticky', top: 80 }}>
+        {/* Right: mini-map */}
+        <div style={isMobile ? {} : { position: 'sticky', top: 80 }}>
           <div style={{ height: 420, borderRadius: 16, overflow: 'hidden', border: '1px solid var(--rule)', boxShadow: '0 4px 24px rgba(14,22,38,0.08)' }}>
             <StadiumMiniMap lat={s.lat} lng={s.lng} name={realName} />
           </div>
@@ -133,7 +138,7 @@ export function StadiumView({ id }: { id: string }) {
   );
 }
 
-function MatchRow({ match }: { match: MatchData }) {
+function MatchRow({ match, isMobile }: { match: MatchData; isMobile: boolean }) {
   const isLive = match.state === 'in';
   const isFT = match.state === 'post';
   const isPre = match.state === 'pre';
@@ -149,10 +154,10 @@ function MatchRow({ match }: { match: MatchData }) {
     <Link href={`/match/${match.id}`} style={{ textDecoration: 'none' }}>
       <div style={{
         display: 'grid',
-        gridTemplateColumns: '100px 1fr auto 1fr 100px',
+        gridTemplateColumns: isMobile ? '1fr auto 1fr' : '100px 1fr auto 1fr 100px',
         alignItems: 'center',
-        gap: 12,
-        padding: '14px 20px',
+        gap: isMobile ? 8 : 12,
+        padding: isMobile ? '12px 14px' : '14px 20px',
         borderRadius: 10,
         border: '1px solid var(--rule)',
         background: 'var(--paper-2)',
@@ -162,18 +167,20 @@ function MatchRow({ match }: { match: MatchData }) {
         onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--paper-3, var(--rule-soft))')}
         onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--paper-2)')}
       >
-        {/* Date / status */}
-        <div>
-          <div className="mono" style={{ fontSize: 10, color: isLive ? 'var(--live)' : 'var(--ink-3)', letterSpacing: '0.1em', fontWeight: isLive ? 700 : 400 }}>
-            {isLive ? '● LIVE' : isFT ? 'FULL TIME' : dateStr}
+        {/* Date / status — hidden on mobile (3-col layout omits this) */}
+        {!isMobile && (
+          <div>
+            <div className="mono" style={{ fontSize: 10, color: isLive ? 'var(--live)' : 'var(--ink-3)', letterSpacing: '0.1em', fontWeight: isLive ? 700 : 400 }}>
+              {isLive ? '● LIVE' : isFT ? 'FULL TIME' : dateStr}
+            </div>
+            {isPre && (
+              <div className="mono" style={{ fontSize: 10, color: 'var(--ink-3)', marginTop: 2 }}>{timeStr}</div>
+            )}
+            {isFT && match.statusDetail && (
+              <div className="mono" style={{ fontSize: 10, color: 'var(--ink-3)', marginTop: 2 }}>{match.statusDetail}</div>
+            )}
           </div>
-          {isPre && (
-            <div className="mono" style={{ fontSize: 10, color: 'var(--ink-3)', marginTop: 2 }}>{timeStr}</div>
-          )}
-          {isFT && match.statusDetail && (
-            <div className="mono" style={{ fontSize: 10, color: 'var(--ink-3)', marginTop: 2 }}>{match.statusDetail}</div>
-          )}
-        </div>
+        )}
 
         {/* Home team */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end' }}>
@@ -192,8 +199,10 @@ function MatchRow({ match }: { match: MatchData }) {
           <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--ink)' }}>{away?.name ?? '—'}</span>
         </div>
 
-        {/* Arrow */}
-        <div style={{ textAlign: 'right', color: 'var(--ink-3)', fontSize: 14 }}>→</div>
+        {/* Arrow — hidden on mobile */}
+        {!isMobile && (
+          <div style={{ textAlign: 'right', color: 'var(--ink-3)', fontSize: 14 }}>→</div>
+        )}
       </div>
     </Link>
   );
