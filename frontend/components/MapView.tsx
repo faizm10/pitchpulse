@@ -28,10 +28,12 @@ export function MapView() {
     if (typeof window === 'undefined') return;
     const params = new URLSearchParams(window.location.search);
     const code = params.get('journey');
-    if (code && teams[code]) {
-      sim.selectTeam(code);
-      // Clean the param from the URL without a reload
-      window.history.replaceState({}, '', '/');
+    if (!code) return;
+    window.history.replaceState({}, '', '/');
+    if (code === 'open') {
+      sim.openSimulator();          // no team set → open the selector
+    } else if (teams[code]) {
+      sim.selectTeam(code);         // team set → jump straight into the journey
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -73,30 +75,6 @@ export function MapView() {
         pointerEvents: 'none',
       }}>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', pointerEvents: 'auto', flexWrap: 'wrap' }}>
-          {/* Journey CTA button */}
-          {!sim.isOpen && (
-            <button
-              type="button"
-              onClick={sim.openSimulator}
-              style={{
-                cursor: 'pointer',
-                display: 'flex', alignItems: 'center', gap: 8,
-                padding: '8px 14px',
-                border: '1px solid rgba(255,255,255,0.25)',
-                borderRadius: 999,
-                background: 'rgba(10,14,22,0.75)',
-                backdropFilter: 'blur(8px)',
-                fontFamily: 'var(--mono)', fontSize: 11,
-                letterSpacing: '0.08em', color: 'white',
-                boxShadow: '0 2px 12px rgba(0,0,0,0.3)',
-                transition: 'all 150ms',
-              }}
-            >
-              <span style={{ fontSize: 14 }}>⚽</span>
-              FOLLOW YOUR TEAM'S JOURNEY
-            </button>
-          )}
-
           {(['CA', 'US', 'MX'] as const).map((code) => {
             const cssVar = code === 'CA' ? 'var(--ca)' : code === 'US' ? 'var(--us)' : 'var(--mx)';
             return (

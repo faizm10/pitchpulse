@@ -93,9 +93,8 @@ export function Topbar() {
             <span className="my-team-name">Follow {teams[myTeam]?.name}</span>
           </Link>
         ) : (
-          <Link href="/mywc" className="btn btn-pulse topbar-cta">
-            <span className="mywc-full">+ MY WORLD CUP</span>
-            <span className="mywc-short">MY WC</span>
+          <Link href="/?journey=open" className="btn btn-pulse topbar-cta">
+            Follow a Team
           </Link>
         )}
       </div>
