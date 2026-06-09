@@ -208,7 +208,7 @@ export function JourneyPanel({ journey, scenario, onScenarioChange, onReplay, on
             Group Finish
           </div>
           <div style={{ display: 'flex', gap: 6 }}>
-            {(['first', 'second'] as const).map((s) => (
+            {(['first', 'second', 'third'] as const).map((s) => (
               <button
                 key={s}
                 type="button"
@@ -218,15 +218,25 @@ export function JourneyPanel({ journey, scenario, onScenarioChange, onReplay, on
                   border: `1px solid ${scenario === s ? teamColor : 'var(--rule)'}`,
                   background: scenario === s ? teamColor : 'var(--paper-2)',
                   color: scenario === s ? contrastText(teamColor) : 'var(--ink)',
-                  fontSize: 12, fontWeight: 600, cursor: 'pointer',
-                  fontFamily: 'var(--mono)', letterSpacing: '0.06em',
+                  fontSize: 11, fontWeight: 600, cursor: 'pointer',
+                  fontFamily: 'var(--mono)', letterSpacing: '0.04em',
                   transition: 'all 150ms',
                 }}
               >
-                {s === 'first' ? '1st Place' : '2nd Place'}
+                {s === 'first' ? '1st' : s === 'second' ? '2nd' : '3rd'}
               </button>
             ))}
           </div>
+          {scenario === 'third' && (
+            <div style={{
+              marginTop: 7, padding: '5px 8px', borderRadius: 5,
+              background: 'rgba(255,180,0,0.08)', border: '1px solid rgba(255,180,0,0.2)',
+              fontSize: 10, fontFamily: 'var(--mono)', color: 'var(--ink-3)',
+              lineHeight: 1.4,
+            }}>
+              ⚠ Only 8 of 12 third-place teams advance. Path is approximate.
+            </div>
+          )}
         </div>
 
         {/* Stage probability tracker */}

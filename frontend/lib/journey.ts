@@ -41,49 +41,117 @@ const GROUP_VENUES: Record<string, [string, string, string]> = {
 
 const MD_DATES = ['Jun 12, 2026', 'Jun 18, 2026', 'Jun 24, 2026'];
 
-// Projected knockout venue path per group × scenario: [R32, R16, QF, SF, Final]
+// Projected knockout path per group × scenario: [R32, R16, QF, SF, Final]
 // Verified against the official FIFA WC2026 bracket (Wikipedia, June 2026)
 //
-// R32 matchups:
-//   M73 RuA–RuB@sofi   M74 WE–3rd@gillette  M75 WF–RuC@bbva     M76 WC–RuF@nrg
-//   M77 WI–3rd@metlife  M78 RuE–RuI@att      M79 WA–3rd@azteca   M80 WL–3rd@mercedesbenz
-//   M81 WD–3rd@levis    M82 WG–3rd@lumen     M83 RuK–RuL@bmo     M84 WH–RuJ@sofi
-//   M85 WB–3rd@bcplace  M86 WJ–RuH@hardrock  M87 WK–3rd@arrowhead M88 RuD–RuG@att
-// R16: M90(73v75)@nrg  M89(74v77)@lincoln  M91(76v78)@metlife  M92(79v80)@azteca
-//       M93(83v84)@att  M94(81v82)@lumen    M95(86v88)@mercedesbenz M96(85v87)@bcplace
-// QF:  M97(89v90)@gillette  M98(93v94)@sofi  M99(91v92)@hardrock  M100(95v96)@arrowhead
-// SF:  M101(97v98)@att      M102(99v100)@mercedesbenz
-// Final: M104@metlife
-const KNOCKOUT_PATHS: Record<string, { first: string[]; second: string[] }> = {
-  // Winner A: M79→M92→M99→M102→F | Runner-up A: M73→M90→M97→M101→F
-  A: { first: ['azteca', 'azteca', 'hardrock', 'mercedesbenz', 'metlife'], second: ['sofi', 'nrg', 'gillette', 'att', 'metlife'] },
-  // Winner B: M85→M96→M100→M102→F | Runner-up B: M73→M90→M97→M101→F
-  B: { first: ['bcplace', 'bcplace', 'arrowhead', 'mercedesbenz', 'metlife'], second: ['sofi', 'nrg', 'gillette', 'att', 'metlife'] },
-  // Winner C: M76→M91→M99→M102→F | Runner-up C: M75→M90→M97→M101→F
-  C: { first: ['nrg', 'metlife', 'hardrock', 'mercedesbenz', 'metlife'], second: ['bbva', 'nrg', 'gillette', 'att', 'metlife'] },
-  // Winner D: M81→M94→M98→M101→F | Runner-up D: M88→M95→M100→M102→F
-  D: { first: ['levis', 'lumen', 'sofi', 'att', 'metlife'], second: ['att', 'mercedesbenz', 'arrowhead', 'mercedesbenz', 'metlife'] },
-  // Winner E: M74→M89→M97→M101→F | Runner-up E: M78→M91→M99→M102→F
-  E: { first: ['gillette', 'lincoln', 'gillette', 'att', 'metlife'], second: ['att', 'metlife', 'hardrock', 'mercedesbenz', 'metlife'] },
-  // Winner F: M75→M90→M97→M101→F | Runner-up F: M76→M91→M99→M102→F
-  F: { first: ['bbva', 'nrg', 'gillette', 'att', 'metlife'], second: ['nrg', 'metlife', 'hardrock', 'mercedesbenz', 'metlife'] },
-  // Winner G: M82→M94→M98→M101→F | Runner-up G: M88→M95→M100→M102→F
-  G: { first: ['lumen', 'lumen', 'sofi', 'att', 'metlife'], second: ['att', 'mercedesbenz', 'arrowhead', 'mercedesbenz', 'metlife'] },
-  // Winner H: M84→M93→M98→M101→F | Runner-up H: M86→M95→M100→M102→F
-  H: { first: ['sofi', 'att', 'sofi', 'att', 'metlife'], second: ['hardrock', 'mercedesbenz', 'arrowhead', 'mercedesbenz', 'metlife'] },
-  // Winner I: M77→M89→M97→M101→F | Runner-up I: M78→M91→M99→M102→F
-  I: { first: ['metlife', 'lincoln', 'gillette', 'att', 'metlife'], second: ['att', 'metlife', 'hardrock', 'mercedesbenz', 'metlife'] },
-  // Winner J: M86→M95→M100→M102→F | Runner-up J: M84→M93→M98→M101→F
-  J: { first: ['hardrock', 'mercedesbenz', 'arrowhead', 'mercedesbenz', 'metlife'], second: ['sofi', 'att', 'sofi', 'att', 'metlife'] },
-  // Winner K: M87→M96→M100→M102→F | Runner-up K: M83→M93→M98→M101→F
-  K: { first: ['arrowhead', 'bcplace', 'arrowhead', 'mercedesbenz', 'metlife'], second: ['bmo', 'att', 'sofi', 'att', 'metlife'] },
-  // Winner L: M80→M92→M99→M102→F | Runner-up L: M83→M93→M98→M101→F
-  L: { first: ['mercedesbenz', 'azteca', 'hardrock', 'mercedesbenz', 'metlife'], second: ['bmo', 'att', 'sofi', 'att', 'metlife'] },
+// R32 matchups with dates:
+//   M73 Jun 28 RuA–RuB@sofi    M74 Jun 29 WE–3rd@gillette   M75 Jun 29 WF–RuC@bbva
+//   M76 Jun 29 WC–RuF@nrg      M77 Jun 30 WI–3rd@metlife    M78 Jun 30 RuE–RuI@att
+//   M79 Jun 30 WA–3rd@azteca   M80 Jul 1  WL–3rd@mercedesbenz
+//   M81 Jul 1  WD–3rd@levis    M82 Jul 1  WG–3rd@lumen      M83 Jul 2 RuK–RuL@bmo
+//   M84 Jul 2  WH–RuJ@sofi     M85 Jul 2  WB–3rd@bcplace    M86 Jul 3 WJ–RuH@hardrock
+//   M87 Jul 3  WK–3rd@arrowhead M88 Jul 3 RuD–RuG@att
+//
+// R16: M89(M74×M77)Jul4@lincoln  M90(M73×M75)Jul4@nrg     M91(M76×M78)Jul5@metlife
+//      M92(M79×M80)Jul5@azteca   M93(M83×M84)Jul6@att     M94(M81×M82)Jul6@lumen
+//      M95(M86×M88)Jul7@mercedesbenz  M96(M85×M87)Jul7@bcplace
+// QF:  M97(M89×M90)Jul9@gillette  M98(M93×M94)Jul10@sofi
+//      M99(M91×M92)Jul11@hardrock  M100(M95×M96)Jul11@arrowhead
+// SF:  M101(M97×M98)Jul14@att   M102(M99×M100)Jul15@mercedesbenz
+// Final: M104 Jul19@metlife
+//
+// 3rd-place eligible slots per group:
+//   A → M74(A/B/C/D/F) or M82(A/E/H/I/J) → use M74
+//   B → M74(A/B/C/D/F) or M81(B/E/F/I/J) → use M74
+//   C → M74(A/B/C/D/F), M77(C/D/F/G/H), M79(C/E/F/H/I) → use M74
+//   D → M74(A/B/C/D/F), M77(C/D/F/G/H), M87(D/E/I/J/L) → use M74
+//   E → M79(C/E/F/H/I), M80(E/H/I/J/K), M81(B/E/F/I/J), M82(A/E/H/I/J), M85(E/F/G/I/J), M87 → use M80
+//   F → M74(A/B/C/D/F), M77, M79, M81, M85 → use M74
+//   G → M77(C/D/F/G/H), M85(E/F/G/I/J) → use M77
+//   H → M77(C/D/F/G/H), M79(C/E/F/H/I), M80(E/H/I/J/K), M82(A/E/H/I/J) → use M77
+//   I → M79(C/E/F/H/I), M80(E/H/I/J/K), M81(B/E/F/I/J), M82, M85, M87 → use M79
+//   J → M80(E/H/I/J/K), M81(B/E/F/I/J), M82(A/E/H/I/J), M85(E/F/G/I/J), M87 → use M80
+//   K → M80(E/H/I/J/K), M87(D/E/I/J/L) → use M80
+//   L → M87(D/E/I/J/L) only → use M87
+
+type KnockoutStop = { venue: string; date: string };
+
+const KNOCKOUT_PATHS: Record<string, { first: KnockoutStop[]; second: KnockoutStop[]; third: KnockoutStop[] }> = {
+  // Winner A: M79(Jun30)→M92(Jul5)→M99(Jul11)→M102(Jul15)→F | Runner-up A: M73(Jun28)→M90(Jul4)→M97(Jul9)→M101(Jul14)→F
+  A: {
+    first:  [{ venue: 'azteca',       date: 'Jun 30, 2026' }, { venue: 'azteca',       date: 'Jul 5, 2026'  }, { venue: 'hardrock',    date: 'Jul 11, 2026' }, { venue: 'mercedesbenz', date: 'Jul 15, 2026' }, { venue: 'metlife', date: 'Jul 19, 2026' }],
+    second: [{ venue: 'sofi',         date: 'Jun 28, 2026' }, { venue: 'nrg',          date: 'Jul 4, 2026'  }, { venue: 'gillette',    date: 'Jul 9, 2026'  }, { venue: 'att',          date: 'Jul 14, 2026' }, { venue: 'metlife', date: 'Jul 19, 2026' }],
+    third:  [{ venue: 'gillette',     date: 'Jun 29, 2026' }, { venue: 'lincoln',      date: 'Jul 4, 2026'  }, { venue: 'gillette',    date: 'Jul 9, 2026'  }, { venue: 'att',          date: 'Jul 14, 2026' }, { venue: 'metlife', date: 'Jul 19, 2026' }],
+  },
+  // Winner B: M85(Jul2)→M96(Jul7)→M100(Jul11)→M102(Jul15)→F | Runner-up B: M73(Jun28)→M90(Jul4)→M97(Jul9)→M101(Jul14)→F
+  B: {
+    first:  [{ venue: 'bcplace',      date: 'Jul 2, 2026'  }, { venue: 'bcplace',      date: 'Jul 7, 2026'  }, { venue: 'arrowhead',   date: 'Jul 11, 2026' }, { venue: 'mercedesbenz', date: 'Jul 15, 2026' }, { venue: 'metlife', date: 'Jul 19, 2026' }],
+    second: [{ venue: 'sofi',         date: 'Jun 28, 2026' }, { venue: 'nrg',          date: 'Jul 4, 2026'  }, { venue: 'gillette',    date: 'Jul 9, 2026'  }, { venue: 'att',          date: 'Jul 14, 2026' }, { venue: 'metlife', date: 'Jul 19, 2026' }],
+    third:  [{ venue: 'gillette',     date: 'Jun 29, 2026' }, { venue: 'lincoln',      date: 'Jul 4, 2026'  }, { venue: 'gillette',    date: 'Jul 9, 2026'  }, { venue: 'att',          date: 'Jul 14, 2026' }, { venue: 'metlife', date: 'Jul 19, 2026' }],
+  },
+  // Winner C: M76(Jun29)→M91(Jul5)→M99(Jul11)→M102(Jul15)→F | Runner-up C: M75(Jun29)→M90(Jul4)→M97(Jul9)→M101(Jul14)→F
+  C: {
+    first:  [{ venue: 'nrg',          date: 'Jun 29, 2026' }, { venue: 'metlife',      date: 'Jul 5, 2026'  }, { venue: 'hardrock',    date: 'Jul 11, 2026' }, { venue: 'mercedesbenz', date: 'Jul 15, 2026' }, { venue: 'metlife', date: 'Jul 19, 2026' }],
+    second: [{ venue: 'bbva',         date: 'Jun 29, 2026' }, { venue: 'nrg',          date: 'Jul 4, 2026'  }, { venue: 'gillette',    date: 'Jul 9, 2026'  }, { venue: 'att',          date: 'Jul 14, 2026' }, { venue: 'metlife', date: 'Jul 19, 2026' }],
+    third:  [{ venue: 'gillette',     date: 'Jun 29, 2026' }, { venue: 'lincoln',      date: 'Jul 4, 2026'  }, { venue: 'gillette',    date: 'Jul 9, 2026'  }, { venue: 'att',          date: 'Jul 14, 2026' }, { venue: 'metlife', date: 'Jul 19, 2026' }],
+  },
+  // Winner D: M81(Jul1)→M94(Jul6)→M98(Jul10)→M101(Jul14)→F | Runner-up D: M88(Jul3)→M95(Jul7)→M100(Jul11)→M102(Jul15)→F
+  D: {
+    first:  [{ venue: 'levis',        date: 'Jul 1, 2026'  }, { venue: 'lumen',        date: 'Jul 6, 2026'  }, { venue: 'sofi',        date: 'Jul 10, 2026' }, { venue: 'att',          date: 'Jul 14, 2026' }, { venue: 'metlife', date: 'Jul 19, 2026' }],
+    second: [{ venue: 'att',          date: 'Jul 3, 2026'  }, { venue: 'mercedesbenz', date: 'Jul 7, 2026'  }, { venue: 'arrowhead',   date: 'Jul 11, 2026' }, { venue: 'mercedesbenz', date: 'Jul 15, 2026' }, { venue: 'metlife', date: 'Jul 19, 2026' }],
+    third:  [{ venue: 'gillette',     date: 'Jun 29, 2026' }, { venue: 'lincoln',      date: 'Jul 4, 2026'  }, { venue: 'gillette',    date: 'Jul 9, 2026'  }, { venue: 'att',          date: 'Jul 14, 2026' }, { venue: 'metlife', date: 'Jul 19, 2026' }],
+  },
+  // Winner E: M74(Jun29)→M89(Jul4)→M97(Jul9)→M101(Jul14)→F | Runner-up E: M78(Jun30)→M91(Jul5)→M99(Jul11)→M102(Jul15)→F
+  E: {
+    first:  [{ venue: 'gillette',     date: 'Jun 29, 2026' }, { venue: 'lincoln',      date: 'Jul 4, 2026'  }, { venue: 'gillette',    date: 'Jul 9, 2026'  }, { venue: 'att',          date: 'Jul 14, 2026' }, { venue: 'metlife', date: 'Jul 19, 2026' }],
+    second: [{ venue: 'att',          date: 'Jun 30, 2026' }, { venue: 'metlife',      date: 'Jul 5, 2026'  }, { venue: 'hardrock',    date: 'Jul 11, 2026' }, { venue: 'mercedesbenz', date: 'Jul 15, 2026' }, { venue: 'metlife', date: 'Jul 19, 2026' }],
+    third:  [{ venue: 'mercedesbenz', date: 'Jul 1, 2026'  }, { venue: 'azteca',       date: 'Jul 5, 2026'  }, { venue: 'hardrock',    date: 'Jul 11, 2026' }, { venue: 'mercedesbenz', date: 'Jul 15, 2026' }, { venue: 'metlife', date: 'Jul 19, 2026' }],
+  },
+  // Winner F: M75(Jun29)→M90(Jul4)→M97(Jul9)→M101(Jul14)→F | Runner-up F: M76(Jun29)→M91(Jul5)→M99(Jul11)→M102(Jul15)→F
+  F: {
+    first:  [{ venue: 'bbva',         date: 'Jun 29, 2026' }, { venue: 'nrg',          date: 'Jul 4, 2026'  }, { venue: 'gillette',    date: 'Jul 9, 2026'  }, { venue: 'att',          date: 'Jul 14, 2026' }, { venue: 'metlife', date: 'Jul 19, 2026' }],
+    second: [{ venue: 'nrg',          date: 'Jun 29, 2026' }, { venue: 'metlife',      date: 'Jul 5, 2026'  }, { venue: 'hardrock',    date: 'Jul 11, 2026' }, { venue: 'mercedesbenz', date: 'Jul 15, 2026' }, { venue: 'metlife', date: 'Jul 19, 2026' }],
+    third:  [{ venue: 'gillette',     date: 'Jun 29, 2026' }, { venue: 'lincoln',      date: 'Jul 4, 2026'  }, { venue: 'gillette',    date: 'Jul 9, 2026'  }, { venue: 'att',          date: 'Jul 14, 2026' }, { venue: 'metlife', date: 'Jul 19, 2026' }],
+  },
+  // Winner G: M82(Jul1)→M94(Jul6)→M98(Jul10)→M101(Jul14)→F | Runner-up G: M88(Jul3)→M95(Jul7)→M100(Jul11)→M102(Jul15)→F
+  G: {
+    first:  [{ venue: 'lumen',        date: 'Jul 1, 2026'  }, { venue: 'lumen',        date: 'Jul 6, 2026'  }, { venue: 'sofi',        date: 'Jul 10, 2026' }, { venue: 'att',          date: 'Jul 14, 2026' }, { venue: 'metlife', date: 'Jul 19, 2026' }],
+    second: [{ venue: 'att',          date: 'Jul 3, 2026'  }, { venue: 'mercedesbenz', date: 'Jul 7, 2026'  }, { venue: 'arrowhead',   date: 'Jul 11, 2026' }, { venue: 'mercedesbenz', date: 'Jul 15, 2026' }, { venue: 'metlife', date: 'Jul 19, 2026' }],
+    third:  [{ venue: 'metlife',      date: 'Jun 30, 2026' }, { venue: 'lincoln',      date: 'Jul 4, 2026'  }, { venue: 'gillette',    date: 'Jul 9, 2026'  }, { venue: 'att',          date: 'Jul 14, 2026' }, { venue: 'metlife', date: 'Jul 19, 2026' }],
+  },
+  // Winner H: M84(Jul2)→M93(Jul6)→M98(Jul10)→M101(Jul14)→F | Runner-up H: M86(Jul3)→M95(Jul7)→M100(Jul11)→M102(Jul15)→F
+  H: {
+    first:  [{ venue: 'sofi',         date: 'Jul 2, 2026'  }, { venue: 'att',          date: 'Jul 6, 2026'  }, { venue: 'sofi',        date: 'Jul 10, 2026' }, { venue: 'att',          date: 'Jul 14, 2026' }, { venue: 'metlife', date: 'Jul 19, 2026' }],
+    second: [{ venue: 'hardrock',     date: 'Jul 3, 2026'  }, { venue: 'mercedesbenz', date: 'Jul 7, 2026'  }, { venue: 'arrowhead',   date: 'Jul 11, 2026' }, { venue: 'mercedesbenz', date: 'Jul 15, 2026' }, { venue: 'metlife', date: 'Jul 19, 2026' }],
+    third:  [{ venue: 'metlife',      date: 'Jun 30, 2026' }, { venue: 'lincoln',      date: 'Jul 4, 2026'  }, { venue: 'gillette',    date: 'Jul 9, 2026'  }, { venue: 'att',          date: 'Jul 14, 2026' }, { venue: 'metlife', date: 'Jul 19, 2026' }],
+  },
+  // Winner I: M77(Jun30)→M89(Jul4)→M97(Jul9)→M101(Jul14)→F | Runner-up I: M78(Jun30)→M91(Jul5)→M99(Jul11)→M102(Jul15)→F
+  I: {
+    first:  [{ venue: 'metlife',      date: 'Jun 30, 2026' }, { venue: 'lincoln',      date: 'Jul 4, 2026'  }, { venue: 'gillette',    date: 'Jul 9, 2026'  }, { venue: 'att',          date: 'Jul 14, 2026' }, { venue: 'metlife', date: 'Jul 19, 2026' }],
+    second: [{ venue: 'att',          date: 'Jun 30, 2026' }, { venue: 'metlife',      date: 'Jul 5, 2026'  }, { venue: 'hardrock',    date: 'Jul 11, 2026' }, { venue: 'mercedesbenz', date: 'Jul 15, 2026' }, { venue: 'metlife', date: 'Jul 19, 2026' }],
+    third:  [{ venue: 'azteca',       date: 'Jun 30, 2026' }, { venue: 'azteca',       date: 'Jul 5, 2026'  }, { venue: 'hardrock',    date: 'Jul 11, 2026' }, { venue: 'mercedesbenz', date: 'Jul 15, 2026' }, { venue: 'metlife', date: 'Jul 19, 2026' }],
+  },
+  // Winner J: M86(Jul3)→M95(Jul7)→M100(Jul11)→M102(Jul15)→F | Runner-up J: M84(Jul2)→M93(Jul6)→M98(Jul10)→M101(Jul14)→F
+  J: {
+    first:  [{ venue: 'hardrock',     date: 'Jul 3, 2026'  }, { venue: 'mercedesbenz', date: 'Jul 7, 2026'  }, { venue: 'arrowhead',   date: 'Jul 11, 2026' }, { venue: 'mercedesbenz', date: 'Jul 15, 2026' }, { venue: 'metlife', date: 'Jul 19, 2026' }],
+    second: [{ venue: 'sofi',         date: 'Jul 2, 2026'  }, { venue: 'att',          date: 'Jul 6, 2026'  }, { venue: 'sofi',        date: 'Jul 10, 2026' }, { venue: 'att',          date: 'Jul 14, 2026' }, { venue: 'metlife', date: 'Jul 19, 2026' }],
+    third:  [{ venue: 'mercedesbenz', date: 'Jul 1, 2026'  }, { venue: 'azteca',       date: 'Jul 5, 2026'  }, { venue: 'hardrock',    date: 'Jul 11, 2026' }, { venue: 'mercedesbenz', date: 'Jul 15, 2026' }, { venue: 'metlife', date: 'Jul 19, 2026' }],
+  },
+  // Winner K: M87(Jul3)→M96(Jul7)→M100(Jul11)→M102(Jul15)→F | Runner-up K: M83(Jul2)→M93(Jul6)→M98(Jul10)→M101(Jul14)→F
+  K: {
+    first:  [{ venue: 'arrowhead',    date: 'Jul 3, 2026'  }, { venue: 'bcplace',      date: 'Jul 7, 2026'  }, { venue: 'arrowhead',   date: 'Jul 11, 2026' }, { venue: 'mercedesbenz', date: 'Jul 15, 2026' }, { venue: 'metlife', date: 'Jul 19, 2026' }],
+    second: [{ venue: 'bmo',          date: 'Jul 2, 2026'  }, { venue: 'att',          date: 'Jul 6, 2026'  }, { venue: 'sofi',        date: 'Jul 10, 2026' }, { venue: 'att',          date: 'Jul 14, 2026' }, { venue: 'metlife', date: 'Jul 19, 2026' }],
+    third:  [{ venue: 'mercedesbenz', date: 'Jul 1, 2026'  }, { venue: 'azteca',       date: 'Jul 5, 2026'  }, { venue: 'hardrock',    date: 'Jul 11, 2026' }, { venue: 'mercedesbenz', date: 'Jul 15, 2026' }, { venue: 'metlife', date: 'Jul 19, 2026' }],
+  },
+  // Winner L: M80(Jul1)→M92(Jul5)→M99(Jul11)→M102(Jul15)→F | Runner-up L: M83(Jul2)→M93(Jul6)→M98(Jul10)→M101(Jul14)→F
+  L: {
+    first:  [{ venue: 'mercedesbenz', date: 'Jul 1, 2026'  }, { venue: 'azteca',       date: 'Jul 5, 2026'  }, { venue: 'hardrock',    date: 'Jul 11, 2026' }, { venue: 'mercedesbenz', date: 'Jul 15, 2026' }, { venue: 'metlife', date: 'Jul 19, 2026' }],
+    second: [{ venue: 'bmo',          date: 'Jul 2, 2026'  }, { venue: 'att',          date: 'Jul 6, 2026'  }, { venue: 'sofi',        date: 'Jul 10, 2026' }, { venue: 'att',          date: 'Jul 14, 2026' }, { venue: 'metlife', date: 'Jul 19, 2026' }],
+    third:  [{ venue: 'arrowhead',    date: 'Jul 3, 2026'  }, { venue: 'bcplace',      date: 'Jul 7, 2026'  }, { venue: 'arrowhead',   date: 'Jul 11, 2026' }, { venue: 'mercedesbenz', date: 'Jul 15, 2026' }, { venue: 'metlife', date: 'Jul 19, 2026' }],
+  },
 };
 
 const KNOCKOUT_STAGES = ['R32', 'R16', 'QF', 'SF', 'F'] as const;
-// Approximate mid-round dates (actual ranges: R32 Jun 28–Jul 3, R16 Jul 4–7, QF Jul 9–11, SF Jul 14–15)
-const KNOCKOUT_DATES = ['Jul 1, 2026', 'Jul 5, 2026', 'Jul 10, 2026', 'Jul 14, 2026', 'Jul 19, 2026'];
 const KNOCKOUT_ROUND_NAMES: Record<string, string> = {
   R32: 'Round of 32',
   R16: 'Round of 16',
@@ -105,7 +173,8 @@ function haversine(lng1: number, lat1: number, lng2: number, lat2: number): numb
 function calcStageProbabilities(formScore: number, scenario: JourneyScenario): Record<string, number> {
   // formScore: 0.0-1.0 (W=3, D=1, L=0 out of 15)
   const adj = 0.5 + formScore * 0.5;
-  const gsBase = scenario === 'first' ? 0.72 : 0.52;
+  // Third place has ~30% base chance of qualifying (only 8 of 12 advance)
+  const gsBase = scenario === 'first' ? 0.72 : scenario === 'second' ? 0.52 : 0.30;
   const gsAdv = Math.min(0.95, gsBase * adj * 1.4);
   const r32 = gsAdv * 0.55 * adj;
   const r16 = r32 * 0.55 * adj;
@@ -197,10 +266,10 @@ export function buildJourney(
     }
   }
 
-  // Projected knockout path
-  const knockoutVenueIds = KNOCKOUT_PATHS[group]?.[scenario] ?? [];
-  const knockoutStops: JourneyStop[] = knockoutVenueIds
-    .map((venueId, i): JourneyStop | null => {
+  // Projected knockout path — dates are now per-path, not shared
+  const knockoutPath = KNOCKOUT_PATHS[group]?.[scenario] ?? [];
+  const knockoutStops: JourneyStop[] = knockoutPath
+    .map(({ venue: venueId, date }, i): JourneyStop | null => {
       const venue = venueById.get(venueId);
       if (!venue) return null;
       const stage = KNOCKOUT_STAGES[i];
@@ -211,7 +280,7 @@ export function buildJourney(
         coords: [venue.longitude, venue.latitude],
         opponent: `${KNOCKOUT_ROUND_NAMES[stage]} Opponent`,
         opponentCode: '???',
-        date: KNOCKOUT_DATES[i],
+        date,
         stage,
         confirmed: false,
       };
@@ -234,7 +303,7 @@ export function buildJourney(
     team.form.reduce((acc, r) => acc + (r === 'W' ? 3 : r === 'D' ? 1 : 0), 0) / 15;
 
   const stageProbabilities = calcStageProbabilities(formScore, scenario);
-  const narrative = buildNarrative(team.name, allStops, Math.round(totalDistanceKm));
+  const narrative = buildNarrative(team.name, allStops, Math.round(totalDistanceKm), scenario);
 
   return {
     teamCode,
@@ -248,7 +317,7 @@ export function buildJourney(
   };
 }
 
-function buildNarrative(teamName: string, stops: JourneyStop[], distanceKm: number): string {
+function buildNarrative(teamName: string, stops: JourneyStop[], distanceKm: number, scenario: JourneyScenario): string {
   const groupStops = stops.filter((s) => s.stage === 'GS');
   const cities = groupStops.map((s) => s.city.split(',')[0]);
   const finalStop = stops.find((s) => s.stage === 'F');
@@ -260,10 +329,15 @@ function buildNarrative(teamName: string, stops: JourneyStop[], distanceKm: numb
       ? `${allUniqueCities.slice(0, -1).join(', ')} and ${allUniqueCities[allUniqueCities.length - 1]}`
       : allUniqueCities.join(' and ');
 
+  const scenarioNote =
+    scenario === 'third'
+      ? 'Should they sneak through as one of the 8 best third-place finishers, '
+      : `Their projected path to glory winds through ${cityList}, `;
+
   return (
     `${teamName} begin their 2026 World Cup in ${cities[0] ?? 'their opening city'}, ` +
     `with group stage stops also in ${cities.slice(1).join(' and ')}. ` +
-    `Their projected path to glory winds through ${cityList}, ` +
+    scenarioNote +
     `covering roughly ${distanceKm.toLocaleString()} km across North America. ` +
     `Should they reach the final, the journey ends in ${finalCity} — ` +
     `home of the 2026 FIFA World Cup Final.`

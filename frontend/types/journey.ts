@@ -33,4 +33,4 @@ export interface JourneyState {
   stageProbabilities: Record<string, number>;
 }
 
-export type JourneyScenario = 'first' | 'second';
+export type JourneyScenario = 'first' | 'second' | 'third';
