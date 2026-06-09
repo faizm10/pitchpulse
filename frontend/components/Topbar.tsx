@@ -78,7 +78,18 @@ export function Topbar() {
         <Logo />
         <div className="topbar-status mono">
           {time || '\u00A0'}<br />
-          {tournamentLine || ' '}
+          {tournamentLine.startsWith('KICKOFF') ? (
+            <span style={{
+              fontWeight: 800,
+              letterSpacing: '0.13em',
+              background: 'linear-gradient(90deg, #00d46a, #00aaff)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            }}>
+              {tournamentLine}
+            </span>
+          ) : (tournamentLine || ' ')}
         </div>
       </div>
 
