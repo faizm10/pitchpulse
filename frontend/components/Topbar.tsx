@@ -27,7 +27,16 @@ const WC_END     = new Date('2026-07-20T00:00:00Z'); // tournament over
 
 function getTournamentStatus(): string {
   const now = new Date();
-  if (now < WC_START)  return 'INTERNATIONAL FRIENDLIES';
+  if (now < WC_START) {
+    const diff = WC_START.getTime() - now.getTime();
+    const d = Math.floor(diff / 86_400_000);
+    const h = Math.floor((diff % 86_400_000) / 3_600_000);
+    const m = Math.floor((diff % 3_600_000) / 60_000);
+    const s = Math.floor((diff % 60_000) / 1_000);
+    if (d > 0) return `KICKOFF IN ${d}D ${String(h).padStart(2, '0')}H ${String(m).padStart(2, '0')}M ${String(s).padStart(2, '0')}S`;
+    if (h > 0) return `KICKOFF IN ${String(h).padStart(2, '0')}H ${String(m).padStart(2, '0')}M ${String(s).padStart(2, '0')}S`;
+    return `KICKOFF IN ${String(m).padStart(2, '0')}M ${String(s).padStart(2, '0')}S`;
+  }
   if (now >= WC_END)   return 'WORLD CUP 2026 · COMPLETE';
   const day = Math.floor((now.getTime() - WC_START.getTime()) / 86_400_000) + 1;
   let stage: string;
