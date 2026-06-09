@@ -703,8 +703,13 @@ body {
 /* responsive */
 @media (max-width: 1100px) {
   .topbar {
-    grid-template-columns: minmax(0, 1fr) auto;
+    /* logo | countdown-center | follow-btn  (row 1)
+       ←── nav pills spanning all 3 cols ──→  (row 2) */
+    grid-template-columns: auto 1fr auto;
+    row-gap: 0;
   }
+  .topbar-left  { grid-column: 1; grid-row: 1; }
+  .topbar-right { grid-column: 3; grid-row: 1; }
   .topbar-mid {
     grid-column: 1 / -1;
     grid-row: 2;
@@ -715,7 +720,27 @@ body {
     scrollbar-width: none;
   }
   .topbar-mid::-webkit-scrollbar { display: none; }
-  .topbar-status { display: none; }
+
+  /* Show countdown in the center of row 1 */
+  .topbar-status {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    grid-column: 2;
+    grid-row: 1;
+    border-left: none;
+    padding-left: 0;
+    font-size: 9px;
+    letter-spacing: 0.13em;
+    text-align: center;
+    line-height: 1.5;
+    overflow: hidden;
+    color: var(--ink-3);
+  }
+  /* Hide the clock on mobile — only show the tournament/countdown line */
+  .topbar-time { display: none; }
+
   .dashboard { grid-template-columns: 1fr; }
   .rail { border-left: 0; border-top: 1px solid var(--rule); max-height: none; }
 
@@ -723,14 +748,16 @@ body {
     height: 60vh;
     min-height: 320px;
   }
-
 }
+
 @media (max-width: 700px) {
   .topbar {
-    padding: 10px 14px;
-    gap: 10px;
+    padding: 10px 14px 0;
+    gap: 8px;
+    /* safe area for notched phones */
+    padding-top: max(10px, env(safe-area-inset-top));
   }
-  .topbar-left { gap: 10px; }
+  .topbar-left { gap: 8px; }
   .topbar-right { gap: 8px; }
   .topbar-live { display: none; }
   .topbar-mid {
@@ -739,21 +766,29 @@ body {
     border-left: 0;
     border-right: 0;
     border-radius: 0;
+    border-top: 1px solid var(--rule-soft);
+    margin-top: 8px;
   }
   .nav-pill {
-    padding: 7px 12px;
+    padding: 8px 13px;
     font-size: 11px;
   }
   .brand-mark {
-    width: 30px;
-    height: 30px;
+    width: 28px;
+    height: 28px;
   }
-  .brand-name { font-size: 23px; }
-  .brand-sub { font-size: 8px; margin-left: 0; }
+  .brand-name { font-size: 21px; }
+  .brand-sub { display: none; }
   .topbar-cta {
-    padding: 9px 12px;
+    padding: 8px 12px;
     font-size: 10px;
     letter-spacing: 0.1em;
+  }
+  /* Never truncate the team name on mobile */
+  .my-team-name { max-width: none; }
+  .my-team-link {
+    padding: 6px 10px 6px 6px;
+    gap: 6px;
   }
 
   .map-pane {
@@ -761,14 +796,18 @@ body {
     min-height: 280px;
   }
 }
+
 @media (max-width: 430px) {
-  .brand { gap: 7px; }
-  .brand-sub { display: none; }
-  .brand-name { font-size: 22px; }
-  .mywc-full { display: none; }
-  .mywc-short { display: inline; }
-  .topbar-cta { padding: 9px 11px; }
-  .my-team-name { max-width: 84px; }
+  .brand { gap: 6px; }
+  .brand-name { font-size: 20px; }
+  .topbar-cta { padding: 8px 10px; }
+  /* On very small screens shorten "Follow Argentina" → just show flag + first word */
+  .my-team-name {
+    max-width: 90px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }
 
 /* ── mobile polish ── */

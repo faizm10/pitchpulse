@@ -77,7 +77,7 @@ export function Topbar() {
       <div className="topbar-left">
         <Logo />
         <div className="topbar-status mono">
-          {time || '\u00A0'}<br />
+          <span className="topbar-time">{time || '\u00A0'}</span>
           {tournamentLine.startsWith('KICKOFF') ? (
             <span style={{
               fontWeight: 800,
@@ -89,7 +89,9 @@ export function Topbar() {
             }}>
               {tournamentLine}
             </span>
-          ) : (tournamentLine || ' ')}
+          ) : (
+            <span>{tournamentLine || '\u00A0'}</span>
+          )}
         </div>
       </div>
 
