@@ -78,9 +78,14 @@ function StopRow({ stop }: { stop: JourneyStop }) {
   );
 }
 
+// Groups whose 3rd-place teams appear in a bracket slot (per official WC2026 bracket)
+const THIRD_PLACE_ELIGIBLE_GROUPS = new Set(['A', 'B', 'C', 'D', 'E', 'F', 'H']);
+
 export function JourneyPanel({ journey, scenario, onScenarioChange, onReplay, onClose, onChangeTeam }: JourneyPanelProps) {
   const team = teams[journey.teamCode];
   const teamColor = team?.flag[0] ?? '#4285F4';
+  const group = team?.group ?? '';
+  const thirdEligible = THIRD_PLACE_ELIGIBLE_GROUPS.has(group);
   const probs = journey.stageProbabilities;
 
   // Detect mobile — bottom sheet on small screens, left sidebar on desktop
@@ -230,11 +235,14 @@ export function JourneyPanel({ journey, scenario, onScenarioChange, onReplay, on
           {scenario === 'third' && (
             <div style={{
               marginTop: 7, padding: '5px 8px', borderRadius: 5,
-              background: 'rgba(255,180,0,0.08)', border: '1px solid rgba(255,180,0,0.2)',
+              background: thirdEligible ? 'rgba(255,180,0,0.08)' : 'rgba(255,80,80,0.08)',
+              border: `1px solid ${thirdEligible ? 'rgba(255,180,0,0.2)' : 'rgba(255,80,80,0.2)'}`,
               fontSize: 10, fontFamily: 'var(--mono)', color: 'var(--ink-3)',
               lineHeight: 1.4,
             }}>
-              ⚠ Only 8 of 12 third-place teams advance. Path is approximate.
+              {thirdEligible
+                ? '⚠ Only 8 of 12 third-place teams advance. Path is approximate.'
+                : `✕ Group ${group} does not have a 3rd-place bracket slot. Shown for reference only.`}
             </div>
           )}
         </div>
