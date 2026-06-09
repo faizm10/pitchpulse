@@ -310,15 +310,6 @@ export function JourneyPanel({ journey, scenario, onScenarioChange, onReplay, on
           ))}
         </div>
 
-        {/* Narrative */}
-        <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--rule)' }}>
-          <div style={{ fontSize: 10, fontFamily: 'var(--mono)', color: 'var(--ink-3)', letterSpacing: '0.1em', marginBottom: 8, textTransform: 'uppercase' }}>
-            The Journey
-          </div>
-          <p style={{ margin: 0, fontSize: 12, lineHeight: 1.6, color: 'var(--ink-2)' }}>
-            {journey.narrative}
-          </p>
-        </div>
       </div>
 
       {/* Replay button */}
