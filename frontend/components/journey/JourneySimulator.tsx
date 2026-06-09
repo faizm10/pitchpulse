@@ -3,7 +3,7 @@
 import { useState, useCallback } from 'react';
 import { buildJourney } from '@/lib/journey';
 import { teams } from '@/lib/data';
-import type { JourneyState, JourneyScenario } from '@/types/journey';
+import type { JourneyState, JourneyScenario, LiveSchedule } from '@/types/journey';
 
 export interface JourneySimulatorState {
   isOpen: boolean;
@@ -20,7 +20,7 @@ export interface JourneySimulatorState {
   closeSelector: () => void;
 }
 
-export function useJourneySimulator(): JourneySimulatorState {
+export function useJourneySimulator(liveSchedule: LiveSchedule | null = null): JourneySimulatorState {
   const [isOpen, setIsOpen] = useState(false);
   const [journey, setJourney] = useState<JourneyState | null>(null);
   const [showSelector, setShowSelector] = useState(false);
@@ -47,26 +47,26 @@ export function useJourneySimulator(): JourneySimulatorState {
 
   const selectTeam = useCallback(
     (teamCode: string) => {
-      const result = buildJourney(teamCode, scenario);
+      const result = buildJourney(teamCode, scenario, liveSchedule);
       if (result) {
         setJourney(result);
         setAnimateKey((k) => k + 1);
       }
       setShowSelector(false);
     },
-    [scenario],
+    [scenario, liveSchedule],
   );
 
   const changeScenario = useCallback(
     (newScenario: JourneyScenario) => {
       setScenario(newScenario);
       if (journey) {
-        const result = buildJourney(journey.teamCode, newScenario);
+        const result = buildJourney(journey.teamCode, newScenario, liveSchedule);
         // Do NOT bump animateKey — routes update silently, no re-animation
         if (result) setJourney(result);
       }
     },
-    [journey],
+    [journey, liveSchedule],
   );
 
   const replay = useCallback(() => {

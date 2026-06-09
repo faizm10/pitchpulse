@@ -1,10 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Logo, Flag } from './Shared';
-import { useMyTeam } from './Providers';
+import { useMyTeam, useJourneyRequest } from './Providers';
 import { teams } from '@/lib/data';
 
 const tabs = [
@@ -42,9 +42,16 @@ function getTournamentStatus(): string {
 
 export function Topbar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { myTeam } = useMyTeam();
+  const { requestJourney } = useJourneyRequest();
   const [time, setTime] = useState<string>('');
   const [tournamentLine, setTournamentLine] = useState<string>('');
+
+  const handleFollowTeam = (codeOrOpen: string) => {
+    requestJourney(codeOrOpen);        // signal MapView via context
+    if (pathname !== '/') router.push('/'); // navigate to homepage if needed
+  };
 
   useEffect(() => {
     const update = () => {
@@ -88,14 +95,24 @@ export function Topbar() {
           4 LIVE
         </div>
         {myTeam ? (
-          <Link href={`/?journey=${myTeam}`} className="my-team-link" title="Follow your team's journey">
+          <button
+            type="button"
+            className="my-team-link"
+            title="Follow your team's journey"
+            onClick={() => handleFollowTeam(myTeam)}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+          >
             <Flag code={myTeam} w={20} h={13} />
             <span className="my-team-name">Follow {teams[myTeam]?.name}</span>
-          </Link>
+          </button>
         ) : (
-          <Link href="/?journey=open" className="btn btn-pulse topbar-cta">
+          <button
+            type="button"
+            className="btn btn-pulse topbar-cta"
+            onClick={() => handleFollowTeam('open')}
+          >
             Follow a Team
-          </Link>
+          </button>
         )}
       </div>
     </div>

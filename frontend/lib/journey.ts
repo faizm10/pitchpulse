@@ -1,6 +1,6 @@
 import { teams } from '@/lib/data';
 import { VENUES } from '@/data/venues';
-import type { JourneyStop, JourneyState, JourneyScenario } from '@/types/journey';
+import type { JourneyStop, JourneyState, JourneyScenario, LiveSchedule } from '@/types/journey';
 
 const venueById = new Map(VENUES.map((v) => [v.id, v]));
 
@@ -99,7 +99,11 @@ function calcStageProbabilities(formScore: number, scenario: JourneyScenario): R
   };
 }
 
-export function buildJourney(teamCode: string, scenario: JourneyScenario): JourneyState | null {
+export function buildJourney(
+  teamCode: string,
+  scenario: JourneyScenario,
+  liveSchedule: LiveSchedule | null = null,
+): JourneyState | null {
   const team = teams[teamCode];
   if (!team) return null;
 
@@ -108,41 +112,65 @@ export function buildJourney(teamCode: string, scenario: JourneyScenario): Journ
   const groupVenues = GROUP_VENUES[group];
   if (!groupTeams || !groupVenues) return null;
 
-  const pos = groupTeams.indexOf(teamCode as never);
-  if (pos === -1) return null;
-
-  // Round-robin pairings per matchday
-  const mdMatchups: Array<[number, number][]> = [
-    [[0, 1], [2, 3]],
-    [[0, 2], [1, 3]],
-    [[0, 3], [1, 2]],
-  ];
-
+  // ── Group stage stops ─────────────────────────────────────────────────────
+  // Prefer live ESPN schedule data; fall back to static pairings
+  const liveEntries = liveSchedule?.[teamCode];
   const groupStops: JourneyStop[] = [];
-  for (let md = 0; md < 3; md++) {
-    const venueId = groupVenues[md];
-    const venue = venueById.get(venueId);
-    if (!venue) continue;
 
-    const myMatchup = mdMatchups[md].find((m) => m[0] === pos || m[1] === pos);
-    if (!myMatchup) continue;
-
-    const opponentPos = myMatchup[0] === pos ? myMatchup[1] : myMatchup[0];
-    const opponentCode = groupTeams[opponentPos];
-    const opponent = teams[opponentCode];
-
-    groupStops.push({
-      venueId,
-      venueName: venue.name,
-      city: venue.city,
-      coords: [venue.longitude, venue.latitude],
-      opponent: opponent?.name ?? opponentCode,
-      opponentCode,
-      date: MD_DATES[md],
-      stage: 'GS',
-      confirmed: true, // WC2026 group stage schedule is published
-      matchday: md + 1,
+  if (liveEntries && liveEntries.length > 0) {
+    // Real data from ESPN — use it directly
+    liveEntries.forEach((entry, idx) => {
+      const venue = venueById.get(entry.venueId);
+      if (!venue) return;
+      groupStops.push({
+        venueId: entry.venueId,
+        venueName: venue.name,
+        city: venue.city,
+        coords: [venue.longitude, venue.latitude],
+        opponent: entry.opponent,
+        opponentCode: entry.opponentCode,
+        date: entry.date,
+        stage: 'GS',
+        confirmed: true,
+        matchday: idx + 1,
+      });
     });
+  } else {
+    // Static fallback — round-robin pairings from GROUP_TEAMS / GROUP_VENUES
+    const pos = groupTeams.indexOf(teamCode as never);
+    if (pos === -1) return null;
+
+    const mdMatchups: Array<[number, number][]> = [
+      [[0, 1], [2, 3]],
+      [[0, 2], [1, 3]],
+      [[0, 3], [1, 2]],
+    ];
+
+    for (let md = 0; md < 3; md++) {
+      const venueId = groupVenues[md];
+      const venue = venueById.get(venueId);
+      if (!venue) continue;
+
+      const myMatchup = mdMatchups[md].find((m) => m[0] === pos || m[1] === pos);
+      if (!myMatchup) continue;
+
+      const opponentPos = myMatchup[0] === pos ? myMatchup[1] : myMatchup[0];
+      const opponentCode = groupTeams[opponentPos];
+      const opponent = teams[opponentCode];
+
+      groupStops.push({
+        venueId,
+        venueName: venue.name,
+        city: venue.city,
+        coords: [venue.longitude, venue.latitude],
+        opponent: opponent?.name ?? opponentCode,
+        opponentCode,
+        date: MD_DATES[md],
+        stage: 'GS',
+        confirmed: true,
+        matchday: md + 1,
+      });
+    }
   }
 
   // Projected knockout path

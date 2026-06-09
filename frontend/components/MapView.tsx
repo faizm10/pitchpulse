@@ -7,13 +7,18 @@ import { TeamSelector } from './journey/TeamSelector';
 import { JourneyPanel } from './journey/JourneyPanel';
 import { JourneyRoute } from './journey/JourneyRoute';
 import { useJourneySimulator } from './journey/JourneySimulator';
+import { useJourneyRequest } from './Providers';
 import { countries, teams } from '@/lib/data';
 import type { Match } from '@/types/espn';
+import type { LiveSchedule } from '@/types/journey';
 
 export function MapView() {
   const router = useRouter();
   const [matches, setMatches] = useState<Match[]>([]);
+  const [liveSchedule, setLiveSchedule] = useState<LiveSchedule | null>(null);
+  const { journeyRequest, consumeJourneyRequest } = useJourneyRequest();
 
+  // Fetch live matches
   useEffect(() => {
     fetch('/api/scores')
       .then((r) => r.json())
@@ -21,20 +26,35 @@ export function MapView() {
       .catch(console.error);
   }, []);
 
-  const sim = useJourneySimulator();
+  // Fetch real WC2026 group-stage schedule from ESPN once on mount
+  useEffect(() => {
+    fetch('/api/wc/group-schedule')
+      .then((r) => r.json())
+      .then((data) => { if (data.schedule) setLiveSchedule(data.schedule); })
+      .catch(console.error);
+  }, []);
 
-  // Auto-open journey for ?journey=XXX (set by the topbar "Follow Your Team" link)
+  const sim = useJourneySimulator(liveSchedule);
+
+  // React to journey requests from the Topbar (works even when already on /)
+  useEffect(() => {
+    if (!journeyRequest) return;
+    consumeJourneyRequest();
+    if (journeyRequest === 'open') {
+      sim.openSimulator();
+    } else if (teams[journeyRequest]) {
+      sim.selectTeam(journeyRequest);
+    }
+  }, [journeyRequest]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Handle ?journey= param for hard navigations from other pages (e.g. /matches → /)
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const params = new URLSearchParams(window.location.search);
-    const code = params.get('journey');
+    const code = new URLSearchParams(window.location.search).get('journey');
     if (!code) return;
     window.history.replaceState({}, '', '/');
-    if (code === 'open') {
-      sim.openSimulator();          // no team set → open the selector
-    } else if (teams[code]) {
-      sim.selectTeam(code);         // team set → jump straight into the journey
-    }
+    if (code === 'open') sim.openSimulator();
+    else if (teams[code]) sim.selectTeam(code);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -53,7 +73,6 @@ export function MapView() {
         )}
       </DashboardMap>
 
-      {/* Journey overlay UI (outside Map context) */}
       {sim.showSelector && (
         <TeamSelector onSelect={sim.selectTeam} onClose={sim.closeSelector} />
       )}

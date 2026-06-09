@@ -168,8 +168,13 @@ export function JourneyPanel({ journey, scenario, onScenarioChange, onReplay, on
 
         {/* Stage probability tracker */}
         <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--rule)' }}>
-          <div style={{ fontSize: 10, fontFamily: 'var(--mono)', color: 'var(--ink-3)', letterSpacing: '0.1em', marginBottom: 10, textTransform: 'uppercase' }}>
-            Tournament Path
+          <div style={{ marginBottom: 10 }}>
+            <div style={{ fontSize: 10, fontFamily: 'var(--mono)', color: 'var(--ink-3)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+              Tournament Path
+            </div>
+            <div style={{ fontSize: 9, fontFamily: 'var(--mono)', color: 'var(--ink-3)', marginTop: 2, opacity: 0.7 }}>
+              estimated odds based on recent form
+            </div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {STAGES.map((stage) => {

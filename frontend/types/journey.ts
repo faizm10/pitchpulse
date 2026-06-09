@@ -1,3 +1,14 @@
+export interface LiveScheduleEntry {
+  venueId: string;
+  venueName: string;
+  city: string;
+  opponent: string;
+  opponentCode: string;
+  date: string;
+}
+
+export type LiveSchedule = Record<string, LiveScheduleEntry[]>;
+
 export interface JourneyStop {
   venueId: string;
   venueName: string;
