@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Flag } from './Shared';
+import { posthog } from '@/lib/posthog';
 
 interface LiveBracketMatch {
   id: string;
@@ -240,6 +241,8 @@ function feederCentersY(
 export function Bracket() {
   const [bracket, setBracket] = useState<LiveBracket>(STATIC_HINTS);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => { posthog.capture('bracket_viewed'); }, []);
 
   useEffect(() => {
     async function load() {

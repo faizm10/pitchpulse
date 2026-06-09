@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect } from 'react';
+import { posthog } from '@/lib/posthog';
 import type { PredictResponse } from '@/types/predict';
 
 interface MatchPredictionProps {
@@ -54,6 +56,19 @@ export function MatchPrediction({
   const homePct = Math.round(prediction.home_win_probability * 100);
   const drawPct = Math.round(prediction.draw_probability * 100);
   const awayPct = Math.round(prediction.away_win_probability * 100);
+
+  useEffect(() => {
+    posthog.capture('prediction_viewed', {
+      home_team: homeLabel,
+      away_team: awayLabel,
+      home_win_pct: homePct,
+      draw_pct: drawPct,
+      away_win_pct: awayPct,
+      model: prediction.model,
+      confidence: prediction.confidence,
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div>

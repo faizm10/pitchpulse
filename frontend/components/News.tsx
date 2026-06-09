@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { useWindowWidth } from '@/hooks/useWindowWidth';
+import { posthog } from '@/lib/posthog';
 
 interface Article {
   id: string;
@@ -82,7 +83,9 @@ function ArticleLink({ article, style, children }: { article: Article; style?: R
   const href = articleHref(article);
   if (href && href !== '#') {
     return (
-      <a href={href} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit', display: 'block', ...style }}>
+      <a href={href} target="_blank" rel="noopener noreferrer"
+        onClick={() => posthog.capture('news_article_clicked', { headline: article.headline, source: article.source, link: href })}
+        style={{ textDecoration: 'none', color: 'inherit', display: 'block', ...style }}>
         {children}
       </a>
     );

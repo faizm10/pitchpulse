@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useTweaks } from './Providers';
+import { posthog } from '@/lib/posthog';
 import type { Tweaks } from '@/lib/types';
 
 export function TweaksPanel() {
@@ -38,11 +39,11 @@ export function TweaksPanel() {
             <button onClick={() => setOpen(false)} style={{ background: 'transparent', border: 0, cursor: 'pointer', color: 'var(--ink-3)', fontSize: 16 }}>×</button>
           </div>
           <div style={{ padding: 14, display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <Seg label="Type" value={tweaks.type} options={[['editorial','Editorial'],['modernist','Modern'],['mono','Mono']]} onChange={(v) => setTweak('type', v as Tweaks['type'])} />
-            <Seg label="Look" value={tweaks.look} options={[['atlas','Atlas'],['broadcast','Night'],['festival','Festival']]} onChange={(v) => setTweak('look', v as Tweaks['look'])} />
-            <Seg label="Map" value={tweaks.mapStyle} options={[['dots','Dots'],['topo','Topo'],['link','Schema']]} onChange={(v) => setTweak('mapStyle', v as Tweaks['mapStyle'])} />
-            <Seg label="Density" value={tweaks.density} options={[['cozy','Cozy'],['compact','Compact']]} onChange={(v) => setTweak('density', v as Tweaks['density'])} />
-            <Toggle label="AI summaries" value={tweaks.aiSummary} onChange={(v) => setTweak('aiSummary', v)} />
+            <Seg label="Type" value={tweaks.type} options={[['editorial','Editorial'],['modernist','Modern'],['mono','Mono']]} onChange={(v) => { setTweak('type', v as Tweaks['type']); posthog.capture('tweak_changed', { key: 'type', value: v }); }} />
+            <Seg label="Look" value={tweaks.look} options={[['atlas','Atlas'],['broadcast','Night'],['festival','Festival']]} onChange={(v) => { setTweak('look', v as Tweaks['look']); posthog.capture('tweak_changed', { key: 'look', value: v }); }} />
+            <Seg label="Map" value={tweaks.mapStyle} options={[['dots','Dots'],['topo','Topo'],['link','Schema']]} onChange={(v) => { setTweak('mapStyle', v as Tweaks['mapStyle']); posthog.capture('tweak_changed', { key: 'mapStyle', value: v }); }} />
+            <Seg label="Density" value={tweaks.density} options={[['cozy','Cozy'],['compact','Compact']]} onChange={(v) => { setTweak('density', v as Tweaks['density']); posthog.capture('tweak_changed', { key: 'density', value: v }); }} />
+            <Toggle label="AI summaries" value={tweaks.aiSummary} onChange={(v) => { setTweak('aiSummary', v); posthog.capture('tweak_changed', { key: 'aiSummary', value: v }); }} />
           </div>
         </aside>
       )}

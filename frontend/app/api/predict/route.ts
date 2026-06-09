@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { getPostHogClient } from '@/lib/posthog-server';
 
 /** Allow cold start on Render free tier; server-side only (no browser CORS). */
 const PREDICT_TIMEOUT_MS = 60_000;
@@ -64,12 +65,24 @@ export async function POST(req: Request) {
       );
     }
 
+    const ph = getPostHogClient();
+    ph.capture({
+      distinctId: 'server',
+      event: 'server_predict_requested',
+      properties: { home_team: homeTeam, away_team: awayTeam, success: true },
+    });
     return NextResponse.json(data);
   } catch (err) {
     const aborted =
       err instanceof Error &&
       (err.name === 'AbortError' || err.message.includes('aborted'));
     console.error('[/api/predict]', err);
+    const ph = getPostHogClient();
+    ph.capture({
+      distinctId: 'server',
+      event: 'server_predict_requested',
+      properties: { home_team: homeTeam, away_team: awayTeam, success: false, error: aborted ? 'timeout' : 'upstream_error' },
+    });
     return NextResponse.json(
       {
         error: aborted

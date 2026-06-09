@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { stadiums } from '@/lib/data';
 import { Flag } from './Shared';
 import { useWindowWidth } from '@/hooks/useWindowWidth';
+import { posthog } from '@/lib/posthog';
 
 const filters = [
   { id: 'all', label: 'All' },
@@ -93,7 +94,7 @@ export function MatchesList() {
           {filters.map((f) => (
             <button
               key={f.id}
-              onClick={() => setFilter(f.id)}
+              onClick={() => { setFilter(f.id); posthog.capture('match_list_filter_changed', { filter: f.id }); }}
               style={{
                 cursor: 'pointer',
                 background: filter === f.id ? 'var(--ink)' : 'transparent',
@@ -175,7 +176,7 @@ function MatchListRow({ m, isMobile, isTablet }: { m: any; isMobile: boolean; is
   if (isMobile) {
     return (
       <div
-        onClick={() => router.push(`/match/${m.id}`)}
+        onClick={() => { posthog.capture('match_list_match_clicked', { match_id: m.id, home_team: m.homeTeam?.abbreviation, away_team: m.awayTeam?.abbreviation, match_state: m.state }); router.push(`/match/${m.id}`); }}
         style={{
           padding: '16px 0',
           borderTop: '1px solid var(--rule-soft)',
@@ -240,7 +241,7 @@ function MatchListRow({ m, isMobile, isTablet }: { m: any; isMobile: boolean; is
   if (isTablet) {
     return (
       <div
-        onClick={() => router.push(`/match/${m.id}`)}
+        onClick={() => { posthog.capture('match_list_match_clicked', { match_id: m.id, home_team: m.homeTeam?.abbreviation, away_team: m.awayTeam?.abbreviation, match_state: m.state }); router.push(`/match/${m.id}`); }}
         style={{
           display: 'grid',
           gridTemplateColumns: '120px 1fr auto 1fr 24px',
