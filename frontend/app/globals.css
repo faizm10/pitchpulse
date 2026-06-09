@@ -738,8 +738,6 @@ body {
     overflow: hidden;
     color: var(--ink-3);
   }
-  /* Hide the clock on mobile — only show the tournament/countdown line */
-  .topbar-time { display: none; }
 
   .dashboard { grid-template-columns: 1fr; }
   .rail { border-left: 0; border-top: 1px solid var(--rule); max-height: none; }

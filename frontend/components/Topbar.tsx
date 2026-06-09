@@ -54,7 +54,6 @@ export function Topbar() {
   const router = useRouter();
   const { myTeam } = useMyTeam();
   const { requestJourney } = useJourneyRequest();
-  const [time, setTime] = useState<string>('');
   const [tournamentLine, setTournamentLine] = useState<string>('');
 
   const handleFollowTeam = (codeOrOpen: string) => {
@@ -63,10 +62,7 @@ export function Topbar() {
   };
 
   useEffect(() => {
-    const update = () => {
-      setTime(new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' }).toUpperCase());
-      setTournamentLine(getTournamentStatus());
-    };
+    const update = () => setTournamentLine(getTournamentStatus());
     update();
     const t = setInterval(update, 1000);
     return () => clearInterval(t);
@@ -77,7 +73,6 @@ export function Topbar() {
       <div className="topbar-left">
         <Logo />
         <div className="topbar-status mono">
-          <span className="topbar-time">{time || '\u00A0'}</span>
           {tournamentLine.startsWith('KICKOFF') ? (
             <span style={{
               fontWeight: 800,
