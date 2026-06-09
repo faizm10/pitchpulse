@@ -15,6 +15,14 @@ interface JourneyPanelProps {
   onChangeTeam: () => void;
 }
 
+/** Returns '#fff' or '#0a0e16' so text is always readable on the given hex background */
+function contrastText(hex: string): string {
+  const r = parseInt(hex.slice(1, 3), 16) / 255;
+  const g = parseInt(hex.slice(3, 5), 16) / 255;
+  const b = parseInt(hex.slice(5, 7), 16) / 255;
+  return 0.299 * r + 0.587 * g + 0.114 * b > 0.55 ? '#0a0e16' : '#ffffff';
+}
+
 const STAGES = ['GS', 'R32', 'R16', 'QF', 'SF', 'F'] as const;
 const STAGE_LABELS: Record<string, string> = {
   GS: 'Group Stage',
@@ -209,7 +217,7 @@ export function JourneyPanel({ journey, scenario, onScenarioChange, onReplay, on
                   flex: 1, padding: '7px 0', borderRadius: 7,
                   border: `1px solid ${scenario === s ? teamColor : 'var(--rule)'}`,
                   background: scenario === s ? teamColor : 'var(--paper-2)',
-                  color: scenario === s ? 'white' : 'var(--ink)',
+                  color: scenario === s ? contrastText(teamColor) : 'var(--ink)',
                   fontSize: 12, fontWeight: 600, cursor: 'pointer',
                   fontFamily: 'var(--mono)', letterSpacing: '0.06em',
                   transition: 'all 150ms',
