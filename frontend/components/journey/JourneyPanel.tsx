@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { Flag } from '@/components/Shared';
 import { teams } from '@/lib/data';
 import { KNOCKOUT_ROUND_NAMES } from '@/lib/journey';
@@ -51,7 +52,7 @@ function StopRow({ stop }: { stop: JourneyStop }) {
             textTransform: 'uppercase', color: stop.confirmed ? 'var(--live)' : 'var(--ink-3)',
           }}>
             {stageLabel}
-            {!stop.confirmed && ' ·  projected'}
+            {!stop.confirmed && ' · projected'}
           </span>
           <span style={{ fontSize: 10, fontFamily: 'var(--mono)', color: 'var(--ink-3)' }}>
             {stop.date}
@@ -61,7 +62,8 @@ function StopRow({ stop }: { stop: JourneyStop }) {
           {stop.venueName}
         </p>
         <p style={{ margin: 0, fontSize: 11, color: 'var(--ink-3)' }}>
-          {stop.city} · vs {stop.opponent}
+          {/* Only show opponent for confirmed group-stage games — projected opponents are unknown */}
+          {stop.confirmed ? `${stop.city} · vs ${stop.opponent}` : stop.city}
         </p>
       </div>
     </div>
@@ -73,25 +75,60 @@ export function JourneyPanel({ journey, scenario, onScenarioChange, onReplay, on
   const teamColor = team?.flag[0] ?? '#4285F4';
   const probs = journey.stageProbabilities;
 
+  // Detect mobile — bottom sheet on small screens, left sidebar on desktop
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 640);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+
+  const panelStyle: React.CSSProperties = isMobile
+    ? {
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        top: 'auto',
+        height: '72vh',
+        zIndex: 100,
+        background: 'var(--paper)',
+        borderTop: '1px solid var(--rule)',
+        borderRadius: '16px 16px 0 0',
+        display: 'flex',
+        flexDirection: 'column',
+        boxShadow: '0 -8px 40px rgba(0,0,0,0.3)',
+        animation: 'slide-up 300ms cubic-bezier(0.2,0.8,0.2,1)',
+      }
+    : {
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        bottom: 0,
+        width: 320,
+        zIndex: 100,
+        background: 'var(--paper)',
+        borderRight: '1px solid var(--rule)',
+        display: 'flex',
+        flexDirection: 'column',
+        overflowY: 'auto',
+        boxShadow: '4px 0 24px rgba(0,0,0,0.12)',
+        animation: 'screen-in 280ms ease',
+      };
+
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      bottom: 0,
-      width: 320,
-      zIndex: 100,
-      background: 'var(--paper)',
-      borderRight: '1px solid var(--rule)',
-      display: 'flex',
-      flexDirection: 'column',
-      overflowY: 'auto',
-      boxShadow: '4px 0 24px rgba(0,0,0,0.12)',
-      animation: 'screen-in 280ms ease',
-    }}>
+    <div style={panelStyle}>
+      {/* Mobile drag handle */}
+      {isMobile && (
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '10px 0 4px', flexShrink: 0 }}>
+          <div style={{ width: 36, height: 4, borderRadius: 2, background: 'var(--ink-3)', opacity: 0.35 }} />
+        </div>
+      )}
+
       {/* Header */}
       <div style={{
-        padding: '16px 16px 12px',
+        padding: '12px 16px',
         borderBottom: '1px solid var(--rule)',
         background: 'var(--paper-2)',
         flexShrink: 0,
@@ -137,7 +174,8 @@ export function JourneyPanel({ journey, scenario, onScenarioChange, onReplay, on
         </div>
       </div>
 
-      <div style={{ flex: 1, overflowY: 'auto' }}>
+      {/* Scrollable body */}
+      <div style={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
         {/* Travel stats */}
         <div style={{
           display: 'grid', gridTemplateColumns: '1fr 1fr',

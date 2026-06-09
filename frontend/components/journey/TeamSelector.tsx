@@ -44,7 +44,7 @@ export function TeamSelector({ onSelect, onClose }: TeamSelectorProps) {
       <div style={{
         width: '100%',
         maxWidth: 480,
-        maxHeight: '80vh',
+        maxHeight: '92vh',
         borderRadius: 16,
         border: '1px solid var(--rule)',
         background: 'var(--paper)',
@@ -107,7 +107,7 @@ export function TeamSelector({ onSelect, onClose }: TeamSelectorProps) {
                 display: 'flex',
                 alignItems: 'center',
                 gap: 12,
-                padding: '10px 20px',
+                padding: '13px 20px',
                 background: 'none',
                 border: 'none',
                 borderBottom: '1px solid var(--rule-soft)',
