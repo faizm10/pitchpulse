@@ -11,6 +11,7 @@ interface JourneyPanelProps {
   onScenarioChange: (s: JourneyScenario) => void;
   onReplay: () => void;
   onClose: () => void;
+  onChangeTeam: () => void;
 }
 
 const STAGES = ['GS', 'R32', 'R16', 'QF', 'SF', 'F'] as const;
@@ -67,7 +68,7 @@ function StopRow({ stop }: { stop: JourneyStop }) {
   );
 }
 
-export function JourneyPanel({ journey, scenario, onScenarioChange, onReplay, onClose }: JourneyPanelProps) {
+export function JourneyPanel({ journey, scenario, onScenarioChange, onReplay, onClose, onChangeTeam }: JourneyPanelProps) {
   const team = teams[journey.teamCode];
   const teamColor = team?.flag[0] ?? '#4285F4';
   const probs = journey.stageProbabilities;
@@ -107,16 +108,32 @@ export function JourneyPanel({ journey, scenario, onScenarioChange, onReplay, on
               </div>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            style={{
-              background: 'none', border: '1px solid var(--rule)', cursor: 'pointer',
-              borderRadius: 6, color: 'var(--ink-3)', fontSize: 14, padding: '4px 8px',
-            }}
-          >
-            ×
-          </button>
+          <div style={{ display: 'flex', gap: 6 }}>
+            <button
+              type="button"
+              onClick={onChangeTeam}
+              title="Change team"
+              style={{
+                background: 'none', border: '1px solid var(--rule)', cursor: 'pointer',
+                borderRadius: 6, color: 'var(--ink-3)', fontSize: 11,
+                padding: '4px 9px', fontFamily: 'var(--mono)', letterSpacing: '0.06em',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              ⇄ Change
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              title="Close"
+              style={{
+                background: 'none', border: '1px solid var(--rule)', cursor: 'pointer',
+                borderRadius: 6, color: 'var(--ink-3)', fontSize: 14, padding: '4px 8px',
+              }}
+            >
+              ×
+            </button>
+          </div>
         </div>
       </div>
 

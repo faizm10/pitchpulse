@@ -83,6 +83,7 @@ export function MapView() {
           onScenarioChange={sim.changeScenario}
           onReplay={sim.replay}
           onClose={sim.closeSimulator}
+          onChangeTeam={sim.openSimulator}
         />
       )}
 

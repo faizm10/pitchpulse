@@ -42,24 +42,48 @@ const GROUP_VENUES: Record<string, [string, string, string]> = {
 const MD_DATES = ['Jun 12, 2026', 'Jun 18, 2026', 'Jun 24, 2026'];
 
 // Projected knockout venue path per group × scenario: [R32, R16, QF, SF, Final]
-// SF1 = AT&T Dallas, SF2 = MetLife NJ, Final = MetLife NJ
+// Verified against the official FIFA WC2026 bracket (Wikipedia, June 2026)
+//
+// R32 matchups:
+//   M73 RuA–RuB@sofi   M74 WE–3rd@gillette  M75 WF–RuC@bbva     M76 WC–RuF@nrg
+//   M77 WI–3rd@metlife  M78 RuE–RuI@att      M79 WA–3rd@azteca   M80 WL–3rd@mercedesbenz
+//   M81 WD–3rd@levis    M82 WG–3rd@lumen     M83 RuK–RuL@bmo     M84 WH–RuJ@sofi
+//   M85 WB–3rd@bcplace  M86 WJ–RuH@hardrock  M87 WK–3rd@arrowhead M88 RuD–RuG@att
+// R16: M90(73v75)@nrg  M89(74v77)@lincoln  M91(76v78)@metlife  M92(79v80)@azteca
+//       M93(83v84)@att  M94(81v82)@lumen    M95(86v88)@mercedesbenz M96(85v87)@bcplace
+// QF:  M97(89v90)@gillette  M98(93v94)@sofi  M99(91v92)@hardrock  M100(95v96)@arrowhead
+// SF:  M101(97v98)@att      M102(99v100)@mercedesbenz
+// Final: M104@metlife
 const KNOCKOUT_PATHS: Record<string, { first: string[]; second: string[] }> = {
-  A: { first: ['nrg', 'att', 'sofi', 'att', 'metlife'], second: ['azteca', 'nrg', 'mercedesbenz', 'metlife', 'metlife'] },
-  B: { first: ['bmo', 'gillette', 'metlife', 'metlife', 'metlife'], second: ['gillette', 'lincoln', 'mercedesbenz', 'att', 'metlife'] },
-  C: { first: ['mercedesbenz', 'hardrock', 'sofi', 'att', 'metlife'], second: ['hardrock', 'mercedesbenz', 'lincoln', 'metlife', 'metlife'] },
-  D: { first: ['sofi', 'levis', 'lumen', 'att', 'metlife'], second: ['levis', 'sofi', 'arrowhead', 'att', 'metlife'] },
-  E: { first: ['att', 'nrg', 'sofi', 'att', 'metlife'], second: ['nrg', 'att', 'mercedesbenz', 'metlife', 'metlife'] },
-  F: { first: ['lumen', 'bcplace', 'sofi', 'att', 'metlife'], second: ['bcplace', 'lumen', 'arrowhead', 'att', 'metlife'] },
-  G: { first: ['metlife', 'lincoln', 'gillette', 'metlife', 'metlife'], second: ['lincoln', 'metlife', 'mercedesbenz', 'att', 'metlife'] },
-  H: { first: ['akron', 'bbva', 'nrg', 'att', 'metlife'], second: ['bbva', 'hardrock', 'mercedesbenz', 'att', 'metlife'] },
-  I: { first: ['levis', 'sofi', 'lumen', 'att', 'metlife'], second: ['sofi', 'levis', 'arrowhead', 'att', 'metlife'] },
-  J: { first: ['metlife', 'mercedesbenz', 'lincoln', 'metlife', 'metlife'], second: ['mercedesbenz', 'metlife', 'gillette', 'metlife', 'metlife'] },
-  K: { first: ['att', 'arrowhead', 'nrg', 'att', 'metlife'], second: ['arrowhead', 'att', 'mercedesbenz', 'metlife', 'metlife'] },
-  L: { first: ['gillette', 'metlife', 'mercedesbenz', 'metlife', 'metlife'], second: ['metlife', 'gillette', 'sofi', 'att', 'metlife'] },
+  // Winner A: M79→M92→M99→M102→F | Runner-up A: M73→M90→M97→M101→F
+  A: { first: ['azteca', 'azteca', 'hardrock', 'mercedesbenz', 'metlife'], second: ['sofi', 'nrg', 'gillette', 'att', 'metlife'] },
+  // Winner B: M85→M96→M100→M102→F | Runner-up B: M73→M90→M97→M101→F
+  B: { first: ['bcplace', 'bcplace', 'arrowhead', 'mercedesbenz', 'metlife'], second: ['sofi', 'nrg', 'gillette', 'att', 'metlife'] },
+  // Winner C: M76→M91→M99→M102→F | Runner-up C: M75→M90→M97→M101→F
+  C: { first: ['nrg', 'metlife', 'hardrock', 'mercedesbenz', 'metlife'], second: ['bbva', 'nrg', 'gillette', 'att', 'metlife'] },
+  // Winner D: M81→M94→M98→M101→F | Runner-up D: M88→M95→M100→M102→F
+  D: { first: ['levis', 'lumen', 'sofi', 'att', 'metlife'], second: ['att', 'mercedesbenz', 'arrowhead', 'mercedesbenz', 'metlife'] },
+  // Winner E: M74→M89→M97→M101→F | Runner-up E: M78→M91→M99→M102→F
+  E: { first: ['gillette', 'lincoln', 'gillette', 'att', 'metlife'], second: ['att', 'metlife', 'hardrock', 'mercedesbenz', 'metlife'] },
+  // Winner F: M75→M90→M97→M101→F | Runner-up F: M76→M91→M99→M102→F
+  F: { first: ['bbva', 'nrg', 'gillette', 'att', 'metlife'], second: ['nrg', 'metlife', 'hardrock', 'mercedesbenz', 'metlife'] },
+  // Winner G: M82→M94→M98→M101→F | Runner-up G: M88→M95→M100→M102→F
+  G: { first: ['lumen', 'lumen', 'sofi', 'att', 'metlife'], second: ['att', 'mercedesbenz', 'arrowhead', 'mercedesbenz', 'metlife'] },
+  // Winner H: M84→M93→M98→M101→F | Runner-up H: M86→M95→M100→M102→F
+  H: { first: ['sofi', 'att', 'sofi', 'att', 'metlife'], second: ['hardrock', 'mercedesbenz', 'arrowhead', 'mercedesbenz', 'metlife'] },
+  // Winner I: M77→M89→M97→M101→F | Runner-up I: M78→M91→M99→M102→F
+  I: { first: ['metlife', 'lincoln', 'gillette', 'att', 'metlife'], second: ['att', 'metlife', 'hardrock', 'mercedesbenz', 'metlife'] },
+  // Winner J: M86→M95→M100→M102→F | Runner-up J: M84→M93→M98→M101→F
+  J: { first: ['hardrock', 'mercedesbenz', 'arrowhead', 'mercedesbenz', 'metlife'], second: ['sofi', 'att', 'sofi', 'att', 'metlife'] },
+  // Winner K: M87→M96→M100→M102→F | Runner-up K: M83→M93→M98→M101→F
+  K: { first: ['arrowhead', 'bcplace', 'arrowhead', 'mercedesbenz', 'metlife'], second: ['bmo', 'att', 'sofi', 'att', 'metlife'] },
+  // Winner L: M80→M92→M99→M102→F | Runner-up L: M83→M93→M98→M101→F
+  L: { first: ['mercedesbenz', 'azteca', 'hardrock', 'mercedesbenz', 'metlife'], second: ['bmo', 'att', 'sofi', 'att', 'metlife'] },
 };
 
 const KNOCKOUT_STAGES = ['R32', 'R16', 'QF', 'SF', 'F'] as const;
-const KNOCKOUT_DATES = ['Jun 29, 2026', 'Jul 4, 2026', 'Jul 9, 2026', 'Jul 14, 2026', 'Jul 19, 2026'];
+// Approximate mid-round dates (actual ranges: R32 Jun 28–Jul 3, R16 Jul 4–7, QF Jul 9–11, SF Jul 14–15)
+const KNOCKOUT_DATES = ['Jul 1, 2026', 'Jul 5, 2026', 'Jul 10, 2026', 'Jul 14, 2026', 'Jul 19, 2026'];
 const KNOCKOUT_ROUND_NAMES: Record<string, string> = {
   R32: 'Round of 32',
   R16: 'Round of 16',
