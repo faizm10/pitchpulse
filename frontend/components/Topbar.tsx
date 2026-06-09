@@ -88,9 +88,9 @@ export function Topbar() {
           4 LIVE
         </div>
         {myTeam ? (
-          <Link href="/mywc" className="my-team-link">
+          <Link href={`/?journey=${myTeam}`} className="my-team-link" title="Follow your team's journey">
             <Flag code={myTeam} w={20} h={13} />
-            <span className="my-team-name">{teams[myTeam]?.name}</span>
+            <span className="my-team-name">Follow {teams[myTeam]?.name}</span>
           </Link>
         ) : (
           <Link href="/mywc" className="btn btn-pulse topbar-cta">

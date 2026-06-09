@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { Map, MapControls, useMap } from "@/components/ui/map";
 import { StadiumMarkers } from "./StadiumMarkers";
 import { MapLoadingSkeleton } from "./MapLoadingSkeleton";
@@ -16,9 +16,10 @@ function MapLoadedObserver({ onLoad }: { onLoad: () => void }) {
 interface DashboardMapProps {
   matches: Match[];
   onSelectMatch?: (id: string) => void;
+  children?: ReactNode;
 }
 
-export function DashboardMap({ matches, onSelectMatch }: DashboardMapProps) {
+export function DashboardMap({ matches, onSelectMatch, children }: DashboardMapProps) {
   const [isMapLoaded, setIsMapLoaded] = useState(false);
   const handleLoad = useCallback(() => setIsMapLoaded(true), []);
 
@@ -35,6 +36,7 @@ export function DashboardMap({ matches, onSelectMatch }: DashboardMapProps) {
         <MapLoadedObserver onLoad={handleLoad} />
         <StadiumMarkers matches={matches} onSelectMatch={onSelectMatch} />
         <MapControls position="bottom-right" showZoom showCompass />
+        {children}
       </Map>
     </div>
   );
