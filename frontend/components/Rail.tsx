@@ -30,7 +30,8 @@ export function Rail() {
   const { tweaks } = useTweaks();
   const { myTeam } = useMyTeam();
   const [liveMatches, setLiveMatches] = useState<Match[]>([]);
-  const [upcomingMatches, setUpcomingMatches] = useState<Match[]>([]);
+  const [upcomingMatches, setUpcomingMatches] = useState<Match[]>([]); // top-5 for "UP NEXT"
+  const [allUpcoming, setAllUpcoming] = useState<Match[]>([]); // full list for team search
   const [standingsGroups, setStandingsGroups] = useState<StandingsGroup[]>([]);
   const [groupIdx, setGroupIdx] = useState(0);
   const [railNarrative, setRailNarrative] = useState('');
@@ -73,7 +74,8 @@ export function Rail() {
         const pre = all
           .filter((m) => m.state === 'pre')
           .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-        setUpcomingMatches(pre.slice(0, 5));
+        setAllUpcoming(pre);           // full list — used for myTeam next-match lookup
+        setUpcomingMatches(pre.slice(0, 5)); // top 5 shown in UP NEXT
 
         // ── DYNAMIC GOAL PULSE EXTRACTION ──────────────────────────────
         const freshPulses: GoalPulseEvent[] = [];
@@ -127,7 +129,7 @@ export function Rail() {
       {/* Live Now — or next match for selected team when nothing is live */}
       {(() => {
         const myNextMatch = myTeam
-          ? upcomingMatches.find(
+          ? allUpcoming.find(
               (m) =>
                 m.homeTeam.abbreviation.toUpperCase() === myTeam.toUpperCase() ||
                 m.awayTeam.abbreviation.toUpperCase() === myTeam.toUpperCase(),
