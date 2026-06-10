@@ -30,7 +30,8 @@ export function Rail() {
   const { tweaks } = useTweaks();
   const { myTeam } = useMyTeam();
   const [liveMatches, setLiveMatches] = useState<Match[]>([]);
-  const [upcomingMatches, setUpcomingMatches] = useState<Match[]>([]);
+  const [upcomingMatches, setUpcomingMatches] = useState<Match[]>([]); // top-5 for "UP NEXT"
+  const [allUpcoming, setAllUpcoming] = useState<Match[]>([]); // full list for team search
   const [standingsGroups, setStandingsGroups] = useState<StandingsGroup[]>([]);
   const [groupIdx, setGroupIdx] = useState(0);
   const [railNarrative, setRailNarrative] = useState('');
@@ -73,7 +74,8 @@ export function Rail() {
         const pre = all
           .filter((m) => m.state === 'pre')
           .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-        setUpcomingMatches(pre.slice(0, 5));
+        setAllUpcoming(pre);           // full list — used for myTeam next-match lookup
+        setUpcomingMatches(pre.slice(0, 5)); // top 5 shown in UP NEXT
 
         // ── DYNAMIC GOAL PULSE EXTRACTION ──────────────────────────────
         const freshPulses: GoalPulseEvent[] = [];
@@ -124,22 +126,49 @@ export function Rail() {
     <aside className="rail">
       <MyTeamBanner myTeam={myTeam} />
 
-      {/* Live Now */}
-      <div className="rail-section">
-        <div className="rail-h">
-          <span>LIVE NOW · {liveMatches.length}</span>
-          <span style={{ color: 'var(--live)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-            <span className="status-dot live" /> ON AIR
-          </span>
-        </div>
-        {liveMatches.length === 0 ? (
-          <div className="mono" style={{ fontSize: 11, color: 'var(--ink-3)', padding: '8px 0' }}>
-            No live matches right now.
+      {/* Live Now — or next match for selected team when nothing is live */}
+      {(() => {
+        const myNextMatch = myTeam
+          ? allUpcoming.find(
+              (m) =>
+                m.homeTeam.abbreviation.toUpperCase() === myTeam.toUpperCase() ||
+                m.awayTeam.abbreviation.toUpperCase() === myTeam.toUpperCase(),
+            )
+          : null;
+        const showNextMatch = liveMatches.length === 0 && myNextMatch;
+
+        return (
+          <div className="rail-section">
+            <div className="rail-h">
+              {showNextMatch ? (
+                <>
+                  <span>NEXT MATCH · {teams[myTeam!]?.name?.toUpperCase()}</span>
+                  <span style={{ color: 'var(--ink-3)', display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 9 }}>
+                    UPCOMING
+                  </span>
+                </>
+              ) : (
+                <>
+                  <span>LIVE NOW · {liveMatches.length}</span>
+                  <span style={{ color: 'var(--live)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                    <span className="status-dot live" /> ON AIR
+                  </span>
+                </>
+              )}
+            </div>
+
+            {liveMatches.length > 0 ? (
+              liveMatches.map((m) => <LiveMatchRow key={m.id} m={m} />)
+            ) : showNextMatch ? (
+              <UpcomingMatchRow m={myNextMatch} />
+            ) : (
+              <div className="mono" style={{ fontSize: 11, color: 'var(--ink-3)', padding: '8px 0' }}>
+                No live matches right now.
+              </div>
+            )}
           </div>
-        ) : (
-          liveMatches.map((m) => <LiveMatchRow key={m.id} m={m} />)
-        )}
-      </div>
+        );
+      })()}
 
       {tweaks.aiSummary && railNarrative && (
         <div className="rail-section" style={{ background: 'var(--ink)', color: 'var(--paper)' }}>

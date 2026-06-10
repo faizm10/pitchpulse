@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { Providers } from '@/components/Providers';
 import { Topbar } from '@/components/Topbar';
-import { TweaksPanel } from '@/components/TweaksPanel';
 
 export const metadata: Metadata = {
   title: "PitchPulse · World Cup '26",
@@ -32,7 +31,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div className="app paper-grain">
             <Topbar />
             {children}
-            <TweaksPanel />
           </div>
         </Providers>
       </body>

@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useState, ReactNode } from 'react';
 import { initPostHog } from '@/lib/posthog';
 import type { Tweaks } from '@/lib/types';
 
@@ -42,11 +42,32 @@ export function useMyTeam(): MyTeamContextValue {
   return v;
 }
 
+// ───────── Journey request ─────────
+// Lets Topbar signal MapView to open the journey simulator without URL tricks.
+
+interface JourneyRequestContextValue {
+  /** Team code to jump to, 'open' to show team selector, or null = no pending request */
+  journeyRequest: string | null;
+  requestJourney: (codeOrOpen: string) => void;
+  consumeJourneyRequest: () => void;
+}
+
+const JourneyRequestContext = createContext<JourneyRequestContextValue | null>(null);
+
+export function useJourneyRequest(): JourneyRequestContextValue {
+  const v = useContext(JourneyRequestContext);
+  if (!v) throw new Error('useJourneyRequest must be used inside <Providers>');
+  return v;
+}
+
 // ───────── Provider tree ─────────
 
 export function Providers({ children }: { children: ReactNode }) {
   const [tweaks, setTweaks] = useState<Tweaks>(DEFAULT_TWEAKS);
   const [myTeam, setMyTeamState] = useState<string | null>(null);
+  const [journeyRequest, setJourneyRequest] = useState<string | null>(null);
+  const requestJourney = useCallback((codeOrOpen: string) => setJourneyRequest(codeOrOpen), []);
+  const consumeJourneyRequest = useCallback(() => setJourneyRequest(null), []);
 
   useEffect(() => { initPostHog(); }, []);
 
@@ -86,7 +107,9 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <TweaksContext.Provider value={{ tweaks, setTweak }}>
       <MyTeamContext.Provider value={{ myTeam, setMyTeam: setMyTeamState }}>
-        {children}
+        <JourneyRequestContext.Provider value={{ journeyRequest, requestJourney, consumeJourneyRequest }}>
+          {children}
+        </JourneyRequestContext.Provider>
       </MyTeamContext.Provider>
     </TweaksContext.Provider>
   );

@@ -3,13 +3,22 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { DashboardMap } from './map/DashboardMap';
-import { countries } from '@/lib/data';
+import { TeamSelector } from './journey/TeamSelector';
+import { JourneyPanel } from './journey/JourneyPanel';
+import { JourneyRoute } from './journey/JourneyRoute';
+import { useJourneySimulator } from './journey/JourneySimulator';
+import { useJourneyRequest } from './Providers';
+import { countries, teams } from '@/lib/data';
 import type { Match } from '@/types/espn';
+import type { LiveSchedule } from '@/types/journey';
 
 export function MapView() {
   const router = useRouter();
   const [matches, setMatches] = useState<Match[]>([]);
+  const [liveSchedule, setLiveSchedule] = useState<LiveSchedule | null>(null);
+  const { journeyRequest, consumeJourneyRequest } = useJourneyRequest();
 
+  // Fetch live matches
   useEffect(() => {
     fetch('/api/scores')
       .then((r) => r.json())
@@ -17,14 +26,68 @@ export function MapView() {
       .catch(console.error);
   }, []);
 
+  // Fetch real WC2026 group-stage schedule from ESPN once on mount
+  useEffect(() => {
+    fetch('/api/wc/group-schedule')
+      .then((r) => r.json())
+      .then((data) => { if (data.schedule) setLiveSchedule(data.schedule); })
+      .catch(console.error);
+  }, []);
+
+  const sim = useJourneySimulator(liveSchedule);
+
+  // React to journey requests from the Topbar (works even when already on /)
+  useEffect(() => {
+    if (!journeyRequest) return;
+    consumeJourneyRequest();
+    if (journeyRequest === 'open') {
+      sim.openSimulator();
+    } else if (teams[journeyRequest]) {
+      sim.selectTeam(journeyRequest);
+    }
+  }, [journeyRequest]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Handle ?journey= param for hard navigations from other pages (e.g. /matches → /)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const code = new URLSearchParams(window.location.search).get('journey');
+    if (!code) return;
+    window.history.replaceState({}, '', '/');
+    if (code === 'open') sim.openSimulator();
+    else if (teams[code]) sim.selectTeam(code);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
-    <div className="map-pane">
+    <div className="map-pane" style={{ position: 'relative' }}>
       <DashboardMap
         matches={matches}
-        onSelectMatch={(id) => router.push(`/match/${id}`)}
-      />
+        onSelectMatch={sim.isOpen ? undefined : (id) => router.push(`/match/${id}`)}
+      >
+        {sim.journey && (
+          <JourneyRoute
+            stops={sim.journey.stops}
+            teamColor={sim.teamColor}
+            triggerAnimate={sim.animateKey}
+          />
+        )}
+      </DashboardMap>
 
-      {/* Bottom country links */}
+      {sim.showSelector && (
+        <TeamSelector onSelect={sim.selectTeam} onClose={sim.closeSelector} />
+      )}
+      {sim.journey && !sim.showSelector && (
+        <JourneyPanel
+          journey={sim.journey}
+          scenario={sim.scenario}
+          onScenarioChange={sim.changeScenario}
+          onReplay={sim.replay}
+          onClose={sim.closeSimulator}
+          onChangeTeam={sim.openSimulator}
+        />
+      )}
+
+      {/* Bottom bar */}
       <div style={{
         position: 'absolute', zIndex: 10,
         left: 32, right: 32, bottom: 24,

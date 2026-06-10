@@ -1,10 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Logo, Flag } from './Shared';
-import { useMyTeam } from './Providers';
+import { useMyTeam, useJourneyRequest } from './Providers';
 import { teams } from '@/lib/data';
 
 const tabs = [
@@ -27,7 +27,16 @@ const WC_END     = new Date('2026-07-20T00:00:00Z'); // tournament over
 
 function getTournamentStatus(): string {
   const now = new Date();
-  if (now < WC_START)  return 'INTERNATIONAL FRIENDLIES';
+  if (now < WC_START) {
+    const diff = WC_START.getTime() - now.getTime();
+    const d = Math.floor(diff / 86_400_000);
+    const h = Math.floor((diff % 86_400_000) / 3_600_000);
+    const m = Math.floor((diff % 3_600_000) / 60_000);
+    const s = Math.floor((diff % 60_000) / 1_000);
+    if (d > 0) return `KICKOFF IN ${d}D ${String(h).padStart(2, '0')}H ${String(m).padStart(2, '0')}M ${String(s).padStart(2, '0')}S`;
+    if (h > 0) return `KICKOFF IN ${String(h).padStart(2, '0')}H ${String(m).padStart(2, '0')}M ${String(s).padStart(2, '0')}S`;
+    return `KICKOFF IN ${String(m).padStart(2, '0')}M ${String(s).padStart(2, '0')}S`;
+  }
   if (now >= WC_END)   return 'WORLD CUP 2026 · COMPLETE';
   const day = Math.floor((now.getTime() - WC_START.getTime()) / 86_400_000) + 1;
   let stage: string;
@@ -42,15 +51,18 @@ function getTournamentStatus(): string {
 
 export function Topbar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { myTeam } = useMyTeam();
-  const [time, setTime] = useState<string>('');
+  const { requestJourney } = useJourneyRequest();
   const [tournamentLine, setTournamentLine] = useState<string>('');
 
+  const handleFollowTeam = (codeOrOpen: string) => {
+    requestJourney(codeOrOpen);        // signal MapView via context
+    if (pathname !== '/') router.push('/'); // navigate to homepage if needed
+  };
+
   useEffect(() => {
-    const update = () => {
-      setTime(new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' }).toUpperCase());
-      setTournamentLine(getTournamentStatus());
-    };
+    const update = () => setTournamentLine(getTournamentStatus());
     update();
     const t = setInterval(update, 1000);
     return () => clearInterval(t);
@@ -61,8 +73,20 @@ export function Topbar() {
       <div className="topbar-left">
         <Logo />
         <div className="topbar-status mono">
-          {time || '\u00A0'}<br />
-          {tournamentLine || ' '}
+          {tournamentLine.startsWith('KICKOFF') ? (
+            <span style={{
+              fontWeight: 800,
+              letterSpacing: '0.13em',
+              background: 'linear-gradient(90deg, #00d46a, #00aaff)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            }}>
+              {tournamentLine}
+            </span>
+          ) : (
+            <span>{tournamentLine || '\u00A0'}</span>
+          )}
         </div>
       </div>
 
@@ -88,15 +112,24 @@ export function Topbar() {
           4 LIVE
         </div>
         {myTeam ? (
-          <Link href="/mywc" className="my-team-link">
+          <button
+            type="button"
+            className="my-team-link"
+            title="Follow your team's journey"
+            onClick={() => handleFollowTeam(myTeam)}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+          >
             <Flag code={myTeam} w={20} h={13} />
-            <span className="my-team-name">{teams[myTeam]?.name}</span>
-          </Link>
+            <span className="my-team-name">Follow {teams[myTeam]?.name}</span>
+          </button>
         ) : (
-          <Link href="/mywc" className="btn btn-pulse topbar-cta">
-            <span className="mywc-full">+ MY WORLD CUP</span>
-            <span className="mywc-short">MY WC</span>
-          </Link>
+          <button
+            type="button"
+            className="btn btn-pulse topbar-cta"
+            onClick={() => handleFollowTeam('open')}
+          >
+            Follow a Team
+          </button>
         )}
       </div>
     </div>
