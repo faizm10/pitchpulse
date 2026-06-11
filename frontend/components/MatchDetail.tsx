@@ -160,7 +160,7 @@ export function MatchDetail({ id }: { id: string }) {
     .join(' · ');
 
   return (
-    <div className="screen" style={{ minHeight: 'calc(100vh - 64px)', display: 'flex', flexDirection: 'column' }}>
+    <div className="screen" style={{ minHeight: 'calc(100vh - var(--topbar-h))', display: 'flex', flexDirection: 'column' }}>
       <BackBar label={headerLabel} />
 
       <div
