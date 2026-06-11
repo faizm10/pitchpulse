@@ -204,7 +204,7 @@ export const stadiums: Stadium[] = [
 
 export const teams: Record<string, Team> = {
   "ALG": { "code": "ALG", "name": "Algeria",                "flag": ["#006233","#FFFFFF","#D21034"], "group": "J", "form": ["W","D","L","W","D"] },
-  "ARG": { "code": "ARG", "name": "Argentina",              "flag": ["#75AADB","#FFFFFF","#75AADB"], "group": "J", "form": ["W","D","W","W","L"] },
+  "ARG": { "code": "ARG", "name": "Argentina",              "flag": ["#75AADB","#FFFFFF","#75AADB"], "group": "J", "form": ["W","W","W","W","W"] },
   "AUS": { "code": "AUS", "name": "Australia",              "flag": ["#012169","#FFFFFF","#E4002B"], "group": "D", "form": ["L","D","W","W","D"] },
   "AUT": { "code": "AUT", "name": "Austria",                "flag": ["#ED2939","#FFFFFF","#ED2939"], "group": "J", "form": ["W","W","D","L","W"] },
   "BEL": { "code": "BEL", "name": "Belgium",                "flag": ["#000000","#FAE042","#ED2939"], "group": "G", "form": ["L","D","W","W","W"] },

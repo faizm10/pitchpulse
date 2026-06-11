@@ -66,3 +66,17 @@ export function resolveTeamForm(
   }
   return overviewForm.slice(0, 5);
 }
+
+/** Live form for rail/journey: WC results when available, else FotMob recent form. */
+export async function fetchResolvedTeamForm(
+  teamId: number,
+  leagueFixtures: FotmobFixture[]
+): Promise<FormResult[]> {
+  const wcForm = computeFormFromFixtures(teamId, leagueFixtures);
+  if (wcForm.length >= 5) return wcForm;
+
+  const { fetchTeamRaw } = await import("./client");
+  const raw = await fetchTeamRaw(teamId);
+  const overviewForm = parseTeamFormFromOverview(raw);
+  return resolveTeamForm(teamId, overviewForm, leagueFixtures);
+}
