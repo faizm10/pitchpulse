@@ -208,11 +208,12 @@ export function buildJourney(
 
   // ── Group stage stops ─────────────────────────────────────────────────────
   // Prefer live ESPN schedule data; fall back to static pairings
-  const liveEntries = liveSchedule?.[teamCode];
+  const liveEntries = liveSchedule?.[teamCode]
+    ? [...liveSchedule[teamCode]].sort((a, b) => parseScheduleDate(a.date) - parseScheduleDate(b.date))
+    : undefined;
   const groupStops: JourneyStop[] = [];
 
   if (liveEntries && liveEntries.length > 0) {
-    // Real data from ESPN — use it directly
     liveEntries.forEach((entry, idx) => {
       const venue = venueById.get(entry.venueId);
       if (!venue) return;
@@ -343,6 +344,32 @@ function buildNarrative(teamName: string, stops: JourneyStop[], distanceKm: numb
     `Should they reach the final, the journey ends in ${finalCity} — ` +
     `home of the 2026 FIFA World Cup Final.`
   );
+}
+
+const KNOCKOUT_STAGE_SHORT: Record<string, string> = {
+  R32: 'R32',
+  R16: 'R16',
+  QF: 'QF',
+  SF: 'SF',
+  F: 'Final',
+};
+
+/** Short stage label for map markers and compact UI (MD3, R32, Final, …). */
+function parseScheduleDate(date: string): number {
+  const t = Date.parse(date);
+  return Number.isNaN(t) ? 0 : t;
+}
+
+export function getJourneyStopStageLabel(stop: JourneyStop): string {
+  if (stop.stage === 'GS' && stop.matchday) return `MD${stop.matchday}`;
+  return KNOCKOUT_STAGE_SHORT[stop.stage] ?? stop.stage;
+}
+
+/** Compact date for map stop labels (e.g. "Jun 12, 2026" → "Jun 12"). */
+export function formatJourneyLabelDate(date: string): string {
+  const trimmed = date.trim();
+  const withoutYear = trimmed.replace(/,?\s*\d{4}$/, '').trim();
+  return withoutYear || trimmed;
 }
 
 export { KNOCKOUT_ROUND_NAMES };
