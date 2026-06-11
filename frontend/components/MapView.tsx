@@ -24,12 +24,24 @@ export function MapView() {
   } = useTeamFollow();
 
   useEffect(() => {
-    fetch('/api/scores')
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.matches) setMatches(data.matches);
-      })
-      .catch(console.error);
+    let cancelled = false;
+
+    async function loadMatches() {
+      try {
+        const res = await fetch('/api/scores', { cache: 'no-store' });
+        const data = await res.json();
+        if (!cancelled && data.matches) setMatches(data.matches);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    loadMatches();
+    const id = setInterval(loadMatches, 20_000);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
   }, []);
 
   // Handle ?journey= param for hard navigations from other pages

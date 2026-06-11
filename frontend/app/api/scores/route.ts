@@ -1,7 +1,7 @@
 import { parseScoreboard } from "@/lib/espn";
 import type { ESPNScoreboardResponse } from "@/types/espn";
 
-export const revalidate = 60;
+export const revalidate = 0; // always fetch fresh from ESPN
 
 const BASE = "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard";
 
@@ -16,7 +16,7 @@ export async function GET() {
   try {
     const responses = await Promise.all(
       WINDOWS.map(dates =>
-        fetch(`${BASE}?dates=${dates}`, { next: { revalidate } })
+        fetch(`${BASE}?dates=${dates}`, { cache: "no-store" })
       )
     );
 
@@ -52,7 +52,7 @@ export async function GET() {
       { matches },
       {
         headers: {
-          "Cache-Control": "public, s-maxage=30, stale-while-revalidate=120",
+          "Cache-Control": "no-store",
         },
       }
     );

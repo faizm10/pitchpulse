@@ -59,18 +59,26 @@ export function MatchesList() {
   const pad = isMobile ? '16px' : isTablet ? '24px' : '56px';
 
   useEffect(() => {
+    let cancelled = false;
+
     async function loadMatches() {
       try {
-        const res = await fetch('/api/scores');
+        const res = await fetch('/api/scores', { cache: 'no-store' });
         const data = await res.json();
-        setMatches(data.matches || []);
+        if (!cancelled) setMatches(data.matches || []);
       } catch (err) {
         console.error(err);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     }
+
     loadMatches();
+    const id = setInterval(loadMatches, 20_000);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
   }, []);
 
   const filtered = matches.filter((m) => {
