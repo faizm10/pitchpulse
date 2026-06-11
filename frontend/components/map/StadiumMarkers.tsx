@@ -23,11 +23,17 @@ interface StadiumMarkersProps {
   onSelectMatch?: (id: string) => void;
 }
 
-function getNextMatch(matches: Match[]) {
+function getDisplayMatch(matches: Match[]) {
+  const live = matches.find((m) => m.state === "in");
+  if (live) return live;
   const upcoming = matches
     .filter((m) => m.state === "pre")
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  return upcoming[0];
+  if (upcoming.length) return upcoming[0];
+  const finished = matches
+    .filter((m) => m.state === "post")
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  return finished[0];
 }
 
 // Simple hook to detect mobile inside a component
@@ -124,7 +130,7 @@ export function StadiumMarkers({ matches, onSelectMatch }: StadiumMarkersProps) 
     <>
       {VENUES.map((venue) => {
         const venueMatches = matchesByVenue.get(venue.id) ?? [];
-        const match = getNextMatch(venueMatches);
+        const match = getDisplayMatch(venueMatches);
         const isLive = match?.state === "in";
         const color = COUNTRY_COLORS[venue.country];
         const minsAway = match?.state === "pre" ? minsUntil(match.date, now) : null;
@@ -133,7 +139,24 @@ export function StadiumMarkers({ matches, onSelectMatch }: StadiumMarkersProps) 
           <MapMarker key={venue.id} longitude={venue.longitude} latitude={venue.latitude}>
             <MarkerContent>
               <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-                {minsAway !== null && (
+                {isLive && (
+                  <div style={{
+                    background: "var(--live)",
+                    color: "#fff",
+                    fontSize: 9,
+                    fontWeight: 700,
+                    fontFamily: "var(--mono)",
+                    letterSpacing: "0.06em",
+                    padding: "2px 5px",
+                    borderRadius: 4,
+                    whiteSpace: "nowrap",
+                    boxShadow: "0 1px 4px rgba(0,0,0,0.35)",
+                    lineHeight: 1.4,
+                  }}>
+                    LIVE
+                  </div>
+                )}
+                {!isLive && minsAway !== null && (
                   <div style={{
                     background: "#f59e0b",
                     color: "#000",
@@ -214,6 +237,43 @@ export function StadiumMarkers({ matches, onSelectMatch }: StadiumMarkersProps) 
                     alt={venue.name}
                     style={{ width: "100%", height: 56, objectFit: "cover", display: "block" }}
                   />
+                )}
+
+                {/* Live score banner */}
+                {match?.state === "in" && (
+                  <div style={{
+                    background: "var(--live)",
+                    padding: isMobile ? "6px 10px" : "8px 12px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <span style={{
+                        width: 6, height: 6, borderRadius: "50%",
+                        background: "#fff", opacity: 0.9,
+                        flexShrink: 0,
+                      }} />
+                      <span style={{
+                        fontSize: 10, fontWeight: 700, color: "#fff",
+                        fontFamily: "var(--mono)", letterSpacing: "0.08em",
+                      }}>
+                        LIVE · {match.displayClock}
+                      </span>
+                    </div>
+                    <div style={{
+                      display: "flex", alignItems: "center", gap: 5,
+                      fontSize: isMobile ? 13 : 15, fontWeight: 800,
+                      fontFamily: "var(--mono)", color: "#fff",
+                      letterSpacing: "0.04em",
+                    }}>
+                      <span>{match.homeTeam.abbreviation}</span>
+                      <span style={{ opacity: 0.7, fontSize: isMobile ? 11 : 13 }}>
+                        {match.homeTeam.score ?? 0}–{match.awayTeam.score ?? 0}
+                      </span>
+                      <span>{match.awayTeam.abbreviation}</span>
+                    </div>
+                  </div>
                 )}
 
                 <div style={{ padding: isMobile ? 9 : 12, background: "var(--paper-2)" }}>
