@@ -2,10 +2,11 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Logo, Flag } from './Shared';
 import { useTeamFollow } from './Providers';
 import { teams } from '@/lib/data';
+import { useLiveMatches } from '@/hooks/useLiveMatches';
 
 const tabs = [
   { label: 'Map', href: '/' },
@@ -60,6 +61,8 @@ export function Topbar() {
   const pathname = usePathname();
   const router = useRouter();
   const { myTeam, openTeamPicker, selectFollowedTeam } = useTeamFollow();
+  const liveMatches = useLiveMatches();
+  const topbarRef = useRef<HTMLElement>(null);
   const [tournamentLine, setTournamentLine] = useState<string>('');
 
   const goHome = () => {
@@ -76,6 +79,24 @@ export function Topbar() {
     goHome();
   };
 
+  useLayoutEffect(() => {
+    const el = topbarRef.current;
+    if (!el) return;
+
+    const setHeight = () => {
+      document.documentElement.style.setProperty('--topbar-h', `${el.offsetHeight}px`);
+    };
+
+    setHeight();
+    const ro = new ResizeObserver(setHeight);
+    ro.observe(el);
+    window.addEventListener('resize', setHeight);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', setHeight);
+    };
+  }, []);
+
   useEffect(() => {
     const update = () => setTournamentLine(getTournamentStatus());
     update();
@@ -83,29 +104,38 @@ export function Topbar() {
     return () => clearInterval(t);
   }, []);
 
+  const liveCount = liveMatches.length;
+  const isKickoffCountdown = tournamentLine.startsWith('KICKOFF');
+
+  const statusContent = useMemo(() => {
+    if (liveCount > 0) {
+      return (
+        <Link href="/matches" className="topbar-status-live mono" title="View live matches">
+          <span aria-hidden="true" />
+          {liveCount} LIVE
+        </Link>
+      );
+    }
+    if (isKickoffCountdown) {
+      return (
+        <span className="topbar-status-kickoff">
+          {tournamentLine}
+        </span>
+      );
+    }
+    return <span>{tournamentLine || '\u00A0'}</span>;
+  }, [liveCount, isKickoffCountdown, tournamentLine]);
+
   return (
-    <div className="topbar">
+    <header className="topbar" ref={topbarRef}>
       <div className="topbar-left">
         <Logo />
-        <div className="topbar-status mono">
-          {tournamentLine.startsWith('KICKOFF') ? (
-            <span style={{
-              fontWeight: 800,
-              letterSpacing: '0.13em',
-              background: 'linear-gradient(90deg, #00d46a, #00aaff)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-            }}>
-              {tournamentLine}
-            </span>
-          ) : (
-            <span>{tournamentLine || '\u00A0'}</span>
-          )}
+        <div className="topbar-status mono" aria-live="polite">
+          {statusContent}
         </div>
       </div>
 
-      <div className="topbar-mid">
+      <nav className="topbar-mid" aria-label="Primary">
         {tabs.map((tab) => {
           const isActive = pathname === tab.href || (tab.href !== '/' && pathname?.startsWith(tab.href));
           return (
@@ -119,23 +149,30 @@ export function Topbar() {
             </Link>
           );
         })}
-      </div>
+      </nav>
 
       <div className="topbar-right">
-        <div className="topbar-live mono">
-          <span />
-          4 LIVE
-        </div>
+        {liveCount > 0 ? (
+          <Link
+            href="/matches"
+            className="topbar-live topbar-live--desktop mono"
+            style={{ textDecoration: 'none', color: 'inherit' }}
+            title="View live matches"
+          >
+            <span aria-hidden="true" />
+            {liveCount} LIVE
+          </Link>
+        ) : null}
         {myTeam ? (
           <button
             type="button"
             className="my-team-link"
             title="Follow your team's journey"
             onClick={handleFollowMyTeam}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
           >
             <Flag code={myTeam} w={20} h={13} />
-            <span className="my-team-name">Follow {teams[myTeam]?.name}</span>
+            <span className="my-team-follow-prefix">Follow </span>
+            <span className="my-team-name">{teams[myTeam]?.name}</span>
           </button>
         ) : (
           <button
@@ -147,6 +184,6 @@ export function Topbar() {
           </button>
         )}
       </div>
-    </div>
+    </header>
   );
 }
