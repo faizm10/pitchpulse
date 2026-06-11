@@ -4,7 +4,7 @@ export const VENUES: VenueData[] = [
   // USA (11 venues)
   {
     id: "metlife",
-    name: "MetLife Stadium",
+    name: "New York New Jersey Stadium (MetLife Stadium)",
     city: "East Rutherford, NJ",
     country: "USA",
     capacity: 82500,
@@ -14,7 +14,7 @@ export const VENUES: VenueData[] = [
   },
   {
     id: "sofi",
-    name: "SoFi Stadium",
+    name: "Los Angeles Stadium (SoFi Stadium)",
     city: "Inglewood, CA",
     country: "USA",
     capacity: 70240,
@@ -24,7 +24,7 @@ export const VENUES: VenueData[] = [
   },
   {
     id: "att",
-    name: "AT&T Stadium",
+    name: "Dallas Stadium (AT&T Stadium)",
     city: "Arlington, TX",
     country: "USA",
     capacity: 80000,
@@ -34,7 +34,7 @@ export const VENUES: VenueData[] = [
   },
   {
     id: "levis",
-    name: "Levi's Stadium",
+    name: "San Francisco Bay Area Stadium (Levi's Stadium)",
     city: "Santa Clara, CA",
     country: "USA",
     capacity: 68500,
@@ -44,7 +44,7 @@ export const VENUES: VenueData[] = [
   },
   {
     id: "hardrock",
-    name: "Hard Rock Stadium",
+    name: "Miami Stadium (Hard Rock Stadium)",
     city: "Miami Gardens, FL",
     country: "USA",
     capacity: 65326,
@@ -54,7 +54,7 @@ export const VENUES: VenueData[] = [
   },
   {
     id: "mercedesbenz",
-    name: "Mercedes-Benz Stadium",
+    name: "Atlanta Stadium (Mercedes-Benz Stadium)",
     city: "Atlanta, GA",
     country: "USA",
     capacity: 71000,
@@ -64,7 +64,7 @@ export const VENUES: VenueData[] = [
   },
   {
     id: "lumen",
-    name: "Lumen Field",
+    name: "Seattle Stadium (Lumen Field)",
     city: "Seattle, WA",
     country: "USA",
     capacity: 68740,
@@ -74,7 +74,7 @@ export const VENUES: VenueData[] = [
   },
   {
     id: "nrg",
-    name: "NRG Stadium",
+    name: "Houston Stadium (NRG Stadium)",
     city: "Houston, TX",
     country: "USA",
     capacity: 72220,
@@ -84,7 +84,7 @@ export const VENUES: VenueData[] = [
   },
   {
     id: "arrowhead",
-    name: "Arrowhead Stadium",
+    name: "Kansas City Stadium (Arrowhead Stadium)",
     city: "Kansas City, MO",
     country: "USA",
     capacity: 76416,
@@ -94,7 +94,7 @@ export const VENUES: VenueData[] = [
   },
   {
     id: "lincoln",
-    name: "Lincoln Financial Field",
+    name: "Philadelphia Stadium (Lincoln Financial Field)",
     city: "Philadelphia, PA",
     country: "USA",
     capacity: 69796,
@@ -104,7 +104,7 @@ export const VENUES: VenueData[] = [
   },
   {
     id: "gillette",
-    name: "Gillette Stadium",
+    name: "Boston Stadium (Gillette Stadium)",
     city: "Foxborough, MA",
     country: "USA",
     capacity: 65878,
@@ -115,13 +115,13 @@ export const VENUES: VenueData[] = [
   // Canada (2 venues)
   {
     id: "bmo",
-    name: "BMO Field",
+    name: "Toronto Stadium (BMO Field)",
     city: "Toronto, ON",
     country: "Canada",
     capacity: 45736,
     longitude: -79.419,
     latitude: 43.633,
-    image: "https://bloximages.chicago2.vip.townnews.com/thestar.com/content/tncms/assets/v3/editorial/e/4f/e4f14ad3-4f83-541b-922e-f77465631c5f/66031031493da.image.jpg?resize=889%2C500",
+    image: "https://www.insauga.com/wp-content/uploads/2026/03/FIFA-INsauga2026.jpg",
   },
   {
     id: "bcplace",
@@ -136,7 +136,7 @@ export const VENUES: VenueData[] = [
   // Mexico (3 venues)
   {
     id: "azteca",
-    name: "Estadio Azteca",
+    name: "Mexico City Stadium (Estadio Azteca)",
     city: "Mexico City",
     country: "Mexico",
     capacity: 87523,
@@ -146,7 +146,7 @@ export const VENUES: VenueData[] = [
   },
   {
     id: "akron",
-    name: "Estadio Akron",
+    name: "Guadalajara Stadium (Estadio Akron)",
     city: "Guadalajara",
     country: "Mexico",
     capacity: 49850,
@@ -156,7 +156,7 @@ export const VENUES: VenueData[] = [
   },
   {
     id: "bbva",
-    name: "Estadio BBVA",
+    name: "Monterrey Stadium (Estadio BBVA)",
     city: "Monterrey",
     country: "Mexico",
     capacity: 53500,
