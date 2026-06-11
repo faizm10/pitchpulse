@@ -1,14 +1,22 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { teams } from '@/lib/data';
 import { Flag, BackBar } from './Shared';
-import { useMyTeam } from './Providers';
+import { useTeamFollow } from './Providers';
 import { useWindowWidth } from '@/hooks/useWindowWidth';
 import { posthog } from '@/lib/posthog';
 
 export function MyWorldCup() {
-  const { myTeam, setMyTeam } = useMyTeam();
+  const router = useRouter();
+  const { myTeam, selectFollowedTeam, clearFollowedTeam } = useTeamFollow();
+
+  const followTeam = (code: string) => {
+    selectFollowedTeam(code);
+    posthog.capture('my_wc_team_set', { team_code: code, team_name: teams[code]?.name });
+    router.push('/');
+  };
   const all = Object.values(teams);
   const width = useWindowWidth();
   const isMobile = width < 640;
@@ -50,7 +58,7 @@ export function MyWorldCup() {
                 >
                   VIEW SQUAD →
                 </Link>
-                <button onClick={() => setMyTeam(null)} style={{
+                <button type="button" onClick={() => clearFollowedTeam()} style={{
                   background: 'transparent', border: '1px solid rgba(242,238,227,0.3)',
                   color: 'var(--paper)', padding: '8px 14px', borderRadius: 999,
                   fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '0.14em', cursor: 'pointer',
@@ -69,7 +77,7 @@ export function MyWorldCup() {
             gap: 8, maxHeight: isMobile ? 'none' : 560, overflow: isMobile ? 'visible' : 'auto', paddingRight: 4,
           }}>
             {all.map((t) => (
-              <div key={t.code} onClick={() => { setMyTeam(t.code); posthog.capture('my_wc_team_set', { team_code: t.code, team_name: t.name }); }} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter') { setMyTeam(t.code); posthog.capture('my_wc_team_set', { team_code: t.code, team_name: t.name }); } }} style={{
+              <div key={t.code} onClick={() => followTeam(t.code)} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter') followTeam(t.code); }} style={{
                 padding: 14, border: '1px solid var(--rule)', borderRadius: 10,
                 background: myTeam === t.code ? 'var(--ink)' : 'var(--paper)',
                 color: myTeam === t.code ? 'var(--paper)' : 'inherit',
