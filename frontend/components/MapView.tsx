@@ -4,57 +4,41 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { DashboardMap } from './map/DashboardMap';
 import { TeamSelector } from './journey/TeamSelector';
-import { JourneyPanel } from './journey/JourneyPanel';
 import { JourneyRoute } from './journey/JourneyRoute';
-import { useJourneySimulator } from './journey/JourneySimulator';
-import { useJourneyRequest } from './Providers';
+import { useTeamFollow } from './Providers';
 import { countries, teams } from '@/lib/data';
 import type { Match } from '@/types/espn';
-import type { LiveSchedule } from '@/types/journey';
 
 export function MapView() {
   const router = useRouter();
   const [matches, setMatches] = useState<Match[]>([]);
-  const [liveSchedule, setLiveSchedule] = useState<LiveSchedule | null>(null);
-  const { journeyRequest, consumeJourneyRequest } = useJourneyRequest();
+  const {
+    journey,
+    showTeamPicker,
+    animateKey,
+    teamColor,
+    selectFollowedTeam,
+    closeTeamPicker,
+    openTeamPicker,
+  } = useTeamFollow();
 
-  // Fetch live matches
   useEffect(() => {
     fetch('/api/scores')
       .then((r) => r.json())
-      .then((data) => { if (data.matches) setMatches(data.matches); })
+      .then((data) => {
+        if (data.matches) setMatches(data.matches);
+      })
       .catch(console.error);
   }, []);
 
-  // Fetch real WC2026 group-stage schedule from ESPN once on mount
-  useEffect(() => {
-    fetch('/api/wc/group-schedule')
-      .then((r) => r.json())
-      .then((data) => { if (data.schedule) setLiveSchedule(data.schedule); })
-      .catch(console.error);
-  }, []);
-
-  const sim = useJourneySimulator(liveSchedule);
-
-  // React to journey requests from the Topbar (works even when already on /)
-  useEffect(() => {
-    if (!journeyRequest) return;
-    consumeJourneyRequest();
-    if (journeyRequest === 'open') {
-      sim.openSimulator();
-    } else if (teams[journeyRequest]) {
-      sim.selectTeam(journeyRequest);
-    }
-  }, [journeyRequest]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Handle ?journey= param for hard navigations from other pages (e.g. /matches → /)
+  // Handle ?journey= param for hard navigations from other pages
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const code = new URLSearchParams(window.location.search).get('journey');
     if (!code) return;
     window.history.replaceState({}, '', '/');
-    if (code === 'open') sim.openSimulator();
-    else if (teams[code]) sim.selectTeam(code);
+    if (code === 'open') openTeamPicker();
+    else if (teams[code]) selectFollowedTeam(code);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -62,52 +46,69 @@ export function MapView() {
     <div className="map-pane" style={{ position: 'relative' }}>
       <DashboardMap
         matches={matches}
-        onSelectMatch={sim.isOpen ? undefined : (id) => router.push(`/match/${id}`)}
+        onSelectMatch={showTeamPicker ? undefined : (id) => router.push(`/match/${id}`)}
       >
-        {sim.journey && (
+        {journey && (
           <JourneyRoute
-            stops={sim.journey.stops}
-            teamColor={sim.teamColor}
-            triggerAnimate={sim.animateKey}
+            stops={journey.stops}
+            teamColor={teamColor}
+            triggerAnimate={animateKey}
           />
         )}
       </DashboardMap>
 
-      {sim.showSelector && (
-        <TeamSelector onSelect={sim.selectTeam} onClose={sim.closeSelector} />
-      )}
-      {sim.journey && !sim.showSelector && (
-        <JourneyPanel
-          journey={sim.journey}
-          scenario={sim.scenario}
-          onScenarioChange={sim.changeScenario}
-          onReplay={sim.replay}
-          onClose={sim.closeSimulator}
-          onChangeTeam={sim.openSimulator}
-        />
+      {showTeamPicker && (
+        <TeamSelector onSelect={selectFollowedTeam} onClose={closeTeamPicker} />
       )}
 
-      {/* Bottom bar */}
-      <div style={{
-        position: 'absolute', zIndex: 10,
-        left: 32, right: 32, bottom: 24,
-        display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end',
-        pointerEvents: 'none',
-      }}>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center', pointerEvents: 'auto', flexWrap: 'wrap' }}>
+      <div
+        style={{
+          position: 'absolute',
+          zIndex: 10,
+          left: 32,
+          right: 32,
+          bottom: 24,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-end',
+          pointerEvents: 'none',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            gap: 8,
+            alignItems: 'center',
+            pointerEvents: 'auto',
+            flexWrap: 'wrap',
+          }}
+        >
           {(['CA', 'US', 'MX'] as const).map((code) => {
-            const cssVar = code === 'CA' ? 'var(--ca)' : code === 'US' ? 'var(--us)' : 'var(--mx)';
+            const cssVar =
+              code === 'CA' ? 'var(--ca)' : code === 'US' ? 'var(--us)' : 'var(--mx)';
             return (
               <a
                 key={code}
                 href={`/country/${code}`}
-                onClick={(e) => { e.preventDefault(); router.push(`/country/${code}`); }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  router.push(`/country/${code}`);
+                }}
                 style={{
-                  cursor: 'pointer', textDecoration: 'none', color: 'inherit',
-                  display: 'flex', alignItems: 'center', gap: 8,
-                  padding: '7px 13px', border: '1px solid var(--rule)', borderRadius: 999,
-                  background: 'var(--paper)', fontFamily: 'var(--mono)', fontSize: 11,
-                  letterSpacing: '0.08em', boxShadow: '0 1px 4px rgba(14,22,38,0.08)',
+                  cursor: 'pointer',
+                  textDecoration: 'none',
+                  color: 'inherit',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '7px 13px',
+                  border: '1px solid var(--rule)',
+                  borderRadius: 999,
+                  background: 'var(--paper)',
+                  fontFamily: 'var(--mono)',
+                  fontSize: 11,
+                  letterSpacing: '0.08em',
+                  boxShadow: '0 1px 4px rgba(14,22,38,0.08)',
                 }}
               >
                 <span style={{ width: 8, height: 8, borderRadius: 2, background: cssVar }} />
@@ -116,7 +117,15 @@ export function MapView() {
             );
           })}
         </div>
-        <div className="mono" style={{ fontSize: 10, color: 'var(--ink-3)', letterSpacing: '0.14em', textTransform: 'uppercase' }}>
+        <div
+          className="mono"
+          style={{
+            fontSize: 10,
+            color: 'var(--ink-3)',
+            letterSpacing: '0.14em',
+            textTransform: 'uppercase',
+          }}
+        >
           16 stadia · 3 nations · 104 matches
         </div>
       </div>
