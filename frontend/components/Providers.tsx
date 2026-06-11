@@ -1,8 +1,20 @@
 'use client';
 
-import { createContext, useCallback, useContext, useEffect, useState, ReactNode } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  ReactNode,
+} from 'react';
 import { initPostHog } from '@/lib/posthog';
+import { buildJourney } from '@/lib/journey';
+import { getTeamColor } from '@/lib/teamColor';
+import { teams } from '@/lib/data';
 import type { Tweaks } from '@/lib/types';
+import type { JourneyScenario, JourneyState, LiveSchedule } from '@/types/journey';
 
 // ───────── Tweaks ─────────
 
@@ -27,37 +39,40 @@ export function useTweaks(): TweaksContextValue {
   return v;
 }
 
-// ───────── My team ─────────
+// ───────── Team follow + journey (unified) ─────────
 
-interface MyTeamContextValue {
+interface TeamFollowContextValue {
   myTeam: string | null;
-  setMyTeam: (code: string | null) => void;
+  journey: JourneyState | null;
+  scenario: JourneyScenario;
+  showTeamPicker: boolean;
+  liveSchedule: LiveSchedule | null;
+  scheduleLoading: boolean;
+  animateKey: number;
+  teamColor: string;
+  selectFollowedTeam: (code: string) => void;
+  openTeamPicker: () => void;
+  closeTeamPicker: () => void;
+  setScenario: (s: JourneyScenario) => void;
+  replayJourney: () => void;
+  clearFollowedTeam: () => void;
 }
 
-const MyTeamContext = createContext<MyTeamContextValue | null>(null);
+const TeamFollowContext = createContext<TeamFollowContextValue | null>(null);
 
-export function useMyTeam(): MyTeamContextValue {
-  const v = useContext(MyTeamContext);
-  if (!v) throw new Error('useMyTeam must be used inside <Providers>');
+export function useTeamFollow(): TeamFollowContextValue {
+  const v = useContext(TeamFollowContext);
+  if (!v) throw new Error('useTeamFollow must be used inside <Providers>');
   return v;
 }
 
-// ───────── Journey request ─────────
-// Lets Topbar signal MapView to open the journey simulator without URL tricks.
-
-interface JourneyRequestContextValue {
-  /** Team code to jump to, 'open' to show team selector, or null = no pending request */
-  journeyRequest: string | null;
-  requestJourney: (codeOrOpen: string) => void;
-  consumeJourneyRequest: () => void;
-}
-
-const JourneyRequestContext = createContext<JourneyRequestContextValue | null>(null);
-
-export function useJourneyRequest(): JourneyRequestContextValue {
-  const v = useContext(JourneyRequestContext);
-  if (!v) throw new Error('useJourneyRequest must be used inside <Providers>');
-  return v;
+/** @deprecated Prefer useTeamFollow — kept for components that only need myTeam */
+export function useMyTeam(): { myTeam: string | null; setMyTeam: (code: string | null) => void } {
+  const { myTeam, selectFollowedTeam, clearFollowedTeam } = useTeamFollow();
+  return {
+    myTeam,
+    setMyTeam: (code) => (code ? selectFollowedTeam(code) : clearFollowedTeam()),
+  };
 }
 
 // ───────── Provider tree ─────────
@@ -65,13 +80,18 @@ export function useJourneyRequest(): JourneyRequestContextValue {
 export function Providers({ children }: { children: ReactNode }) {
   const [tweaks, setTweaks] = useState<Tweaks>(DEFAULT_TWEAKS);
   const [myTeam, setMyTeamState] = useState<string | null>(null);
-  const [journeyRequest, setJourneyRequest] = useState<string | null>(null);
-  const requestJourney = useCallback((codeOrOpen: string) => setJourneyRequest(codeOrOpen), []);
-  const consumeJourneyRequest = useCallback(() => setJourneyRequest(null), []);
+  const [hydrated, setHydrated] = useState(false);
+  const [journey, setJourney] = useState<JourneyState | null>(null);
+  const [scenario, setScenarioState] = useState<JourneyScenario>('first');
+  const [showTeamPicker, setShowTeamPicker] = useState(false);
+  const [liveSchedule, setLiveSchedule] = useState<LiveSchedule | null>(null);
+  const [scheduleLoading, setScheduleLoading] = useState(true);
+  const [animateKey, setAnimateKey] = useState(0);
 
-  useEffect(() => { initPostHog(); }, []);
+  useEffect(() => {
+    initPostHog();
+  }, []);
 
-  // Hydrate from localStorage
   useEffect(() => {
     try {
       const t = localStorage.getItem('pp-tweaks');
@@ -81,24 +101,115 @@ export function Providers({ children }: { children: ReactNode }) {
       const m = localStorage.getItem('pp-my-team');
       if (m) setMyTeamState(m);
     } catch {}
+    setHydrated(true);
   }, []);
 
-  // Persist + apply attrs
   useEffect(() => {
     const el = document.documentElement;
     el.setAttribute('data-look', tweaks.look);
     el.setAttribute('data-density', tweaks.density);
     el.setAttribute('data-type', tweaks.type);
-    try { localStorage.setItem('pp-tweaks', JSON.stringify(tweaks)); } catch {}
+    try {
+      localStorage.setItem('pp-tweaks', JSON.stringify(tweaks));
+    } catch {}
   }, [tweaks]);
 
   useEffect(() => {
     if (myTeam) {
-      try { localStorage.setItem('pp-my-team', myTeam); } catch {}
+      try {
+        localStorage.setItem('pp-my-team', myTeam);
+      } catch {}
     } else {
-      try { localStorage.removeItem('pp-my-team'); } catch {}
+      try {
+        localStorage.removeItem('pp-my-team');
+      } catch {}
     }
   }, [myTeam]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setScheduleLoading(true);
+    fetch('/api/wc/group-schedule')
+      .then((r) => r.json())
+      .then((data) => {
+        if (!cancelled && data.schedule) setLiveSchedule(data.schedule);
+      })
+      .catch(console.error)
+      .finally(() => {
+        if (!cancelled) setScheduleLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const rebuildJourney = useCallback(
+    (code: string, scen: JourneyScenario, bumpAnimate: boolean) => {
+      const result = buildJourney(code, scen, liveSchedule);
+      if (result) {
+        setJourney(result);
+        if (bumpAnimate) setAnimateKey((k) => k + 1);
+      }
+    },
+    [liveSchedule],
+  );
+
+  // Hydrate journey when myTeam was saved (static fallback if schedule API fails)
+  useEffect(() => {
+    if (!hydrated || !myTeam || scheduleLoading) return;
+    if (journey?.teamCode === myTeam) return;
+    rebuildJourney(myTeam, scenario, true);
+  }, [hydrated, scheduleLoading, myTeam, liveSchedule]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Rebuild with live schedule when it arrives after static fallback
+  useEffect(() => {
+    if (!hydrated || !myTeam || !liveSchedule || scheduleLoading) return;
+    const result = buildJourney(myTeam, scenario, liveSchedule);
+    if (result) setJourney(result);
+  }, [hydrated, liveSchedule, myTeam, scenario, scheduleLoading]);
+
+  const selectFollowedTeam = useCallback(
+    (code: string) => {
+      if (!teams[code]) return;
+      setMyTeamState(code);
+      setScenarioState('first');
+      setShowTeamPicker(false);
+      rebuildJourney(code, 'first', true);
+    },
+    [rebuildJourney],
+  );
+
+  const openTeamPicker = useCallback(() => setShowTeamPicker(true), []);
+
+  const closeTeamPicker = useCallback(() => {
+    setShowTeamPicker(false);
+  }, []);
+
+  const setScenario = useCallback(
+    (s: JourneyScenario) => {
+      setScenarioState(s);
+      if (myTeam) {
+        const result = buildJourney(myTeam, s, liveSchedule);
+        if (result) setJourney(result);
+      }
+    },
+    [myTeam, liveSchedule],
+  );
+
+  const replayJourney = useCallback(() => {
+    setAnimateKey((k) => k + 1);
+  }, []);
+
+  const clearFollowedTeam = useCallback(() => {
+    setMyTeamState(null);
+    setJourney(null);
+    setShowTeamPicker(false);
+  }, []);
+
+  const teamColor = useMemo(
+    () => getTeamColor(journey?.teamCode ?? myTeam),
+    [journey?.teamCode, myTeam],
+  );
 
   const setTweak = <K extends keyof Tweaks>(key: K, value: Tweaks[K]) => {
     setTweaks((prev) => ({ ...prev, [key]: value }));
@@ -106,11 +217,26 @@ export function Providers({ children }: { children: ReactNode }) {
 
   return (
     <TweaksContext.Provider value={{ tweaks, setTweak }}>
-      <MyTeamContext.Provider value={{ myTeam, setMyTeam: setMyTeamState }}>
-        <JourneyRequestContext.Provider value={{ journeyRequest, requestJourney, consumeJourneyRequest }}>
-          {children}
-        </JourneyRequestContext.Provider>
-      </MyTeamContext.Provider>
+      <TeamFollowContext.Provider
+        value={{
+          myTeam,
+          journey,
+          scenario,
+          showTeamPicker,
+          liveSchedule,
+          scheduleLoading,
+          animateKey,
+          teamColor,
+          selectFollowedTeam,
+          openTeamPicker,
+          closeTeamPicker,
+          setScenario,
+          replayJourney,
+          clearFollowedTeam,
+        }}
+      >
+        {children}
+      </TeamFollowContext.Provider>
     </TweaksContext.Provider>
   );
 }
