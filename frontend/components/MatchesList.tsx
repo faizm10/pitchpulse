@@ -28,13 +28,16 @@ const ROUNDS = [
 ];
 
 type FilterId = 'all' | 'live' | 'upcoming' | 'ft';
-
+type ViewMode = 'list' | 'calendar';
 
 export function MatchesList() {
   const [filter, setFilter] = useState<FilterId>('all');
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [matches, setMatches] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const width = useWindowWidth();
+  
+  const router = useRouter(); 
 
   const isMobile = width < 640;
   const isTablet = width >= 640 && width < 1024;
@@ -45,7 +48,6 @@ export function MatchesList() {
       try {
         const res = await fetch('/api/scores');
         const data = await res.json();
-        console.log('matches:', data);
         setMatches(data.matches || []);
       } catch (err) {
         console.error(err);
@@ -71,14 +73,209 @@ export function MatchesList() {
     }),
   })).filter(g => g.matches.length > 0);
 
+  const renderCalendarView = () => {
+    const calendarMonths = [
+      { name: 'June 2026', year: 2026, month: 5, totalDays: 30, startOffset: 1 },
+      { name: 'July 2026', year: 2026, month: 6, totalDays: 31, startOffset: 3 },
+    ];
+
+    return (
+      <div style={{ display: 'grid', gap: 64 }}>
+        {calendarMonths.map((mon) => {
+          const daysArray = Array.from({ length: mon.totalDays }, (_, i) => i + 1);
+          const emptyHeaderCells = Array.from({ length: mon.startOffset });
+
+          return (
+            <div key={mon.name}>
+              <div className="serif" style={{ 
+                fontSize: isMobile ? 28 : 36, 
+                fontWeight: 700, 
+                marginBottom: 24, 
+                borderBottom: '2px solid var(--ink)',
+                paddingBottom: 8,
+                letterSpacing: '-0.02em'
+              }}>
+                {mon.name}
+              </div>
+
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(7, 1fr)',
+                gap: '24px 16px',
+              }}>
+                {!isMobile && ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d) => (
+                  <div key={d} className="mono" style={{
+                    fontSize: 10,
+                    paddingBottom: 8,
+                    borderBottom: '1px solid var(--rule)',
+                    color: 'var(--ink-3)',
+                    letterSpacing: '0.14em',
+                    textTransform: 'uppercase'
+                  }}>
+                    {d}
+                  </div>
+                ))}
+
+                {!isMobile && emptyHeaderCells.map((_, i) => (
+                  <div key={`empty-${i}`} style={{ borderBottom: '1px solid var(--rule-soft)', opacity: 0.1 }} />
+                ))}
+
+                {daysArray.map((day) => {
+                  const targetDateStr = `${mon.year}-${String(mon.month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                  
+                  // Filter matches based on their Eastern Time date string
+                  const dayMatches = filtered.filter(m => {
+                    const matchDate = new Date(m.date);
+                    
+                    // Format the match date into Eastern Time YYYY-MM-DD format
+                    const etDateStr = matchDate.toLocaleDateString('en-CA', {
+                      timeZone: 'America/New_York',
+                      year: 'numeric',
+                      month: '2-digit',
+                      day: '2-digit'
+                    }); // Returns "YYYY-MM-DD" safely
+                    
+                    return etDateStr === targetDateStr;
+                  });
+
+                  const hasMatches = dayMatches.length > 0;
+
+                  return (
+                    <div key={day} style={{
+                      minHeight: isMobile ? 'auto' : 140,
+                      borderBottom: '1px solid var(--rule-soft)',
+                      paddingBottom: 16,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 12
+                    }}>
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'baseline',
+                        justifyContent: 'space-between',
+                        borderBottom: '1px solid var(--rule-soft)',
+                        paddingBottom: 4
+                      }}>
+                        <span className="mono" style={{ 
+                          fontSize: 13, 
+                          color: hasMatches ? 'var(--ink)' : 'var(--ink-3)',
+                          fontWeight: hasMatches ? 700 : 400 
+                        }}>
+                          {day}
+                        </span>
+                        {isMobile && hasMatches && (
+                          <span className="mono" style={{ fontSize: 9, color: 'var(--ink-3)' }}>
+                            {dayMatches.length} MATCHES
+                          </span>
+                        )}
+                      </div>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        {dayMatches.map((m) => {
+                          // Format the printed time line into Eastern Time
+                          const matchTime = new Date(m.date).toLocaleTimeString('en-US', {
+                            hour: 'numeric',
+                            minute: '2-digit',
+                            hour12: true,
+                            timeZone: 'America/New_York'
+                          }).toLowerCase();
+
+                          return (
+                            <div 
+                              key={m.id}
+                              onClick={() => router.push(`/match/${m.id}`)}
+                              style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: 4,
+                                cursor: 'pointer',
+                                padding: '4px 0'
+                              }}
+                            >
+                              <div className="mono" style={{ 
+                                fontSize: 9, 
+                                color: m.state === 'in' ? 'var(--live)' : 'var(--ink-3)', 
+                                letterSpacing: '0.05em' 
+                              }}>
+                                {m.state === 'in' ? `• LIVE` : matchTime}
+                              </div>
+
+                              <div className="serif" style={{ 
+                                fontSize: 13, 
+                                lineHeight: '1.4em',
+                                color: 'var(--ink)',
+                                fontWeight: 500,
+                                display: 'flex',
+                                flexWrap: 'wrap',
+                                alignItems: 'center',
+                                gap: '4px 6px'
+                              }}>
+                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                                  <Flag code={m.homeTeam.abbreviation} w={16} h={10} />
+                                  {m.homeTeam.name}
+                                </span>
+                                
+                                <span style={{ fontStyle: 'italic', color: 'var(--ink-3)', fontSize: 11, padding: '0 2px' }}>vs</span>
+                                
+                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                                  <Flag code={m.awayTeam.abbreviation} w={16} h={10} />
+                                  {m.awayTeam.name}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
   return (
     <div className="screen">
       <div style={{
         padding: isMobile ? '24px 16px 20px' : isTablet ? '32px 24px 20px' : '40px 56px 24px',
         borderBottom: '1px solid var(--rule)',
       }}>
-        <div className="eyebrow">
-          All matches · {filtered.length} scheduled
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div className="eyebrow">
+            All matches · {filtered.length} scheduled
+          </div>
+
+          <div style={{ 
+            display: 'inline-flex', 
+            border: '1px solid var(--rule)', 
+            borderRadius: 999, 
+            padding: 2,
+            background: 'var(--paper)'
+          }}>
+            {(['list', 'calendar'] as ViewMode[]).map((mode) => (
+              <button
+                key={mode}
+                onClick={() => { setViewMode(mode); posthog.capture('match_view_changed', { mode }); }}
+                style={{
+                  cursor: 'pointer',
+                  background: viewMode === mode ? 'var(--ink)' : 'transparent',
+                  color: viewMode === mode ? 'var(--paper)' : 'var(--ink)',
+                  border: 'none',
+                  borderRadius: 999,
+                  padding: '4px 12px',
+                  fontFamily: 'var(--mono)',
+                  fontSize: 10,
+                  letterSpacing: '0.1em',
+                  textTransform: 'uppercase',
+                }}
+              >
+                {mode}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="headline" style={{
@@ -135,35 +332,41 @@ export function MatchesList() {
           </div>
         )}
 
-        <div style={{ display: 'grid', gap: 0 }}>
-          {grouped.map((group) => (
-            <div key={group.label}>
-              <div style={{
-                padding: '28px 0 12px',
-                borderBottom: '2px solid var(--rule)',
-                marginBottom: 4,
-              }}>
-                <div className="mono" style={{
-                  fontSize: 10,
-                  letterSpacing: '0.18em',
-                  color: 'var(--ink-3)',
-                  textTransform: 'uppercase',
-                  marginBottom: 4,
-                }}>
-                  {new Date(group.from).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
-                  {group.from !== group.to && ` – ${new Date(group.to).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`}
-                </div>
-                <div className="serif" style={{ fontSize: isMobile ? 18 : 22, fontWeight: 700 }}>
-                  {group.label}
-                </div>
-              </div>
+        {!loading && filtered.length > 0 && (
+          viewMode === 'list' ? (
+            <div style={{ display: 'grid', gap: 0 }}>
+              {grouped.map((group) => (
+                <div key={group.label}>
+                  <div style={{
+                    padding: '28px 0 12px',
+                    borderBottom: '2px solid var(--rule)',
+                    marginBottom: 4,
+                  }}>
+                    <div className="mono" style={{
+                      fontSize: 10,
+                      letterSpacing: '0.18em',
+                      color: 'var(--ink-3)',
+                      textTransform: 'uppercase',
+                      marginBottom: 4,
+                    }}>
+                      {new Date(group.from).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                      {group.from !== group.to && ` – ${new Date(group.to).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`}
+                    </div>
+                    <div className="serif" style={{ fontSize: isMobile ? 18 : 22, fontWeight: 700 }}>
+                      {group.label}
+                    </div>
+                  </div>
 
-              {group.matches.map((m) => (
-                <MatchListRow key={m.id} m={m} isMobile={isMobile} isTablet={isTablet} />
+                  {group.matches.map((m) => (
+                    <MatchListRow key={m.id} m={m} isMobile={isMobile} isTablet={isTablet} />
+                  ))}
+                </div>
               ))}
             </div>
-          ))}
-        </div>
+          ) : (
+            renderCalendarView()
+          )
+        )}
       </div>
     </div>
   );
@@ -172,7 +375,6 @@ export function MatchesList() {
 function MatchListRow({ m, isMobile, isTablet }: { m: any; isMobile: boolean; isTablet: boolean }) {
   const router = useRouter();
 
-  // ── MOBILE: stacked card ─────────────────────────────────────────
   if (isMobile) {
     return (
       <div
@@ -183,7 +385,6 @@ function MatchListRow({ m, isMobile, isTablet }: { m: any; isMobile: boolean; is
           cursor: 'pointer',
         }}
       >
-        {/* Status */}
         <div style={{ marginBottom: 10 }}>
           {m.state === 'in' && (
             <span style={{
@@ -206,7 +407,6 @@ function MatchListRow({ m, isMobile, isTablet }: { m: any; isMobile: boolean; is
           )}
         </div>
 
-        {/* Teams + score */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end' }}>
             <span className="serif" style={{ fontSize: 15, textAlign: 'right' }}>{m.homeTeam.name}</span>
@@ -226,7 +426,6 @@ function MatchListRow({ m, isMobile, isTablet }: { m: any; isMobile: boolean; is
           </div>
         </div>
 
-        {/* Venue */}
         {m.venue?.city && (
           <div className="mono" style={{ fontSize: 9, color: 'var(--ink-3)', letterSpacing: '0.1em', marginTop: 8 }}>
             {m.venue.city.toUpperCase()}
@@ -237,7 +436,6 @@ function MatchListRow({ m, isMobile, isTablet }: { m: any; isMobile: boolean; is
     );
   }
 
-  // ── TABLET: condensed row, no stadium column ─────────────────────
   if (isTablet) {
     return (
       <div
@@ -294,7 +492,6 @@ function MatchListRow({ m, isMobile, isTablet }: { m: any; isMobile: boolean; is
     );
   }
 
-  // ── DESKTOP: full original row ───────────────────────────────────
   return (
     <div
       onClick={() => router.push(`/match/${m.id}`)}

@@ -33,6 +33,14 @@ interface ThirdPlaceEntry extends GroupStandingEntry {
   groupName: string;
 }
 
+// ── Shared Layout Grid Tracks ────────────────────────────────────────────────
+// Creating shared layout strings ensures the header grid tracks mirror the row grid tracks perfectly.
+const GROUP_ROW_GRID_MOBILE = '16px 22px 1fr 54px 44px 32px';
+const GROUP_ROW_GRID_DESKTOP = '20px 24px 1fr 32px 32px 32px 32px 52px 36px';
+
+const THIRD_ROW_GRID_MOBILE = '16px 22px 1fr 32px 44px 32px';
+const THIRD_ROW_GRID_DESKTOP = '20px 24px 1fr 32px 32px 32px 32px 32px 52px 36px';
+
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
@@ -154,28 +162,29 @@ export function Standings() {
                 <div style={{ border: '1px solid var(--rule)', borderRadius: 12, overflow: 'hidden' }}>
                   {/* Third-place table header */}
                   <div style={{
-                    padding: '12px 20px',
+                    padding: isMobile ? '12px 16px' : '12px 20px',
                     borderBottom: '1px solid var(--rule)',
-                    display: 'flex',
+                    display: 'grid',
+                    gridTemplateColumns: isMobile ? THIRD_ROW_GRID_MOBILE : THIRD_ROW_GRID_DESKTOP,
                     alignItems: 'center',
-                    justifyContent: 'space-between',
                     background: 'var(--paper-2)',
                   }}>
-                    <span className="mono" style={{ fontSize: 9, color: 'var(--ink-3)', letterSpacing: '0.12em' }}>
-                      RANK · TEAM (GRP)
+                    {/* Span across Rank, Flag, and Team Name tracks */}
+                    <span className="mono" style={{ gridColumn: 'span 3', fontSize: 9, color: 'var(--ink-3)', letterSpacing: '0.12em' }}>
+                      RANK · TEAM
                     </span>
                     {isMobile ? (
-                      <div style={{ display: 'grid', gridTemplateColumns: '28px 36px 36px', gap: 0, textAlign: 'right' }}>
-                        {['GRP', 'GF:GA', 'PTS'].map((h) => (
-                          <span key={h} className="mono" style={{ fontSize: 9, color: 'var(--ink-3)', letterSpacing: '0.12em' }}>{h}</span>
-                        ))}
-                      </div>
+                      <>
+                        <span className="mono" style={{ fontSize: 9, color: 'var(--ink-3)', letterSpacing: '0.12em', textAlign: 'right' }}>GRP</span>
+                        <span className="mono" style={{ fontSize: 9, color: 'var(--ink-3)', letterSpacing: '0.12em', textAlign: 'right' }}>GF:GA</span>
+                        <span className="mono" style={{ fontSize: 9, color: 'var(--ink-3)', letterSpacing: '0.12em', textAlign: 'right' }}>PTS</span>
+                      </>
                     ) : (
-                      <div style={{ display: 'grid', gridTemplateColumns: '28px 28px 28px 28px 36px 52px 36px', gap: 0, textAlign: 'right' }}>
+                      <>
                         {['GRP', 'P', 'W', 'D', 'L', 'GF:GA', 'PTS'].map((h) => (
-                          <span key={h} className="mono" style={{ fontSize: 9, color: 'var(--ink-3)', letterSpacing: '0.12em' }}>{h}</span>
+                          <span key={h} className="mono" style={{ fontSize: 9, color: 'var(--ink-3)', letterSpacing: '0.12em', textAlign: 'right' }}>{h}</span>
                         ))}
-                      </div>
+                      </>
                     )}
                   </div>
                   {thirdPlaceEntries.map((entry, idx) => {
@@ -207,29 +216,31 @@ function GroupTable({ group, isMobile }: { group: StandingsGroupBlock; isMobile:
     <div style={{ border: '1px solid var(--rule)', borderRadius: 12, overflow: 'hidden' }}>
       {/* Header */}
       <div style={{
-        padding: '12px 20px',
+        padding: isMobile ? '12px 16px' : '12px 20px',
         borderBottom: '1px solid var(--rule)',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        display: 'grid',
+        gridTemplateColumns: isMobile ? GROUP_ROW_GRID_MOBILE : GROUP_ROW_GRID_DESKTOP,
+        alignItems: 'center',
         background: 'var(--paper-2)',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        {/* Title spans across Rank, Flag, and Team Name columns */}
+        <div style={{ gridColumn: 'span 3', display: 'flex', alignItems: 'center' }}>
           <span className="mono" style={{ fontSize: 11, letterSpacing: '0.18em', color: 'var(--ink)' }}>
             {group.header.toUpperCase()}
           </span>
         </div>
-        {/* Mobile: show fewer columns */}
         {isMobile ? (
-          <div style={{ display: 'grid', gridTemplateColumns: '28px 36px 36px', gap: 0, textAlign: 'right' }}>
-            {['W/D/L', 'GF:GA', 'PTS'].map((h) => (
-              <span key={h} className="mono" style={{ fontSize: 9, color: 'var(--ink-3)', letterSpacing: '0.12em' }}>{h}</span>
-            ))}
-          </div>
+          <>
+            <span className="mono" style={{ fontSize: 9, color: 'var(--ink-3)', letterSpacing: '0.05em', textAlign: 'right' }}>W/D/L</span>
+            <span className="mono" style={{ fontSize: 9, color: 'var(--ink-3)', letterSpacing: '0.05em', textAlign: 'right' }}>GF:GA</span>
+            <span className="mono" style={{ fontSize: 9, color: 'var(--ink-3)', letterSpacing: '0.05em', textAlign: 'right' }}>PTS</span>
+          </>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: '28px 28px 28px 36px 52px 36px', gap: 0, textAlign: 'right' }}>
+          <>
             {['P', 'W', 'D', 'L', 'GF:GA', 'PTS'].map((h) => (
-              <span key={h} className="mono" style={{ fontSize: 9, color: 'var(--ink-3)', letterSpacing: '0.12em' }}>{h}</span>
+              <span key={h} className="mono" style={{ fontSize: 9, color: 'var(--ink-3)', letterSpacing: '0.12em', textAlign: 'right' }}>{h}</span>
             ))}
-          </div>
+          </>
         )}
       </div>
 
@@ -256,12 +267,10 @@ function GroupRow({ entry, rank, isMobile }: { entry: GroupStandingEntry; rank: 
   const isFirst  = rank === 1;
   const isThird  = rank === 3;
 
-  // Green bar for top 2, yellow bar for 3rd
   const barColor   = advances ? QUALIFY_GREEN : isThird ? THIRD_YELLOW : 'transparent';
   const barWidth   = advances ? (isFirst ? 4 : 3) : isThird ? 3 : 0;
   const barOpacity = advances ? 1 : isThird ? 1 : 0;
 
-  // Subtle tinted row background
   const bgColor = advances
     ? `rgba(34,197,94,0.06)`
     : isThird
@@ -271,11 +280,7 @@ function GroupRow({ entry, rank, isMobile }: { entry: GroupStandingEntry; rank: 
   return (
     <div style={{
       display: 'grid',
-      // Mobile: rank | flag | name | W/D/L combined | GF:GA | PTS
-      // Desktop: rank | flag | name | P | W | D | L | GF:GA | PTS
-      gridTemplateColumns: isMobile
-        ? '16px 22px 1fr 52px 40px 32px'
-        : '20px 24px 1fr 28px 28px 28px 36px 52px 36px',
+      gridTemplateColumns: isMobile ? GROUP_ROW_GRID_MOBILE : GROUP_ROW_GRID_DESKTOP,
       gap: 0,
       alignItems: 'center',
       padding: isMobile ? '10px 16px' : '11px 20px',
@@ -311,12 +316,11 @@ function GroupRow({ entry, rank, isMobile }: { entry: GroupStandingEntry; rank: 
       <TeamNameLink entry={entry} advances={advances} color={advances ? null : isThird ? THIRD_YELLOW : null} isMobile={isMobile} />
 
       {isMobile ? (
-        // Compact W-D-L combined
         <>
-          <span className="mono tnum" style={{ fontSize: 11, textAlign: 'right', color: 'var(--ink-2)', paddingRight: 4 }}>
+          <span className="mono tnum" style={{ fontSize: 11, textAlign: 'right', color: 'var(--ink-2)' }}>
             {entry.wins}-{entry.draws}-{entry.losses}
           </span>
-          <span className="mono tnum" style={{ fontSize: 11, textAlign: 'right', color: 'var(--ink-3)', paddingRight: 4 }}>
+          <span className="mono tnum" style={{ fontSize: 11, textAlign: 'right', color: 'var(--ink-3)' }}>
             {entry.goalsFor}:{entry.goalsAgainst}
           </span>
           <span className="serif tnum" style={{
@@ -329,14 +333,13 @@ function GroupRow({ entry, rank, isMobile }: { entry: GroupStandingEntry; rank: 
           </span>
         </>
       ) : (
-        // Full P W D L GF:GA PTS
         <>
           {[entry.played, entry.wins, entry.draws, entry.losses].map((v, i) => (
-            <span key={i} className="mono tnum" style={{ fontSize: 12, textAlign: 'right', color: 'var(--ink-2)', paddingRight: 4 }}>
+            <span key={i} className="mono tnum" style={{ fontSize: 12, textAlign: 'right', color: 'var(--ink-2)' }}>
               {v}
             </span>
           ))}
-          <span className="mono tnum" style={{ fontSize: 12, textAlign: 'right', color: 'var(--ink-3)', paddingRight: 4 }}>
+          <span className="mono tnum" style={{ fontSize: 12, textAlign: 'right', color: 'var(--ink-3)' }}>
             {entry.goalsFor}:{entry.goalsAgainst}
           </span>
           <span className="serif tnum" style={{
@@ -367,6 +370,7 @@ function TeamNameLink({
   const style = {
     fontSize: isMobile ? 13 : 15,
     paddingLeft: isMobile ? 8 : 10,
+    paddingRight: 8,
     color: color ?? (advances ? 'var(--ink)' : 'var(--ink-2)'),
     fontWeight: color ? 600 : advances ? 500 : 400,
     whiteSpace: 'nowrap' as const,
@@ -399,9 +403,7 @@ function ThirdPlaceRow({ entry, rank, advances, isMobile }: {
   return (
     <div style={{
       display: 'grid',
-      gridTemplateColumns: isMobile
-        ? '16px 22px 1fr 28px 40px 32px'
-        : '20px 24px 1fr 28px 28px 28px 28px 36px 52px 36px',
+      gridTemplateColumns: isMobile ? THIRD_ROW_GRID_MOBILE : THIRD_ROW_GRID_DESKTOP,
       gap: 0,
       alignItems: 'center',
       padding: isMobile ? '10px 16px' : '11px 20px',
@@ -426,13 +428,13 @@ function ThirdPlaceRow({ entry, rank, advances, isMobile }: {
 
       <TeamNameLink entry={entry} advances={advances} color={null} isMobile={isMobile} />
 
-      <span className="mono" style={{ fontSize: 11, textAlign: 'right', color: 'var(--ink-3)', fontWeight: 600, paddingRight: 4 }}>
+      <span className="mono" style={{ fontSize: 11, textAlign: 'right', color: 'var(--ink-3)', fontWeight: 600 }}>
         {entry.groupName}
       </span>
 
       {isMobile ? (
         <>
-          <span className="mono tnum" style={{ fontSize: 11, textAlign: 'right', color: 'var(--ink-3)', paddingRight: 4 }}>
+          <span className="mono tnum" style={{ fontSize: 11, textAlign: 'right', color: 'var(--ink-3)' }}>
             {entry.goalsFor}:{entry.goalsAgainst}
           </span>
           <span className="serif tnum" style={{ fontSize: 15, textAlign: 'right', fontWeight: 600, color: advances ? QUALIFY_GREEN : 'var(--ink-2)' }}>
@@ -442,9 +444,9 @@ function ThirdPlaceRow({ entry, rank, advances, isMobile }: {
       ) : (
         <>
           {[entry.played, entry.wins, entry.draws, entry.losses].map((v, i) => (
-            <span key={i} className="mono tnum" style={{ fontSize: 12, textAlign: 'right', color: 'var(--ink-2)', paddingRight: 4 }}>{v}</span>
+            <span key={i} className="mono tnum" style={{ fontSize: 12, textAlign: 'right', color: 'var(--ink-2)' }}>{v}</span>
           ))}
-          <span className="mono tnum" style={{ fontSize: 12, textAlign: 'right', color: 'var(--ink-3)', paddingRight: 4 }}>
+          <span className="mono tnum" style={{ fontSize: 12, textAlign: 'right', color: 'var(--ink-3)' }}>
             {entry.goalsFor}:{entry.goalsAgainst}
           </span>
           <span className="serif tnum" style={{ fontSize: 16, textAlign: 'right', fontWeight: 600, color: advances ? QUALIFY_GREEN : 'var(--ink-2)' }}>
