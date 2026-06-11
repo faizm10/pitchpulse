@@ -124,5 +124,9 @@ export async function GET() {
     }
   }
 
+  for (const code of Object.keys(schedule)) {
+    schedule[code].sort((a, b) => Date.parse(a.date) - Date.parse(b.date));
+  }
+
   return NextResponse.json({ schedule });
 }
