@@ -41,39 +41,76 @@ function normalizeTypeSlug(slug: string): string {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
+function buildKeyEvent(p: any, overrideText?: string): object | null {
+  if (!p?.id) return null;
+  const rawSlug: string = p.type?.type ?? p.type?.name ?? "";
+  const typeSlug = normalizeTypeSlug(rawSlug);
+  if (!p.scoringPlay && !NOTABLE_TYPES.has(rawSlug) && !NOTABLE_TYPES.has(typeSlug)) return null;
+  return {
+    id: String(p.id),
+    sequence: p.sequence ?? 0,
+    clock: p.clock?.displayValue ?? "",
+    period: p.period?.number ?? 1,
+    typeSlug,
+    typeText: p.type?.text ?? p.type?.name ?? typeSlug,
+    text: p.shortText ?? p.text ?? "",
+    fullText: overrideText ?? p.text ?? "",
+    scoringPlay: p.scoringPlay ?? false,
+    teamName: p.team?.displayName ?? "",
+    homeScore: p.homeScore ?? null,
+    awayScore: p.awayScore ?? null,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    participants: (p.participants ?? []).map((pt: any) => ({
+      athlete: pt.athlete?.displayName ?? pt.athlete?.shortName ?? pt.athlete?.lastName ?? "",
+      team: p.team?.displayName ?? "",
+    })),
+  };
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function parseEspnExtras(data: any) {
   const seenPlayIds = new Set<string>();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const keyEvents: any[] = [];
+
+  function ingest(ev: object | null) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if (!ev) return;
+    const id = (ev as any).id;
+    if (!id || seenPlayIds.has(id)) return;
+    seenPlayIds.add(id);
+    keyEvents.push(ev);
+  }
+
+  // Source 1: commentary[] — each item wraps a play object
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   for (const item of (data.commentary ?? []) as any[]) {
-    const p = item.play;
-    if (!p?.id) continue;
-    const rawSlug: string = p.type?.type ?? "";
-    const typeSlug = normalizeTypeSlug(rawSlug);
-    if (!p.scoringPlay && !NOTABLE_TYPES.has(rawSlug) && !NOTABLE_TYPES.has(typeSlug)) continue;
-    if (seenPlayIds.has(String(p.id))) continue;
-    seenPlayIds.add(String(p.id));
-    keyEvents.push({
-      id: String(p.id),
-      sequence: item.sequence ?? 0,
-      clock: p.clock?.displayValue ?? "",
-      period: p.period?.number ?? 1,
-      typeSlug,
-      typeText: p.type?.text ?? typeSlug,
-      text: p.shortText ?? p.text ?? "",
-      fullText: item.text ?? p.text ?? "",
-      scoringPlay: p.scoringPlay ?? false,
-      teamName: p.team?.displayName ?? "",
-      homeScore: p.homeScore ?? null,
-      awayScore: p.awayScore ?? null,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      participants: (p.participants ?? []).map((pt: any) => ({
-        athlete: pt.athlete?.displayName ?? pt.athlete?.shortName ?? "",
-        team: p.team?.displayName ?? "",
-      })),
-    });
+    ingest(buildKeyEvent(item.play, item.text));
   }
+
+  // Source 2: scoringPlays[] — direct play objects for goals/penalties
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  for (const p of (data.scoringPlays ?? []) as any[]) {
+    ingest(buildKeyEvent(p));
+  }
+
+  // Source 3: plays[] — flat list ESPN sometimes returns
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  for (const p of (data.plays ?? []) as any[]) {
+    ingest(buildKeyEvent(p));
+  }
+
+  // Source 4: header competition plays / timeline
+  const compPlays =
+    data.header?.competitions?.[0]?.plays ??
+    data.header?.competitions?.[0]?.timeline ??
+    [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  for (const p of compPlays as any[]) {
+    ingest(buildKeyEvent(p));
+  }
+
+  keyEvents.sort((a, b) => (a.sequence ?? 0) - (b.sequence ?? 0));
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const boxTeams: any[] = data.boxscore?.teams ?? [];
