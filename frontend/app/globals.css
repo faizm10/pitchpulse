@@ -128,8 +128,7 @@ body {
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--rule);
-  padding: 12px max(24px, env(safe-area-inset-right)) 0 max(24px, env(safe-area-inset-left));
-  padding-top: max(12px, env(safe-area-inset-top));
+  padding: max(12px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) 12px max(24px, env(safe-area-inset-left));
   display: grid;
   grid-template-columns: minmax(0, auto) minmax(320px, 1fr) auto;
   align-items: center;
@@ -184,12 +183,15 @@ body {
   }
 }
 .topbar-status {
+  display: flex;
+  align-items: center;
   font-size: 10px;
   color: var(--ink-3);
   letter-spacing: 0.16em;
   border-left: 1px solid var(--rule-soft);
   padding-left: 14px;
   white-space: nowrap;
+  line-height: 1;
 }
 .topbar-live {
   font-size: 10px;
@@ -1129,7 +1131,7 @@ body {
     column-gap: 8px;
     width: 100%;
     box-sizing: border-box;
-    padding: 0 max(16px, env(safe-area-inset-right)) 0 max(16px, env(safe-area-inset-left));
+    padding: 4px max(16px, env(safe-area-inset-right)) 10px max(16px, env(safe-area-inset-left));
   }
 
   .topbar-top {
@@ -1179,9 +1181,10 @@ body {
     min-width: 0;
     justify-self: unset;
     justify-content: space-between;
+    align-items: center;
     gap: 4px;
     overflow-x: visible;
-    margin: 8px 0 0;
+    margin: 0;
     border: none;
     border-top: 1px solid var(--rule-soft);
     border-radius: 0;

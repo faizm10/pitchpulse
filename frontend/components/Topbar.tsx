@@ -1,10 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Logo } from './Shared';
-import { useTeamFollow } from './Providers';
 import { useLiveMatches } from '@/hooks/useLiveMatches';
 
 const tabs = [
@@ -63,26 +62,10 @@ function getTournamentStatus(compact = false): string {
 
 export function Topbar() {
   const pathname = usePathname();
-  const router = useRouter();
-  const { myTeam, openTeamPicker, selectFollowedTeam } = useTeamFollow();
   const liveMatches = useLiveMatches();
   const topbarRef = useRef<HTMLElement>(null);
   const [tournamentLine, setTournamentLine] = useState<string>('');
   const [compactTopbar, setCompactTopbar] = useState(false);
-
-  const goHome = () => {
-    if (pathname !== '/') router.push('/');
-  };
-
-  const handleFollowTeam = () => {
-    openTeamPicker();
-    goHome();
-  };
-
-  const handleFollowMyTeam = () => {
-    if (myTeam) selectFollowedTeam(myTeam);
-    goHome();
-  };
 
   useLayoutEffect(() => {
     const el = topbarRef.current;
@@ -156,8 +139,8 @@ export function Topbar() {
           </div>
         </div>
 
-        <div className="topbar-right">
-          {liveCount > 0 ? (
+        {liveCount > 0 ? (
+          <div className="topbar-right">
             <Link
               href="/matches"
               className="topbar-live topbar-live--desktop mono"
@@ -167,26 +150,8 @@ export function Topbar() {
               <span aria-hidden="true" />
               {liveCount} LIVE
             </Link>
-          ) : null}
-          {myTeam ? (
-            <button
-              type="button"
-              className="my-team-link"
-              title="Follow your team's journey"
-              onClick={handleFollowMyTeam}
-            >
-              Follow
-            </button>
-          ) : (
-            <button
-              type="button"
-              className="btn btn-pulse topbar-cta"
-              onClick={handleFollowTeam}
-            >
-              Follow a Team
-            </button>
-          )}
-        </div>
+          </div>
+        ) : null}
       </div>
 
       <nav className="topbar-mid" aria-label="Primary">
