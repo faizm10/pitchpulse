@@ -1,6 +1,11 @@
 export { isFotmobEnabled, FOTMOB_WC_LEAGUE_ID, FotmobError } from "./client";
 export { parseLeagueOverview } from "./parse-league";
 export { fetchTeamProfile, getLeagueOverviewCached, parseTeamProfile } from "./parse-team";
+export {
+  parseTeamFormFromOverview,
+  computeFormFromFixtures,
+  resolveTeamForm,
+} from "./parse-form";
 export { resolveFotmobMatch, findFixture, getFixtureById } from "./match-resolve";
 export {
   getTeamMapEntry,
