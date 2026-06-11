@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { MapMarker, MapRoute, MarkerContent, MarkerLabel, useMap } from '@/components/ui/map';
 import { formatJourneyLabelDate, getJourneyStopStageLabel } from '@/lib/journey';
 import type { JourneyStop } from '@/types/journey';
@@ -18,6 +18,65 @@ function delay(ms: number): Promise<void> {
 /** Keep "City, ST" on one line inside narrow map labels. */
 function formatJourneyCity(city: string): string {
   return city.replace(/,\s*/g, ',\u00A0');
+}
+
+type VenueStopGroup = {
+  venueId: string;
+  coords: [number, number];
+  stops: Array<{ stop: JourneyStop; gameNumber: number }>;
+};
+
+function groupStopsByVenue(stops: JourneyStop[], visibleCount: number): VenueStopGroup[] {
+  const visible = stops.slice(0, visibleCount);
+  const groups: VenueStopGroup[] = [];
+  const groupIndexByVenue = new Map<string, number>();
+
+  visible.forEach((stop, index) => {
+    const existing = groupIndexByVenue.get(stop.venueId);
+    const entry = { stop, gameNumber: index + 1 };
+
+    if (existing !== undefined) {
+      groups[existing].stops.push(entry);
+      return;
+    }
+
+    groupIndexByVenue.set(stop.venueId, groups.length);
+    groups.push({
+      venueId: stop.venueId,
+      coords: stop.coords,
+      stops: [entry],
+    });
+  });
+
+  return groups;
+}
+
+function JourneyStopLabelCard({
+  stop,
+  gameNumber,
+  showGameNumber,
+}: {
+  stop: JourneyStop;
+  gameNumber: number;
+  showGameNumber: boolean;
+}) {
+  return (
+    <div
+      className={`journey-stop-label${stop.confirmed ? '' : ' journey-stop-label--projected'}`}
+    >
+      {showGameNumber ? (
+        <span className="journey-stop-label__game">Game {gameNumber}</span>
+      ) : null}
+      <span className="journey-stop-label__date">{formatJourneyLabelDate(stop.date)}</span>
+      <span className="journey-stop-label__stage">{getJourneyStopStageLabel(stop)}</span>
+      <span className="journey-stop-label__city">{formatJourneyCity(stop.city)}</span>
+      {stop.confirmed && stop.opponentCode ? (
+        <span className="journey-stop-label__vs">vs {stop.opponentCode}</span>
+      ) : (
+        <span className="journey-stop-label__vs journey-stop-label__vs--tbd">TBD</span>
+      )}
+    </div>
+  );
 }
 
 export function JourneyRoute({ stops, teamColor, triggerAnimate }: JourneyRouteProps) {
@@ -84,36 +143,51 @@ export function JourneyRoute({ stops, teamColor, triggerAnimate }: JourneyRouteP
         ? stops.length
         : Math.min(Math.max(visibleCount + 1, 1), stops.length);
 
+  const venueGroups = useMemo(
+    () => groupStopsByVenue(stops, visibleStopCount),
+    [stops, visibleStopCount],
+  );
+
   return (
     <>
-      {stops.slice(0, visibleStopCount).map((stop, i) => (
-        <MapMarker key={`${stop.venueId}-${i}`} longitude={stop.coords[0]} latitude={stop.coords[1]}>
-          <MarkerContent className="journey-stop-marker">
-            <MarkerLabel position="top" className="journey-stop-label-wrap">
-              <div
-                className={`journey-stop-label${stop.confirmed ? '' : ' journey-stop-label--projected'}`}
+      {venueGroups.map((group) => {
+        const hasConfirmed = group.stops.some(({ stop }) => stop.confirmed);
+        const stacked = group.stops.length > 1;
+
+        return (
+          <MapMarker
+            key={group.venueId}
+            longitude={group.coords[0]}
+            latitude={group.coords[1]}
+          >
+            <MarkerContent className="journey-stop-marker">
+              <MarkerLabel
+                position="top"
+                className={`journey-stop-label-wrap${stacked ? ' journey-stop-label-wrap--stacked' : ''}`}
               >
-                <span className="journey-stop-label__date">{formatJourneyLabelDate(stop.date)}</span>
-                <span className="journey-stop-label__stage">{getJourneyStopStageLabel(stop)}</span>
-                <span className="journey-stop-label__city">{formatJourneyCity(stop.city)}</span>
-                {stop.confirmed && stop.opponentCode ? (
-                  <span className="journey-stop-label__vs">vs {stop.opponentCode}</span>
-                ) : (
-                  <span className="journey-stop-label__vs journey-stop-label__vs--tbd">TBD</span>
-                )}
-              </div>
-            </MarkerLabel>
-            <div
-              className={`journey-stop-dot${stop.confirmed ? '' : ' journey-stop-dot--projected'}`}
-              style={
-                stop.confirmed
-                  ? { background: teamColor, boxShadow: `0 0 0 3px ${teamColor}33` }
-                  : undefined
-              }
-            />
-          </MarkerContent>
-        </MapMarker>
-      ))}
+                <div className="journey-stop-label-stack">
+                  {group.stops.map(({ stop, gameNumber }) => (
+                    <JourneyStopLabelCard
+                      key={`${group.venueId}-${gameNumber}`}
+                      stop={stop}
+                      gameNumber={gameNumber}
+                      showGameNumber={stacked}
+                    />
+                  ))}
+                </div>
+              </MarkerLabel>
+              <div
+                className={`journey-stop-dot${hasConfirmed ? '' : ' journey-stop-dot--projected'}`}
+                style={
+                  hasConfirmed
+                    ? { background: teamColor, boxShadow: `0 0 0 3px ${teamColor}33` }
+                    : undefined
+                }
+              />
+            </MarkerContent>
+          </MapMarker>
+        );
+      })}
       {confirmedSegments.map(([from, to], i) => (
         <MapRoute
           key={`jc-${i}`}

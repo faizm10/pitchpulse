@@ -37,8 +37,9 @@ Open [http://localhost:3000](http://localhost:3000).
 ```
 PREDICT_API_URL=http://127.0.0.1:8001
 FOTMOB_ENABLED=1
-NEXT_PUBLIC_POSTHOG_KEY=
-NEXT_PUBLIC_POSTHOG_HOST=https://app.posthog.com
+NEXT_PUBLIC_POSTHOG_KEY=phc_...
+NEXT_PUBLIC_POSTHOG_HOST=https://us.posthog.com
+POSTHOG_API_HOST=https://us.i.posthog.com
 ```
 
 `backend/.env`

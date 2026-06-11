@@ -9,7 +9,8 @@ import {
   useState,
   ReactNode,
 } from 'react';
-import { initPostHog } from '@/lib/posthog';
+import { initPostHog, posthog } from '@/lib/posthog';
+import { PostHogPageView } from '@/components/PostHogPageView';
 import { buildJourney } from '@/lib/journey';
 import { getTeamColor } from '@/lib/teamColor';
 import { teams } from '@/lib/data';
@@ -91,6 +92,12 @@ export function Providers({ children }: { children: ReactNode }) {
   useEffect(() => {
     initPostHog();
   }, []);
+
+  useEffect(() => {
+    if (!hydrated || !myTeam || !process.env.NEXT_PUBLIC_POSTHOG_KEY) return;
+    const name = teams[myTeam]?.name ?? myTeam;
+    posthog.identify(myTeam, { team_code: myTeam, team_name: name });
+  }, [hydrated, myTeam]);
 
   useEffect(() => {
     try {
@@ -235,6 +242,7 @@ export function Providers({ children }: { children: ReactNode }) {
           clearFollowedTeam,
         }}
       >
+        <PostHogPageView />
         {children}
       </TeamFollowContext.Provider>
     </TweaksContext.Provider>

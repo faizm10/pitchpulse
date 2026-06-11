@@ -26,13 +26,18 @@ const WC_SF      = new Date('2026-07-14T00:00:00Z'); // semi-finals
 const WC_FINAL   = new Date('2026-07-18T00:00:00Z'); // final day
 const WC_END     = new Date('2026-07-20T00:00:00Z'); // tournament over
 
-function getCountdown(): string {
+function getCountdown(compact = false): string {
   const diff = WC_START.getTime() - Date.now();
   if (diff <= 0) return '';
   const d = Math.floor(diff / 86_400_000);
   const h = Math.floor((diff % 86_400_000) / 3_600_000);
   const m = Math.floor((diff % 3_600_000) / 60_000);
   const s = Math.floor((diff % 60_000) / 1_000);
+  if (compact) {
+    if (d > 0) return `${d}D ${h}H ${m}M`;
+    if (h > 0) return `${h}H ${m}M ${s}S`;
+    return `${m}M ${s}S`;
+  }
   if (d > 0) {
     return `KICKOFF IN ${d}D ${String(h).padStart(2, '0')}H ${String(m).padStart(2, '0')}M ${String(s).padStart(2, '0')}S`;
   }
@@ -42,9 +47,9 @@ function getCountdown(): string {
   return `KICKOFF IN ${String(m).padStart(2, '0')}M ${String(s).padStart(2, '0')}S`;
 }
 
-function getTournamentStatus(): string {
+function getTournamentStatus(compact = false): string {
   const now = new Date();
-  if (now < WC_START) return getCountdown();
+  if (now < WC_START) return getCountdown(compact);
   if (now >= WC_END)   return 'WORLD CUP 2026 · COMPLETE';
   const day = Math.floor((now.getTime() - WC_START.getTime()) / 86_400_000) + 1;
   let stage: string;
@@ -64,6 +69,7 @@ export function Topbar() {
   const liveMatches = useLiveMatches();
   const topbarRef = useRef<HTMLElement>(null);
   const [tournamentLine, setTournamentLine] = useState<string>('');
+  const [compactTopbar, setCompactTopbar] = useState(false);
 
   const goHome = () => {
     if (pathname !== '/') router.push('/');
@@ -98,14 +104,22 @@ export function Topbar() {
   }, []);
 
   useEffect(() => {
-    const update = () => setTournamentLine(getTournamentStatus());
+    const mq = window.matchMedia('(max-width: 700px)');
+    const syncCompact = () => setCompactTopbar(mq.matches);
+    syncCompact();
+    mq.addEventListener('change', syncCompact);
+    return () => mq.removeEventListener('change', syncCompact);
+  }, []);
+
+  useEffect(() => {
+    const update = () => setTournamentLine(getTournamentStatus(compactTopbar));
     update();
     const t = setInterval(update, 1000);
     return () => clearInterval(t);
-  }, []);
+  }, [compactTopbar]);
 
   const liveCount = liveMatches.length;
-  const isKickoffCountdown = tournamentLine.startsWith('KICKOFF');
+  const isKickoffCountdown = Date.now() < WC_START.getTime();
 
   const statusContent = useMemo(() => {
     if (liveCount > 0) {
@@ -118,20 +132,63 @@ export function Topbar() {
     }
     if (isKickoffCountdown) {
       return (
-        <span className="topbar-status-kickoff">
-          {tournamentLine}
+        <span className={`topbar-status-kickoff${compactTopbar ? ' topbar-status-kickoff--compact' : ''}`}>
+          {compactTopbar ? (
+            <>
+              <span className="topbar-status-kickoff__label">KICKOFF</span>
+              <span className="topbar-status-kickoff__timer">{tournamentLine}</span>
+            </>
+          ) : (
+            tournamentLine
+          )}
         </span>
       );
     }
     return <span>{tournamentLine || '\u00A0'}</span>;
-  }, [liveCount, isKickoffCountdown, tournamentLine]);
+  }, [compactTopbar, liveCount, isKickoffCountdown, tournamentLine]);
 
   return (
     <header className="topbar" ref={topbarRef}>
-      <div className="topbar-left">
-        <Logo />
-        <div className="topbar-status mono" aria-live="polite">
-          {statusContent}
+      <div className="topbar-head">
+        <div className="topbar-top">
+          <Logo />
+          <div className="topbar-status mono" aria-live="polite">
+            {statusContent}
+          </div>
+        </div>
+
+        <div className="topbar-right">
+          {liveCount > 0 ? (
+            <Link
+              href="/matches"
+              className="topbar-live topbar-live--desktop mono"
+              style={{ textDecoration: 'none', color: 'inherit' }}
+              title="View live matches"
+            >
+              <span aria-hidden="true" />
+              {liveCount} LIVE
+            </Link>
+          ) : null}
+          {myTeam ? (
+            <button
+              type="button"
+              className="my-team-link"
+              title="Follow your team's journey"
+              onClick={handleFollowMyTeam}
+            >
+              <Flag code={myTeam} w={20} h={13} />
+              <span className="my-team-follow-prefix">Follow </span>
+              <span className="my-team-name">{teams[myTeam]?.name}</span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="btn btn-pulse topbar-cta"
+              onClick={handleFollowTeam}
+            >
+              Follow a Team
+            </button>
+          )}
         </div>
       </div>
 
@@ -150,40 +207,6 @@ export function Topbar() {
           );
         })}
       </nav>
-
-      <div className="topbar-right">
-        {liveCount > 0 ? (
-          <Link
-            href="/matches"
-            className="topbar-live topbar-live--desktop mono"
-            style={{ textDecoration: 'none', color: 'inherit' }}
-            title="View live matches"
-          >
-            <span aria-hidden="true" />
-            {liveCount} LIVE
-          </Link>
-        ) : null}
-        {myTeam ? (
-          <button
-            type="button"
-            className="my-team-link"
-            title="Follow your team's journey"
-            onClick={handleFollowMyTeam}
-          >
-            <Flag code={myTeam} w={20} h={13} />
-            <span className="my-team-follow-prefix">Follow </span>
-            <span className="my-team-name">{teams[myTeam]?.name}</span>
-          </button>
-        ) : (
-          <button
-            type="button"
-            className="btn btn-pulse topbar-cta"
-            onClick={handleFollowTeam}
-          >
-            Follow a Team
-          </button>
-        )}
-      </div>
     </header>
   );
 }
