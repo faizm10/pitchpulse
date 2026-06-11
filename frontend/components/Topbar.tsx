@@ -17,8 +17,8 @@ const tabs = [
   { label: 'News', href: '/news' },
 ];
 
-// WC2026 phase boundaries — opening match June 11 at 8 PM CDT (01:00 UTC Jun 12)
-const WC_START   = new Date('2026-06-12T01:00:00Z'); // opening match kickoff
+// WC2026 phase boundaries — opening match June 11 at 3 PM EST (20:00 UTC)
+const WC_START   = new Date('2026-06-11T20:00:00Z'); // opening match kickoff
 const WC_R32     = new Date('2026-06-29T00:00:00Z'); // round of 32 begins
 const WC_R16     = new Date('2026-07-05T00:00:00Z'); // round of 16 begins
 const WC_QF      = new Date('2026-07-11T00:00:00Z'); // quarter-finals
