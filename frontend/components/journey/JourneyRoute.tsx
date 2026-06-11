@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { MapRoute, useMap } from '@/components/ui/map';
+import { MapMarker, MapRoute, MarkerContent, MarkerLabel, useMap } from '@/components/ui/map';
+import { formatJourneyLabelDate, getJourneyStopStageLabel } from '@/lib/journey';
 import type { JourneyStop } from '@/types/journey';
 
 interface JourneyRouteProps {
@@ -12,6 +13,11 @@ interface JourneyRouteProps {
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/** Keep "City, ST" on one line inside narrow map labels. */
+function formatJourneyCity(city: string): string {
+  return city.replace(/,\s*/g, ',\u00A0');
 }
 
 export function JourneyRoute({ stops, teamColor, triggerAnimate }: JourneyRouteProps) {
@@ -71,8 +77,43 @@ export function JourneyRoute({ stops, teamColor, triggerAnimate }: JourneyRouteP
     }
   }
 
+  const visibleStopCount =
+    stops.length === 0
+      ? 0
+      : stops.length < 2
+        ? stops.length
+        : Math.min(Math.max(visibleCount + 1, 1), stops.length);
+
   return (
     <>
+      {stops.slice(0, visibleStopCount).map((stop, i) => (
+        <MapMarker key={`${stop.venueId}-${i}`} longitude={stop.coords[0]} latitude={stop.coords[1]}>
+          <MarkerContent className="journey-stop-marker">
+            <MarkerLabel position="top" className="journey-stop-label-wrap">
+              <div
+                className={`journey-stop-label${stop.confirmed ? '' : ' journey-stop-label--projected'}`}
+              >
+                <span className="journey-stop-label__date">{formatJourneyLabelDate(stop.date)}</span>
+                <span className="journey-stop-label__stage">{getJourneyStopStageLabel(stop)}</span>
+                <span className="journey-stop-label__city">{formatJourneyCity(stop.city)}</span>
+                {stop.confirmed && stop.opponentCode ? (
+                  <span className="journey-stop-label__vs">vs {stop.opponentCode}</span>
+                ) : (
+                  <span className="journey-stop-label__vs journey-stop-label__vs--tbd">TBD</span>
+                )}
+              </div>
+            </MarkerLabel>
+            <div
+              className={`journey-stop-dot${stop.confirmed ? '' : ' journey-stop-dot--projected'}`}
+              style={
+                stop.confirmed
+                  ? { background: teamColor, boxShadow: `0 0 0 3px ${teamColor}33` }
+                  : undefined
+              }
+            />
+          </MarkerContent>
+        </MapMarker>
+      ))}
       {confirmedSegments.map(([from, to], i) => (
         <MapRoute
           key={`jc-${i}`}
