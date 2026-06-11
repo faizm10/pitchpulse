@@ -1407,29 +1407,6 @@ export default function MLSGamePage({ params }: { params: { slug: string } }) {
       {/* Score hero */}
       <ScoreHero match={match} liveClock={liveClock} isMobile={isMobile} />
 
-      {/* Data sources attribution — same style as Chelsea page */}
-      <div
-        role="note"
-        style={{
-          margin: isMobile ? '16px 16px 0' : '20px 40px 0',
-          padding: '10px 14px',
-          borderRadius: 6,
-          border: '1px solid var(--rule-soft)',
-          background: 'var(--paper-2)',
-          display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap',
-        }}
-      >
-        <span className="mono" style={{ fontSize: 9, color: 'var(--ink-3)', letterSpacing: '0.12em' }}>DATA SOURCES</span>
-        <span className="mono" style={{ fontSize: 9, padding: '1px 6px', borderRadius: 2, background: 'rgba(255,60,60,0.12)', color: '#e63c3c', letterSpacing: '0.1em' }}>ESPN</span>
-        <span className="mono" style={{ fontSize: 9, color: 'var(--ink-3)' }}>Events · Stats · News · Leaders</span>
-        {isHybrid && (
-          <>
-            <span className="mono" style={{ fontSize: 9, padding: '1px 6px', borderRadius: 2, background: 'rgba(0,120,255,0.12)', color: '#0078ff', letterSpacing: '0.1em', marginLeft: 6 }}>FOTMOB</span>
-            <span className="mono" style={{ fontSize: 9, color: 'var(--ink-3)' }}>Live clock · Standings</span>
-          </>
-        )}
-      </div>
-
       {/* Penalty shootout — shown above key events when pens are live or after game ends on pens */}
       {match.hadPenaltyShootout && (
         <PenaltyShootoutPanel
