@@ -7,8 +7,6 @@ import type { StandingsGroupBlock, GroupStandingEntry } from "@/types/espn";
 
 export const dynamic = "force-dynamic";
 
-export const revalidate = 60;
-
 const ESPN_SCOREBOARD =
   "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard";
 const GROUP_STAGE_DATES = "20260611-20260628";
@@ -26,7 +24,7 @@ async function collectAllGroupStandings(): Promise<StandingsGroupBlock[]> {
   scoreboardUrl.searchParams.set("limit", "500");
 
   const boardRes = await fetch(scoreboardUrl.toString(), {
-    next: { revalidate },
+    cache: "no-store",
   });
   if (!boardRes.ok) {
     throw new Error("scoreboard");

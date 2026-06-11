@@ -54,18 +54,26 @@ export function Standings() {
   const pad = isMobile ? '16px' : isTablet ? '24px' : '56px';
 
   useEffect(() => {
+    let cancelled = false;
+
     async function load() {
       try {
-        const res = await fetch('/api/standings');
+        const res = await fetch('/api/standings', { cache: 'no-store' });
         const data = await res.json();
-        setGroups(data.groups ?? []);
+        if (!cancelled) setGroups(data.groups ?? []);
       } catch {
-        setError(true);
+        if (!cancelled) setError(true);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     }
+
     load();
+    const id = setInterval(load, 30_000);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
   }, []);
 
   const thirdPlaceEntries: ThirdPlaceEntry[] = groups
