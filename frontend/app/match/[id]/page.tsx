@@ -11,6 +11,7 @@ import { buildGoalDataFromKeyEvent, isScoringGoalEvent } from '@/lib/goal-notifi
 import { fetchPrediction } from '@/lib/predict';
 import { showMatchEventToast } from '@/lib/match-toasts';
 import { stadiums } from '@/lib/data';
+import { posthog } from '@/lib/posthog';
 import type { PredictResponse } from '@/types/predict';
 
 const POLL_LIVE = 12_000;
@@ -787,6 +788,7 @@ function NewsSection({ news, isMobile }: { news: NewsItem[]; isMobile: boolean }
         {news.map((item) => (
           <li key={item.id}>
             <a href={item.link} target="_blank" rel="noopener noreferrer" aria-label={item.headline}
+              onClick={() => posthog.capture('match_news_article_clicked', { headline: item.headline, source: item.source, link: item.link })}
               style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
               <article
                 style={{ display: 'grid', gridTemplateColumns: item.image && !isMobile ? '80px 1fr' : '1fr', gap: 14, padding: '14px 12px', borderRadius: 8, transition: 'background 0.1s', cursor: 'pointer' }}
@@ -973,6 +975,7 @@ export default function MatchPage({ params }: { params: { id: string } }) {
   const [predictionError, setPredictionError] = useState<string | null>(null);
   const clockBase = useRef<{ seconds: number; fetchedAt: number } | null>(null);
   const seenEventIds = useRef<Set<string>>(new Set());
+  const hasTrackedView = useRef(false);
 
   if (!gameId) {
     notFound();
@@ -1016,6 +1019,17 @@ export default function MatchPage({ params }: { params: { id: string } }) {
       setMatch(incoming);
       setError(null);
       setLastFetched(Date.now());
+
+      if (!hasTrackedView.current) {
+        hasTrackedView.current = true;
+        posthog.capture('match_viewed', {
+          match_id: gameId,
+          home_team: incoming.homeTeam.abbreviation,
+          away_team: incoming.awayTeam.abbreviation,
+          match_state: incoming.state,
+          league: incoming.league,
+        });
+      }
 
       const clockActive =
         incoming.state === 'in' &&
@@ -1156,7 +1170,7 @@ export default function MatchPage({ params }: { params: { id: string } }) {
             </div>
             <button
               className="btn"
-              onClick={fetchMatch}
+              onClick={() => { posthog.capture('match_refreshed', { match_id: gameId }); fetchMatch(); }}
               aria-label="Refresh match data"
               style={{ fontSize: 10, padding: '0 12px', minHeight: 36 }}
             >

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { BackBar, Flag } from "./Shared";
 import { useWindowWidth } from "@/hooks/useWindowWidth";
+import { posthog } from "@/lib/posthog";
 import type { FotmobFixture, FotmobSquadMember, FotmobTeamProfile } from "@/types/fotmob";
 import { getTeamMapEntry } from "@/lib/fotmob/team-map";
 import { TeamHubHeaderSkeleton, TeamHubSkeleton } from "@/components/skeleton/TeamPagesSkeleton";
@@ -483,6 +484,7 @@ export function TeamHub({ code }: { code: string }) {
         if (!cancelled) {
           if (data.error) throw new Error(data.detail ?? data.error);
           setProfile(data.profile);
+          posthog.capture('team_hub_viewed', { team_code: upper });
         }
       })
       .catch(e => { if (!cancelled) setError(e.message ?? "Failed to load team"); })

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { BackBar, Flag } from "./Shared";
 import { useWindowWidth } from "@/hooks/useWindowWidth";
+import { posthog } from "@/lib/posthog";
 import type { FotmobPlayerDetail } from "@/types/fotmob";
 import { PlayerProfileSkeleton } from "@/components/skeleton/TeamPagesSkeleton";
 
@@ -34,7 +35,10 @@ export function PlayerProfile({ playerId, teamCode }: { playerId: string; teamCo
         if (!res.ok) {
           throw new Error(data.detail ?? data.error ?? `HTTP ${res.status}`);
         }
-        if (!cancelled) setDetail(data.detail);
+        if (!cancelled) {
+          setDetail(data.detail);
+          posthog.capture('player_profile_viewed', { player_id: playerId, team_code: upper });
+        }
       } catch (e) {
         if (!cancelled) {
           setError(e instanceof Error ? e.message : "Failed to load player");

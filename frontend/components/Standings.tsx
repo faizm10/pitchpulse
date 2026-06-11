@@ -11,6 +11,9 @@ import { useWindowWidth } from '@/hooks/useWindowWidth';
 
 // ── Colour helpers ────────────────────────────────────────────────────────────
 
+const QUALIFY_GREEN = '#22c55e';   // top-2 / top-8 advance
+const THIRD_YELLOW  = '#f59e0b';   // 3rd place — candidate
+
 function teamPrimaryColor(code: string | null | undefined): string | null {
   if (!code) return null;
   return (teams as Record<string, { flag?: string[] }>)[code]?.flag?.[0] ?? null;
@@ -109,16 +112,11 @@ export function Standings() {
             {/* Qualification legend */}
             <div style={{ display: 'flex', gap: 20, marginBottom: 24, flexWrap: 'wrap' }}>
               {[
-                { bar: 'var(--ink)', label: '1st – 2nd: automatic qualification' },
-                { bar: 'var(--ink-3)', dashed: true, label: '3rd: best third-placed candidates' },
+                { color: QUALIFY_GREEN, label: '1st – 2nd: automatic qualification' },
+                { color: THIRD_YELLOW,  label: '3rd: best third-placed candidates' },
               ].map((l) => (
                 <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <div style={{
-                    width: 3, height: 16, borderRadius: 2,
-                    background: l.dashed ? 'transparent' : l.bar,
-                    opacity: l.dashed ? 0.5 : 1,
-                    borderLeft: l.dashed ? '3px dashed var(--ink-3)' : undefined,
-                  }} />
+                  <div style={{ width: 3, height: 16, borderRadius: 2, background: l.color }} />
                   <span className="mono" style={{ fontSize: 9, letterSpacing: '0.1em', color: 'var(--ink-3)' }}>
                     {l.label.toUpperCase()}
                   </span>
@@ -205,25 +203,16 @@ export function Standings() {
 // ── Group table ───────────────────────────────────────────────────────────────
 
 function GroupTable({ group, isMobile }: { group: StandingsGroupBlock; isMobile: boolean }) {
-  const leader = group.entries[0];
-  const leaderCode = leader ? teamCodeFromDisplayName(leader.name, leader.abbreviation) : null;
-  const leaderColor = teamPrimaryColor(leaderCode);
-
   return (
     <div style={{ border: '1px solid var(--rule)', borderRadius: 12, overflow: 'hidden' }}>
       {/* Header */}
       <div style={{
         padding: '12px 20px',
-        borderBottom: leaderColor
-          ? `2px solid ${hexRgba(leaderColor, 0.4)}`
-          : '1px solid var(--rule)',
+        borderBottom: '1px solid var(--rule)',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        background: leaderColor
-          ? `linear-gradient(90deg, ${hexRgba(leaderColor, 0.06)} 0%, var(--paper-2) 60%)`
-          : 'var(--paper-2)',
+        background: 'var(--paper-2)',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          {leaderCode && <Flag code={leaderCode} w={16} h={11} />}
           <span className="mono" style={{ fontSize: 11, letterSpacing: '0.18em', color: 'var(--ink)' }}>
             {group.header.toUpperCase()}
           </span>
@@ -264,24 +253,19 @@ function GroupRow({ entry, rank, isMobile }: { entry: GroupStandingEntry; rank: 
   const color = teamPrimaryColor(code);
 
   const advances = rank <= 2;
-  const isFirst = rank === 1;
-  const isThird = rank === 3;
+  const isFirst  = rank === 1;
+  const isThird  = rank === 3;
 
-  const barColor = isFirst && color
-    ? color
-    : advances && color
-    ? hexRgba(color, 0.65)
-    : advances ? 'var(--ink)'
-    : isThird ? 'var(--ink-3)'
-    : 'transparent';
+  // Green bar for top 2, yellow bar for 3rd
+  const barColor   = advances ? QUALIFY_GREEN : isThird ? THIRD_YELLOW : 'transparent';
+  const barWidth   = advances ? (isFirst ? 4 : 3) : isThird ? 3 : 0;
+  const barOpacity = advances ? 1 : isThird ? 1 : 0;
 
-  const barWidth = isFirst ? 4 : advances ? 3 : isThird ? 3 : 0;
-  const barOpacity = isFirst ? 1 : advances ? 0.85 : isThird ? 0.4 : 0;
-
-  const bgColor = isFirst && color
-    ? hexRgba(color, 0.07)
-    : advances && color
-    ? hexRgba(color, 0.03)
+  // Subtle tinted row background
+  const bgColor = advances
+    ? `rgba(34,197,94,0.06)`
+    : isThird
+    ? `rgba(245,158,11,0.05)`
     : 'var(--paper)';
 
   return (
@@ -312,7 +296,7 @@ function GroupRow({ entry, rank, isMobile }: { entry: GroupStandingEntry; rank: 
       {/* Rank */}
       <span className="mono tnum" style={{
         fontSize: 11,
-        color: isFirst && color ? color : advances ? 'var(--ink)' : 'var(--ink-3)',
+        color: advances ? QUALIFY_GREEN : isThird ? THIRD_YELLOW : 'var(--ink-3)',
         fontWeight: isFirst ? 700 : 400,
       }}>
         {rank}
@@ -324,7 +308,7 @@ function GroupRow({ entry, rank, isMobile }: { entry: GroupStandingEntry; rank: 
       </div>
 
       {/* Team name */}
-      <TeamNameLink entry={entry} advances={advances} color={isFirst ? color : null} isMobile={isMobile} />
+      <TeamNameLink entry={entry} advances={advances} color={advances ? null : isThird ? THIRD_YELLOW : null} isMobile={isMobile} />
 
       {isMobile ? (
         // Compact W-D-L combined
@@ -339,7 +323,7 @@ function GroupRow({ entry, rank, isMobile }: { entry: GroupStandingEntry; rank: 
             fontSize: 15,
             textAlign: 'right',
             fontWeight: isFirst ? 700 : advances ? 600 : 400,
-            color: isFirst && color ? color : advances ? 'var(--ink)' : 'var(--ink-2)',
+            color: advances ? QUALIFY_GREEN : isThird ? THIRD_YELLOW : 'var(--ink-2)',
           }}>
             {entry.points}
           </span>
@@ -359,7 +343,7 @@ function GroupRow({ entry, rank, isMobile }: { entry: GroupStandingEntry; rank: 
             fontSize: 16,
             textAlign: 'right',
             fontWeight: isFirst ? 700 : advances ? 600 : 400,
-            color: isFirst && color ? color : advances ? 'var(--ink)' : 'var(--ink-2)',
+            color: advances ? QUALIFY_GREEN : isThird ? THIRD_YELLOW : 'var(--ink-2)',
           }}>
             {entry.points}
           </span>
@@ -411,7 +395,6 @@ function ThirdPlaceRow({ entry, rank, advances, isMobile }: {
   isMobile: boolean;
 }) {
   const code = teamCodeFromDisplayName(entry.name, entry.abbreviation);
-  const color = teamPrimaryColor(code);
 
   return (
     <div style={{
@@ -423,16 +406,19 @@ function ThirdPlaceRow({ entry, rank, advances, isMobile }: {
       alignItems: 'center',
       padding: isMobile ? '10px 16px' : '11px 20px',
       borderTop: rank === 1 ? 'none' : '1px solid var(--rule-soft)',
-      background: advances && color ? hexRgba(color, 0.04) : 'var(--paper)',
+      background: advances ? 'rgba(34,197,94,0.06)' : 'var(--paper)',
       position: 'relative',
     }}>
       <div style={{
         position: 'absolute', left: 0, top: 0, bottom: 0, width: 3,
-        background: advances ? (color ?? 'var(--live, #10b981)') : 'transparent',
-        opacity: advances ? 0.8 : 0,
+        background: advances ? QUALIFY_GREEN : 'transparent',
       }} />
 
-      <span className="mono tnum" style={{ fontSize: 11, color: 'var(--ink)' }}>{rank}</span>
+      <span className="mono tnum" style={{
+        fontSize: 11,
+        color: advances ? QUALIFY_GREEN : 'var(--ink-3)',
+        fontWeight: advances ? 600 : 400,
+      }}>{rank}</span>
 
       <div style={{ display: 'flex', alignItems: 'center' }}>
         <Flag code={code} w={isMobile ? 16 : 18} h={isMobile ? 10 : 12} />
@@ -449,7 +435,7 @@ function ThirdPlaceRow({ entry, rank, advances, isMobile }: {
           <span className="mono tnum" style={{ fontSize: 11, textAlign: 'right', color: 'var(--ink-3)', paddingRight: 4 }}>
             {entry.goalsFor}:{entry.goalsAgainst}
           </span>
-          <span className="serif tnum" style={{ fontSize: 15, textAlign: 'right', fontWeight: 600, color: 'var(--ink)' }}>
+          <span className="serif tnum" style={{ fontSize: 15, textAlign: 'right', fontWeight: 600, color: advances ? QUALIFY_GREEN : 'var(--ink-2)' }}>
             {entry.points}
           </span>
         </>
@@ -461,7 +447,7 @@ function ThirdPlaceRow({ entry, rank, advances, isMobile }: {
           <span className="mono tnum" style={{ fontSize: 12, textAlign: 'right', color: 'var(--ink-3)', paddingRight: 4 }}>
             {entry.goalsFor}:{entry.goalsAgainst}
           </span>
-          <span className="serif tnum" style={{ fontSize: 16, textAlign: 'right', fontWeight: 600, color: 'var(--ink)' }}>
+          <span className="serif tnum" style={{ fontSize: 16, textAlign: 'right', fontWeight: 600, color: advances ? QUALIFY_GREEN : 'var(--ink-2)' }}>
             {entry.points}
           </span>
         </>
