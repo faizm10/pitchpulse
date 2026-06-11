@@ -58,7 +58,7 @@ export function StadiumView({ id }: { id: string }) {
   );
 
   return (
-    <div className="screen" style={{ minHeight: 'calc(100vh - 64px)' }}>
+    <div className="screen" style={{ minHeight: 'calc(100vh - var(--topbar-h))' }}>
       <BackBar label={`${s.country === 'CA' ? 'CANADA' : s.country === 'MX' ? 'MEXICO' : 'UNITED STATES'} · STADIUM`} />
 
       {/* Hero image */}
