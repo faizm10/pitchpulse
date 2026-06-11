@@ -34,7 +34,6 @@ interface ThirdPlaceEntry extends GroupStandingEntry {
 }
 
 // ── Shared Layout Grid Tracks ────────────────────────────────────────────────
-// Creating shared layout strings ensures the header grid tracks mirror the row grid tracks perfectly.
 const GROUP_ROW_GRID_MOBILE = '16px 22px 1fr 54px 44px 32px';
 const GROUP_ROW_GRID_DESKTOP = '20px 24px 1fr 32px 32px 32px 32px 52px 36px';
 
@@ -42,10 +41,76 @@ const THIRD_ROW_GRID_MOBILE = '16px 22px 1fr 32px 44px 32px';
 const THIRD_ROW_GRID_DESKTOP = '20px 24px 1fr 32px 32px 32px 32px 32px 52px 36px';
 
 
+// ── Real-Time Standings Calculation Logic ────────────────────────────────────
+function computeLiveGroupEntries(initialEntries: GroupStandingEntry[], matches: any[]): GroupStandingEntry[] {
+  // Map initial entries by team system code or team name for fast identification
+  const map: Record<string, GroupStandingEntry & { pointsOverride?: number }> = {};
+  
+  initialEntries.forEach(entry => {
+    const code = teamCodeFromDisplayName(entry.name, entry.abbreviation) || entry.name.toLowerCase();
+    map[code] = { 
+      ...entry,
+      played: 0, wins: 0, draws: 0, losses: 0, goalsFor: 0, goalsAgainst: 0, points: 0 
+    };
+  });
+
+  // Calculate stats based on active scores data stream
+  matches.forEach(match => {
+    const homeCode = teamCodeFromDisplayName(match.homeTeam.name, match.homeTeam.abbreviation) || match.homeTeam.name.toLowerCase();
+    const awayCode = teamCodeFromDisplayName(match.awayTeam.name, match.awayTeam.abbreviation) || match.awayTeam.name.toLowerCase();
+
+    // Check if both teams belong to this table cluster block
+    if (map[homeCode] && map[awayCode]) {
+      if (match.state === 'in' || match.state === 'post') {
+        const homeScore = Number(match.homeTeam.score || 0);
+        const awayScore = Number(match.awayTeam.score || 0);
+
+        map[homeCode].played += 1;
+        map[awayCode].played += 1;
+        map[homeCode].goalsFor += homeScore;
+        map[homeCode].goalsAgainst += awayScore;
+        map[awayCode].goalsFor += awayScore;
+        map[awayCode].goalsAgainst += homeScore;
+
+        if (homeScore > awayScore) {
+          map[homeCode].wins += 1;
+          map[homeCode].points += 3;
+          map[awayCode].losses += 1;
+        } else if (awayScore > homeScore) {
+          map[awayCode].wins += 1;
+          map[awayCode].points += 3;
+          map[homeCode].losses += 1;
+        } else {
+          map[homeCode].draws += 1;
+          map[homeCode].points += 1;
+          map[awayCode].draws += 1;
+          map[awayCode].points += 1;
+        }
+      }
+    }
+  });
+
+  // If no live matches have started for this group yet, fall back seamlessly to initial data
+  const dynamicEntries = Object.values(map);
+  const totalPlayed = dynamicEntries.reduce((sum, e) => sum + e.played, 0);
+  if (totalPlayed === 0) return initialEntries;
+
+  // International tournament sort algorithm
+  return dynamicEntries.sort((a, b) => {
+    if (b.points !== a.points) return b.points - a.points;
+    const gdA = a.goalsFor - a.goalsAgainst;
+    const gdB = b.goalsFor - b.goalsAgainst;
+    if (gdB !== gdA) return gdB - gdA;
+    return b.goalsFor - a.goalsFor;
+  });
+}
+
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export function Standings() {
   const [groups, setGroups] = useState<StandingsGroupBlock[]>([]);
+  const [matches, setMatches] = useState<any[]>([]); // New state hook for live calculations
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const width = useWindowWidth();
@@ -54,29 +119,35 @@ export function Standings() {
   const pad = isMobile ? '16px' : isTablet ? '24px' : '56px';
 
   useEffect(() => {
-    let cancelled = false;
-
     async function load() {
       try {
-        const res = await fetch('/api/standings', { cache: 'no-store' });
-        const data = await res.json();
-        if (!cancelled) setGroups(data.groups ?? []);
+        // Fetch baseline standings data and match endpoints concurrently
+        const [standingsRes, scoresRes] = await Promise.all([
+          fetch('/api/standings'),
+          fetch('/api/scores')
+        ]);
+        
+        const standingsData = await standingsRes.json();
+        const scoresData = await scoresRes.json();
+
+        setGroups(standingsData.groups ?? []);
+        setMatches(scoresData.matches ?? []);
       } catch {
-        if (!cancelled) setError(true);
+        setError(true);
       } finally {
-        if (!cancelled) setLoading(false);
+        setLoading(false);
       }
     }
-
     load();
-    const id = setInterval(load, 30_000);
-    return () => {
-      cancelled = true;
-      clearInterval(id);
-    };
   }, []);
 
-  const thirdPlaceEntries: ThirdPlaceEntry[] = groups
+  // Compute live contextual blocks on every state render cycle
+  const processedGroups = groups.map(g => ({
+    ...g,
+    entries: computeLiveGroupEntries(g.entries, matches)
+  }));
+
+  const thirdPlaceEntries: ThirdPlaceEntry[] = processedGroups
     .map((g) => {
       const thirdRow = g.entries?.[2];
       if (!thirdRow) return null;
@@ -85,8 +156,8 @@ export function Standings() {
     .filter((entry): entry is ThirdPlaceEntry => entry !== null)
     .sort((a, b) => {
       if (b.points !== a.points) return b.points - a.points;
-      const gdA = a.goalDifference ?? (a.goalsFor - a.goalsAgainst);
-      const gdB = b.goalDifference ?? (b.goalsFor - b.goalsAgainst);
+      const gdA = a.goalsFor - a.goalsAgainst;
+      const gdB = b.goalsFor - b.goalsAgainst;
       if (gdB !== gdA) return gdB - gdA;
       return b.goalsFor - a.goalsFor;
     });
@@ -117,13 +188,13 @@ export function Standings() {
           </div>
         )}
 
-        {!loading && !error && groups.length === 0 && (
+        {!loading && !error && processedGroups.length === 0 && (
           <div className="serif it" style={{ fontSize: 28, color: 'var(--ink-3)' }}>
             No standings available yet.
           </div>
         )}
 
-        {!loading && !error && groups.length > 0 && (
+        {!loading && !error && processedGroups.length > 0 && (
           <>
             {/* Qualification legend */}
             <div style={{ display: 'flex', gap: 20, marginBottom: 24, flexWrap: 'wrap' }}>
@@ -140,7 +211,7 @@ export function Standings() {
               ))}
             </div>
 
-            {/* Group tables grid — single col on mobile, 2 col on tablet, auto on desktop */}
+            {/* Group tables grid */}
             <div style={{
               display: 'grid',
               gridTemplateColumns: isMobile
@@ -151,7 +222,7 @@ export function Standings() {
               gap: isMobile ? 20 : 32,
               marginBottom: 56,
             }}>
-              {groups.map((group) => (
+              {processedGroups.map((group) => (
                 <GroupTable key={group.header} group={group} isMobile={isMobile} />
               ))}
             </div>
@@ -177,7 +248,6 @@ export function Standings() {
                     alignItems: 'center',
                     background: 'var(--paper-2)',
                   }}>
-                    {/* Span across Rank, Flag, and Team Name tracks */}
                     <span className="mono" style={{ gridColumn: 'span 3', fontSize: 9, color: 'var(--ink-3)', letterSpacing: '0.12em' }}>
                       RANK · TEAM
                     </span>
@@ -231,7 +301,6 @@ function GroupTable({ group, isMobile }: { group: StandingsGroupBlock; isMobile:
         alignItems: 'center',
         background: 'var(--paper-2)',
       }}>
-        {/* Title spans across Rank, Flag, and Team Name columns */}
         <div style={{ gridColumn: 'span 3', display: 'flex', alignItems: 'center' }}>
           <span className="mono" style={{ fontSize: 11, letterSpacing: '0.18em', color: 'var(--ink)' }}>
             {group.header.toUpperCase()}
