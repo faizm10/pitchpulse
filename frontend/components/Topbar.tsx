@@ -11,13 +11,13 @@ const tabs = [
   { label: 'Map', href: '/' },
   { label: 'Matches', href: '/matches' },
   { label: 'Standings', href: '/standings' },
-  { label: 'Bracket', href: '/bracket' },
+  // { label: 'Bracket', href: '/bracket' },
   { label: 'Stats', href: '/stats' },
   { label: 'News', href: '/news' },
 ];
 
-// WC2026 phase boundaries (UTC midnight)
-const WC_START   = new Date('2026-06-11T00:00:00Z'); // opening match
+// WC2026 phase boundaries — opening match June 11 at 8 PM CDT (01:00 UTC Jun 12)
+const WC_START   = new Date('2026-06-12T01:00:00Z'); // opening match kickoff
 const WC_R32     = new Date('2026-06-29T00:00:00Z'); // round of 32 begins
 const WC_R16     = new Date('2026-07-05T00:00:00Z'); // round of 16 begins
 const WC_QF      = new Date('2026-07-11T00:00:00Z'); // quarter-finals
@@ -25,9 +25,22 @@ const WC_SF      = new Date('2026-07-14T00:00:00Z'); // semi-finals
 const WC_FINAL   = new Date('2026-07-18T00:00:00Z'); // final day
 const WC_END     = new Date('2026-07-20T00:00:00Z'); // tournament over
 
+function getCountdown(): string {
+  const diff = WC_START.getTime() - Date.now();
+  if (diff <= 0) return '';
+  const h = Math.floor(diff / 3_600_000);
+  const m = Math.floor((diff % 3_600_000) / 60_000);
+  const s = Math.floor((diff % 60_000) / 1_000);
+  if (h >= 24) {
+    const d = Math.floor(h / 24);
+    return `KICKOFF IN ${d}D ${h % 24}H ${m}M`;
+  }
+  return `KICKOFF IN ${h}H ${String(m).padStart(2, '0')}M ${String(s).padStart(2, '0')}S`;
+}
+
 function getTournamentStatus(): string {
   const now = new Date();
-  if (now < WC_START)  return 'INTERNATIONAL FRIENDLIES';
+  if (now < WC_START)  return getCountdown();
   if (now >= WC_END)   return 'WORLD CUP 2026 · COMPLETE';
   const day = Math.floor((now.getTime() - WC_START.getTime()) / 86_400_000) + 1;
   let stage: string;
