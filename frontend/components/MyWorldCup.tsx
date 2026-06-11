@@ -24,7 +24,7 @@ export function MyWorldCup() {
   const pad = isMobile ? '16px' : isTablet ? '24px' : '56px';
 
   return (
-    <div className="screen" style={{ minHeight: 'calc(100vh - 64px)' }}>
+    <div className="screen" style={{ minHeight: 'calc(100vh - var(--topbar-h))' }}>
       <BackBar label="MY WORLD CUP" />
       <div style={{ padding: `48px ${pad}`, display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 32 : 56 }}>
         <div>
