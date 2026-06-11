@@ -7,11 +7,12 @@ import { Flag } from '@/components/Shared';
 interface TeamSelectorProps {
   onSelect: (teamCode: string) => void;
   onClose: () => void;
+  onBrowse?: () => void;
 }
 
 const ALL_TEAMS = Object.values(teams).sort((a, b) => a.name.localeCompare(b.name));
 
-export function TeamSelector({ onSelect, onClose }: TeamSelectorProps) {
+export function TeamSelector({ onSelect, onClose, onBrowse }: TeamSelectorProps) {
   const [query, setQuery] = useState('');
 
   const filtered = useMemo(
@@ -97,6 +98,38 @@ export function TeamSelector({ onSelect, onClose }: TeamSelectorProps) {
 
         {/* Team list */}
         <div style={{ overflowY: 'auto', flex: 1 }}>
+          {onBrowse && !query.trim() && (
+            <button
+              type="button"
+              onClick={onBrowse}
+              style={{
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
+                padding: '13px 20px',
+                background: 'none',
+                border: 'none',
+                borderBottom: '1px solid var(--rule)',
+                cursor: 'pointer',
+                textAlign: 'left',
+                transition: 'background 120ms',
+              }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--paper-2)'; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'none'; }}
+            >
+              <span style={{
+                width: 28, height: 18,
+                display: 'grid', placeItems: 'center',
+                fontSize: 16, color: 'var(--ink-3)',
+              }}>
+                ⊘
+              </span>
+              <span style={{ flex: 1, fontSize: 14, color: 'var(--ink)', fontWeight: 500 }}>
+                No team — general view
+              </span>
+            </button>
+          )}
           {filtered.map((team) => (
             <button
               key={team.code}

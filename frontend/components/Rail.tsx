@@ -60,6 +60,18 @@ export function Rail() {
     setScenario,
     replayJourney,
   } = useTeamFollow();
+  const [bannerDismissed, setBannerDismissed] = useState(false);
+
+  useEffect(() => {
+    try {
+      if (localStorage.getItem('pp-banner-dismissed') === '1') setBannerDismissed(true);
+    } catch {}
+  }, []);
+
+  const dismissBanner = () => {
+    setBannerDismissed(true);
+    try { localStorage.setItem('pp-banner-dismissed', '1'); } catch {}
+  };
   const [liveMatches, setLiveMatches] = useState<Match[]>([]);
   const [upcomingMatches, setUpcomingMatches] = useState<Match[]>([]); // top-5 for "UP NEXT"
   const [allUpcoming, setAllUpcoming] = useState<Match[]>([]); // full list for team search
@@ -175,7 +187,7 @@ export function Rail() {
 
   return (
     <aside className="rail">
-      <MyTeamBanner myTeam={myTeam} onFollow={openTeamPicker} onChangeTeam={openTeamPicker} />
+      <MyTeamBanner myTeam={myTeam} onFollow={openTeamPicker} onChangeTeam={openTeamPicker} dismissed={bannerDismissed} onDismiss={dismissBanner} />
 
       {/* Live first when browsing without a followed team */}
       {!followingTeam && (
@@ -416,16 +428,35 @@ function MyTeamBanner({
   myTeam,
   onFollow,
   onChangeTeam,
+  dismissed,
+  onDismiss,
 }: {
   myTeam: string | null;
   onFollow: () => void;
   onChangeTeam: () => void;
+  dismissed: boolean;
+  onDismiss: () => void;
 }) {
   const t = myTeam ? teams[myTeam] : null;
   const liveForms = useLiveForms();
   const banner = t ? getTeamBannerStyle(myTeam) : null;
 
   const form: FormResult[] = (myTeam ? liveForms?.[myTeam] : null) ?? t?.form ?? [];
+
+  if (!t && dismissed) {
+    return (
+      <div className="rail-section" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <button
+          type="button"
+          className="btn btn-sm"
+          style={{ flex: 1 }}
+          onClick={onFollow}
+        >
+          Follow a Team
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -469,16 +500,33 @@ function MyTeamBanner({
           </div>
         </div>
       ) : (
-        <div>
+        <div style={{ position: 'relative' }}>
+          <button
+            type="button"
+            onClick={onDismiss}
+            aria-label="Dismiss"
+            style={{
+              position: 'absolute', top: 0, right: 0,
+              background: 'none', border: 'none', cursor: 'pointer',
+              color: 'var(--ink-3)', fontSize: 16, lineHeight: 1, padding: 2,
+            }}
+          >
+            ×
+          </button>
           <div className="mono" style={{ fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--ink-3)' }}>
             MAKE IT YOURS
           </div>
           <div className="serif" style={{ fontSize: 24, lineHeight: 1.1, marginTop: 6 }}>
             Pick your team —<br /><em style={{ color: 'var(--pulse)' }}>map &amp; rail sync.</em>
           </div>
-          <button type="button" className="btn btn-pulse" style={{ marginTop: 14 }} onClick={onFollow}>
-            Follow a Team
-          </button>
+          <div style={{ marginTop: 14, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+            <button type="button" className="btn btn-pulse" onClick={onFollow}>
+              Follow a Team
+            </button>
+            <button type="button" className="btn btn-sm" onClick={onDismiss}>
+              Just browse
+            </button>
+          </div>
         </div>
       )}
     </div>

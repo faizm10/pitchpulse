@@ -18,6 +18,7 @@ export function MapView() {
     animateKey,
     teamColor,
     selectFollowedTeam,
+    clearFollowedTeam,
     closeTeamPicker,
     openTeamPicker,
   } = useTeamFollow();
@@ -58,7 +59,11 @@ export function MapView() {
       </DashboardMap>
 
       {showTeamPicker && (
-        <TeamSelector onSelect={selectFollowedTeam} onClose={closeTeamPicker} />
+        <TeamSelector
+          onSelect={selectFollowedTeam}
+          onClose={closeTeamPicker}
+          onBrowse={() => { clearFollowedTeam(); closeTeamPicker(); }}
+        />
       )}
 
       <div
