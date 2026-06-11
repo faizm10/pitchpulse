@@ -95,6 +95,8 @@ export interface FotmobTeamProfile {
   fifaRank?: number;
   fifaPoints?: number;
   groupLabel?: string;
+  /** Last 5 W/D/L from FotMob (WC fixtures + recent matches). */
+  form: ("W" | "D" | "L")[];
   squad: FotmobSquadMember[];
   fixtures: FotmobFixture[];
 }
