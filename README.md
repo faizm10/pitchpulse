@@ -1,164 +1,53 @@
 # PitchPulse
 
-> Your all-in-one FIFA World Cup 2026 intelligence dashboard.
+⚽ Map-first FIFA World Cup 2026 dashboard. Live scores, standings, news, match detail, and ML win/draw/loss predictions across 16 host venues.
 
-PitchPulse is a map-first dashboard for the 2026 World Cup: live scores, standings, news, match pages, and ML-powered win/draw/loss predictions — built by football fans, for football fans.
+https://github.com/hamzaelmi068/pitchpulse/raw/main/public/demo.mp4
 
-## What's working today
+## Stack
 
-| Area | Status |
-|------|--------|
-| Interactive map (MapLibre GL, 16 host venues) | Live |
-| Live scores & match list | ESPN |
-| Group standings | ESPN |
-| News feed | ESPN |
-| Match detail (teams, score, status, venue) | ESPN |
-| AI prediction bars + narrative | FastAPI Random Forest |
-| Team squads & fixtures (`/team/[code]`) | FotMob (league 77) |
-| Match FotMob extras (group, xG when available) | FotMob |
-| Knockout bracket | ESPN + static R32 hints |
-| Player stats leaderboard | Mock UI |
-| Stadium / country detail pages | Mock UI |
-| Match timeline & possession | Hidden (not wired) |
+Next.js 14, TypeScript, MapLibre GL, ESPN + FotMob APIs, FastAPI, scikit-learn
 
-## Tech stack
-
-| Layer | Tools |
-|-------|--------|
-| Frontend | Next.js 14, TypeScript, plain CSS |
-| Map | MapLibre GL |
-| Live data | ESPN public API (Next.js API routes) |
-| Squads / fixtures | FotMob API via `/api/fotmob/*` (`FOTMOB_ENABLED=1`) |
-| Predictions | FastAPI, scikit-learn, pandas (Python 3.10+) |
-| ML model | Random Forest, 18 features, 3-class output (home / draw / away) |
-
-The prediction service is **stateless**: it loads a model trained offline from `backend/app/data/world_cup_matches.csv` (World Cup matches 1930–2018). No paid APIs required for the current pipeline.
-
-## Project structure
-
-```
-pitchpulse/
-├── frontend/                 # Next.js app → http://localhost:3000
-│   ├── app/api/              # ESPN proxies + /api/predict → FastAPI
-│   ├── components/             # UI (map, match detail, predictions, …)
-│   ├── data/venues.ts        # Stadium coordinates for the map
-│   └── lib/                  # ESPN parsers, mock data, predict client
-├── backend/                  # FastAPI → http://127.0.0.1:8001
-│   ├── app/services/         # Feature engineering + training
-│   ├── app/models/           # Predictor + saved .joblib artifact
-│   └── scripts/              # prepare_data.py, train_model.py
-└── AGENTS.md                 # Agent / contributor context
-```
-
-## Run locally
-
-You need **two terminals**.
-
-### 1. Prediction API (port 8001)
+## Run
 
 ```bash
+# frontend
+cd frontend && npm i && npm run dev
+
+# backend (separate terminal)
 cd backend
-python -m venv .venv
-# Windows:  .venv\Scripts\activate
-# macOS/Linux:  source .venv/bin/activate
+python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-python scripts/train_model.py          # first time only
+python scripts/train_model.py   # first time only
 uvicorn app.main:app --reload --port 8001
 ```
 
-### 2. Frontend (port 3000)
+Open [http://localhost:3000](http://localhost:3000).
 
-```bash
-cd frontend
-npm install
-```
+## Env
 
-Create `frontend/.env.local`:
+`frontend/.env.local`
 
 ```
 PREDICT_API_URL=http://127.0.0.1:8001
+FOTMOB_ENABLED=1
+NEXT_PUBLIC_POSTHOG_KEY=
+NEXT_PUBLIC_POSTHOG_HOST=https://app.posthog.com
 ```
 
-Then:
+`backend/.env`
 
-```bash
-npm run dev
+```
+PORT=8001
+TRAIN_ON_STARTUP=0
+MODEL_PATH=app/models/artifacts/world_cup_rf.joblib
+CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000). Click a match from the map or Matches page to see ESPN detail plus prediction bars.
-
-### Quick checks
-
-```bash
-curl http://127.0.0.1:8001/health
-curl -X POST http://127.0.0.1:8001/predict -H "Content-Type: application/json" -d "{\"home_team\":\"Brazil\",\"away_team\":\"Germany\"}"
-curl -X POST http://localhost:3000/api/predict -H "Content-Type: application/json" -d "{\"home_team\":\"Brazil\",\"away_team\":\"Germany\"}"
-```
-
-## Production — prediction API + Vercel
-
-The ML backend is deployed separately from the Next.js app. The browser **never** calls Render directly; Vercel’s server route `frontend/app/api/predict` proxies to FastAPI using `PREDICT_API_URL`.
-
-| Piece | URL / config |
-|-------|----------------|
-| **Render API** | `https://pitchpulse-api-dsye.onrender.com` |
-| **Health** | `GET …/health` → `{"status":"ok","model_loaded":true}` |
-| **Vercel env** | `PREDICT_API_URL=https://pitchpulse-api-dsye.onrender.com` (Production + Preview) |
-| **Redeploy** | Required after changing env vars |
-
-### Wire Vercel (one-time)
-
-1. Vercel project → **Settings → Environment Variables**
-2. Set `PREDICT_API_URL` = `https://pitchpulse-api-dsye.onrender.com` (no trailing slash)
-3. **Deployments → Redeploy** the latest production build
-4. Open a match on the live site → AI prediction bars should load
-
-### Smoke test
-
-From repo root (Node 18+):
-
-```bash
-# Backend only (local or Render)
-PREDICT_API_URL=https://pitchpulse-api-dsye.onrender.com npm run smoke:predict
-
-# Backend + deployed Next.js proxy
-PREDICT_API_URL=https://pitchpulse-api-dsye.onrender.com \
-SMOKE_FRONTEND_URL=https://your-app.vercel.app \
-npm run smoke:predict
-```
-
-### Redeploy backend after retraining
-
-```bash
-cd backend
-python scripts/train_model.py    # updates app/models/artifacts/world_cup_rf.joblib
-git add app/models/artifacts/world_cup_rf.joblib
-git commit -m "chore(backend): refresh prediction model artifact"
-git push
-```
-
-Render auto-deploys from `main` when `backend/` or `render.yaml` changes. Confirm with `GET /health` (`training_rows` unchanged is fine; `model_loaded` must be `true`).
-
-### Render plan note
-
-Free tier **sleeps** when idle; the first `/predict` after sleep can take **30–60 seconds**. For marketing / launch, use Render **Starter** (~$7/mo) or equivalent always-on hosting — set `plan: starter` in `render.yaml` or upgrade in the Render dashboard.
-
-See `backend/README.md` for API details and `render.yaml` for the Blueprint.
-
-## ML pipeline (summary)
-
-- **Training data:** World Cup tournament matches 1930–2018 (`world_cup_matches.csv`)
-- **Features:** 18 (win rates, weighted goals, head-to-head, tournament stage weight, …)
-- **Output:** `home_win_probability`, `draw_probability`, `away_win_probability`
-- **Unknown teams:** Slight home lean (0.34 / 0.33 / 0.33) with `confidence: "low"`
-
-See `backend/README.md` for dataset sources, Kaggle setup, and CV metrics.
+Production: set `PREDICT_API_URL=https://pitchpulse-api-dsye.onrender.com` on Vercel. See [AGENTS.md](AGENTS.md) and [backend/README.md](backend/README.md) for deploy, retrain, and API details.
 
 ## Team
 
 - [Hamza](https://github.com/hamzaelmi068)
 - [Faiz](https://github.com/faizm10)
-
-## License
-
-See [LICENSE](LICENSE).
+- [Harishan](https://github.com/HariT10)
