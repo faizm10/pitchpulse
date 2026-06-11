@@ -1,4 +1,4 @@
-import type { GoalData } from '@/components/GoalNotification';
+import type { GoalData, GoalVariant } from '@/components/GoalNotification';
 import type { MatchToastTeam } from '@/lib/match-toasts';
 
 export type ScoringSide = 'home' | 'away';
@@ -49,6 +49,20 @@ export const MLS_GAME_SQUADS: Record<string, Record<ScoringSide, GoalScorerOptio
 export function getMatchSquads(matchSlug?: string): Record<ScoringSide, GoalScorerOption[]> {
   if (matchSlug && MLS_GAME_SQUADS[matchSlug]) return MLS_GAME_SQUADS[matchSlug];
   return { home: [], away: [] };
+}
+
+const SCORER_VARIANTS: { pattern: RegExp; variant: GoalVariant }[] = [
+  { pattern: /\bronaldo\b|cristiano|\bcr7\b/i,      variant: 'siuuu' },
+  { pattern: /\bmessi\b|lionel messi|leo messi/i,   variant: 'goat'  },
+  { pattern: /\bson\b|heung.?min/i,                 variant: 'son'   },
+  { pattern: /\bra[uú]l\b/i,                        variant: 'raul'  },
+];
+
+export function pickVariantForScorer(name: string): GoalVariant | undefined {
+  for (const { pattern, variant } of SCORER_VARIANTS) {
+    if (pattern.test(name)) return variant;
+  }
+  return undefined;
 }
 
 export function isScoringGoalEvent(ev: Pick<KeyEventLike, 'typeSlug' | 'scoringPlay'>): boolean {

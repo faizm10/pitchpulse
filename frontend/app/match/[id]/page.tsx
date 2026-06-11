@@ -7,7 +7,7 @@ import { notFound } from 'next/navigation';
 import { useGoalCelebration } from '@/components/LiveGoalCelebration';
 import { MatchPrediction } from '@/components/MatchPrediction';
 import { PitchPulseToaster } from '@/components/PitchPulseToaster';
-import { buildGoalDataFromKeyEvent, isScoringGoalEvent } from '@/lib/goal-notification';
+import { buildGoalDataFromKeyEvent, isScoringGoalEvent, pickVariantForScorer } from '@/lib/goal-notification';
 import { fetchPrediction } from '@/lib/predict';
 import { showMatchEventToast } from '@/lib/match-toasts';
 import { stadiums } from '@/lib/data';
@@ -995,11 +995,13 @@ export default function MatchPage({ params }: { params: { id: string } }) {
                   incoming.league,
                   gameId
                 );
+                const athleteName = ev.participants?.[0]?.athlete ?? '';
+                const variant = pickVariantForScorer(athleteName);
                 playGoal({
                   ...goalData,
                   homeScore: ev.homeScore != null ? ev.homeScore : (parseInt(incoming.homeTeam.score, 10) || 0),
                   awayScore: ev.awayScore != null ? ev.awayScore : (parseInt(incoming.awayTeam.score, 10) || 0),
-                });
+                }, variant);
               } else {
                 showMatchEventToast(ev, incoming.homeTeam, incoming.awayTeam);
               }

@@ -8,6 +8,21 @@ import { Flag } from './Shared';
 import { useWindowWidth } from '@/hooks/useWindowWidth';
 import { posthog } from '@/lib/posthog';
 
+function useNow(intervalMs = 30_000) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), intervalMs);
+    return () => clearInterval(id);
+  }, [intervalMs]);
+  return now;
+}
+
+function minsUntil(dateStr: string, now: number): number | null {
+  const diff = new Date(dateStr).getTime() - now;
+  if (diff <= 0 || diff > 30 * 60 * 1000) return null;
+  return Math.ceil(diff / 60_000);
+}
+
 const filters = [
   { id: 'all', label: 'All' },
   { id: 'live', label: 'Live', dot: 'var(--live)' },
@@ -372,6 +387,40 @@ export function MatchesList() {
   );
 }
 
+function MatchStatusLabel({ m, fontSize }: { m: any; fontSize: number }) {
+  const now = useNow();
+  const minsAway = m.state === 'pre' ? minsUntil(m.date, now) : null;
+
+  if (m.state === 'in') {
+    return (
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: 'var(--live)', fontFamily: 'var(--mono)', fontSize, letterSpacing: '0.12em' }}>
+        <span className="status-dot live" />
+        LIVE · {m.displayClock}
+      </span>
+    );
+  }
+  if (m.state === 'post') {
+    return (
+      <span className="mono" style={{ fontSize, color: 'var(--ink-3)', letterSpacing: '0.12em' }}>
+        FULL TIME
+      </span>
+    );
+  }
+  if (minsAway !== null) {
+    return (
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontFamily: 'var(--mono)', fontSize, letterSpacing: '0.1em', color: '#f59e0b', fontWeight: 700 }}>
+        <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#f59e0b', display: 'inline-block', flexShrink: 0 }} />
+        {minsAway <= 1 ? 'KICKOFF NOW' : `KICKOFF IN ${minsAway}M`}
+      </span>
+    );
+  }
+  return (
+    <span className="mono" style={{ fontSize, color: 'var(--ink-2)', letterSpacing: '0.12em' }}>
+      {new Date(m.date).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
+    </span>
+  );
+}
+
 function MatchListRow({ m, isMobile, isTablet }: { m: any; isMobile: boolean; isTablet: boolean }) {
   const router = useRouter();
 
@@ -386,25 +435,7 @@ function MatchListRow({ m, isMobile, isTablet }: { m: any; isMobile: boolean; is
         }}
       >
         <div style={{ marginBottom: 10 }}>
-          {m.state === 'in' && (
-            <span style={{
-              display: 'inline-flex', alignItems: 'center', gap: 6,
-              color: 'var(--live)', fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '0.12em',
-            }}>
-              <span className="status-dot live" />
-              LIVE · {m.displayClock}
-            </span>
-          )}
-          {m.state === 'post' && (
-            <span className="mono" style={{ fontSize: 10, color: 'var(--ink-3)', letterSpacing: '0.12em' }}>
-              FULL TIME
-            </span>
-          )}
-          {m.state === 'pre' && (
-            <span className="mono" style={{ fontSize: 10, color: 'var(--ink-2)', letterSpacing: '0.12em' }}>
-              {new Date(m.date).toLocaleString()}
-            </span>
-          )}
+          <MatchStatusLabel m={m} fontSize={10} />
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -451,23 +482,7 @@ function MatchListRow({ m, isMobile, isTablet }: { m: any; isMobile: boolean; is
         }}
       >
         <div>
-          {m.state === 'in' && (
-            <span style={{
-              display: 'inline-flex', alignItems: 'center', gap: 6,
-              color: 'var(--live)', fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '0.12em',
-            }}>
-              <span className="status-dot live" />
-              LIVE · {m.displayClock}
-            </span>
-          )}
-          {m.state === 'post' && (
-            <span className="mono" style={{ fontSize: 10, color: 'var(--ink-3)', letterSpacing: '0.12em' }}>FULL TIME</span>
-          )}
-          {m.state === 'pre' && (
-            <span className="mono" style={{ fontSize: 10, color: 'var(--ink-2)', letterSpacing: '0.12em' }}>
-              {new Date(m.date).toLocaleString()}
-            </span>
-          )}
+          <MatchStatusLabel m={m} fontSize={10} />
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, justifyContent: 'flex-end' }}>
@@ -506,23 +521,7 @@ function MatchListRow({ m, isMobile, isTablet }: { m: any; isMobile: boolean; is
       }}
     >
       <div>
-        {m.state === 'in' && (
-          <span style={{
-            display: 'inline-flex', alignItems: 'center', gap: 6,
-            color: 'var(--live)', fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '0.12em',
-          }}>
-            <span className="status-dot live" />
-            LIVE · {m.displayClock}
-          </span>
-        )}
-        {m.state === 'post' && (
-          <span className="mono" style={{ fontSize: 11, color: 'var(--ink-3)', letterSpacing: '0.12em' }}>FULL TIME</span>
-        )}
-        {m.state === 'pre' && (
-          <span className="mono" style={{ fontSize: 11, color: 'var(--ink-2)', letterSpacing: '0.12em' }}>
-            {new Date(m.date).toLocaleString()}
-          </span>
-        )}
+        <MatchStatusLabel m={m} fontSize={11} />
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 14, justifyContent: 'flex-end' }}>

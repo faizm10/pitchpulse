@@ -5,7 +5,7 @@ import React, { useState, useEffect, useRef, useMemo, type CSSProperties } from 
 /* ------------------------------------------------------------
  * Public types
  * ------------------------------------------------------------ */
-export type GoalVariant = 'broadcast' | 'arcade' | 'cinematic' | 'stadium' | 'siuuu' | 'goat';
+export type GoalVariant = 'broadcast' | 'arcade' | 'cinematic' | 'stadium' | 'siuuu' | 'goat' | 'son' | 'raul';
 
 export interface GoalData {
   given: string;
@@ -249,6 +249,44 @@ const CSS = `
 .gt-name { font-family:'Anton','Bebas Neue',Impact,sans-serif; font-size:clamp(26px,5vw,58px); color:#fff; letter-spacing:.02em; line-height:1; text-shadow:0 3px 12px rgba(0,0,0,.6); }
 .gt-meta { font-family:'Roboto Mono',monospace; font-size:clamp(11px,1.8vw,18px); color:rgba(255,255,255,.78); letter-spacing:.15em; margin-top:8px; text-transform:uppercase; }
 .gt-score { font-weight:700; color:#74ACDF; }
+
+/* ===== SON (Son Heung-Min Easter egg) ===== */
+/* South Korea: red #C60C30 + navy #003478 */
+.sn-root { position:fixed; inset:0; overflow:hidden; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; padding-bottom:7vh; background:#000; z-index:99999; }
+.sn-bg-gif { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center 20%; z-index:0; opacity:0; transform:scale(1.06); transition:opacity .7s ease, transform 6s ease; }
+.sn-root[data-phase="1"] .sn-bg-gif,.sn-root[data-phase="2"] .sn-bg-gif,.sn-root[data-phase="3"] .sn-bg-gif { opacity:1; transform:scale(1); }
+.sn-root[data-phase="4"] .sn-bg-gif { opacity:0; transition:opacity .8s ease; }
+.sn-overlay { position:absolute; inset:0; z-index:1; background:linear-gradient(180deg,rgba(0,52,120,.38) 0%,rgba(198,12,48,.38) 100%); pointer-events:none; }
+.sn-vignette { position:absolute; inset:0; z-index:2; background:linear-gradient(to top,rgba(0,0,0,.88) 0%,rgba(0,0,0,.25) 45%,transparent 100%); pointer-events:none; }
+.sn-watermark { position:absolute; top:16px; right:22px; z-index:4; font-family:'Anton','Bebas Neue',Impact,sans-serif; font-size:clamp(28px,5vw,64px); color:rgba(198,12,48,.25); letter-spacing:.04em; pointer-events:none; }
+.sn-shout { position:relative; z-index:3; font-family:'Anton','Bebas Neue',Impact,sans-serif; font-size:clamp(80px,18vw,220px); color:#fff; text-shadow:0 8px 0 rgba(198,12,48,.7),0 0 80px rgba(255,255,255,.3); letter-spacing:-.01em; line-height:.85; transform:translateY(60px) scale(.6); opacity:0; transition:all .55s cubic-bezier(.2,1.5,.3,1); }
+.sn-root[data-phase="1"] .sn-shout,.sn-root[data-phase="2"] .sn-shout,.sn-root[data-phase="3"] .sn-shout { opacity:1; transform:translateY(0) scale(1); }
+.sn-root[data-phase="4"] .sn-shout { opacity:0; transform:translateY(-30px) scale(.95); transition:opacity .6s ease; }
+.sn-player { position:relative; z-index:3; text-align:center; margin-top:10px; opacity:0; transform:translateY(20px); transition:all .5s .2s cubic-bezier(.16,1,.3,1); }
+.sn-root[data-phase="2"] .sn-player,.sn-root[data-phase="3"] .sn-player { opacity:1; transform:translateY(0); }
+.sn-root[data-phase="4"] .sn-player { opacity:0; transition:opacity .5s ease; }
+.sn-name { font-family:'Anton','Bebas Neue',Impact,sans-serif; font-size:clamp(26px,5vw,58px); color:#fff; letter-spacing:.02em; line-height:1; text-shadow:0 3px 12px rgba(0,0,0,.6); }
+.sn-meta { font-family:'Roboto Mono',monospace; font-size:clamp(11px,1.8vw,18px); color:rgba(255,255,255,.78); letter-spacing:.15em; margin-top:8px; text-transform:uppercase; }
+.sn-score { font-weight:700; color:#C60C30; }
+
+/* ===== RAUL (Raúl González Easter egg) ===== */
+/* Real Madrid: white + gold #FEBE10 */
+.rl-root { position:fixed; inset:0; overflow:hidden; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; padding-bottom:7vh; background:#000; z-index:99999; }
+.rl-bg-gif { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center 20%; z-index:0; opacity:0; transform:scale(1.06); transition:opacity .7s ease, transform 6s ease; }
+.rl-root[data-phase="1"] .rl-bg-gif,.rl-root[data-phase="2"] .rl-bg-gif,.rl-root[data-phase="3"] .rl-bg-gif { opacity:1; transform:scale(1); }
+.rl-root[data-phase="4"] .rl-bg-gif { opacity:0; transition:opacity .8s ease; }
+.rl-overlay { position:absolute; inset:0; z-index:1; background:linear-gradient(135deg,rgba(254,190,16,.15) 0%,rgba(255,255,255,.1) 50%,rgba(254,190,16,.2) 100%); pointer-events:none; }
+.rl-vignette { position:absolute; inset:0; z-index:2; background:linear-gradient(to top,rgba(0,0,0,.88) 0%,rgba(0,0,0,.25) 45%,transparent 100%); pointer-events:none; }
+.rl-watermark { position:absolute; top:16px; right:22px; z-index:4; font-family:'Anton','Bebas Neue',Impact,sans-serif; font-size:clamp(28px,5vw,64px); color:rgba(254,190,16,.22); letter-spacing:.04em; pointer-events:none; }
+.rl-shout { position:relative; z-index:3; font-family:'Anton','Bebas Neue',Impact,sans-serif; font-size:clamp(80px,18vw,220px); color:#FEBE10; text-shadow:0 8px 0 rgba(0,0,0,.6),0 0 80px rgba(254,190,16,.5); letter-spacing:-.01em; line-height:.85; transform:translateY(60px) scale(.6); opacity:0; transition:all .55s cubic-bezier(.2,1.5,.3,1); }
+.rl-root[data-phase="1"] .rl-shout,.rl-root[data-phase="2"] .rl-shout,.rl-root[data-phase="3"] .rl-shout { opacity:1; transform:translateY(0) scale(1); }
+.rl-root[data-phase="4"] .rl-shout { opacity:0; transform:translateY(-30px) scale(.95); transition:opacity .6s ease; }
+.rl-player { position:relative; z-index:3; text-align:center; margin-top:10px; opacity:0; transform:translateY(20px); transition:all .5s .2s cubic-bezier(.16,1,.3,1); }
+.rl-root[data-phase="2"] .rl-player,.rl-root[data-phase="3"] .rl-player { opacity:1; transform:translateY(0); }
+.rl-root[data-phase="4"] .rl-player { opacity:0; transition:opacity .5s ease; }
+.rl-name { font-family:'Anton','Bebas Neue',Impact,sans-serif; font-size:clamp(26px,5vw,58px); color:#fff; letter-spacing:.02em; line-height:1; text-shadow:0 3px 12px rgba(0,0,0,.6); }
+.rl-meta { font-family:'Roboto Mono',monospace; font-size:clamp(11px,1.8vw,18px); color:rgba(255,255,255,.78); letter-spacing:.15em; margin-top:8px; text-transform:uppercase; }
+.rl-score { font-weight:700; color:#FEBE10; }
 `;
 
 
@@ -636,6 +674,76 @@ function GoatVariant({ data, onDone }: VariantProps) {
 }
 
 /* ------------------------------------------------------------
+ * SON — Son Heung-Min Easter egg
+ * ------------------------------------------------------------ */
+const SON_GIF = '/gifs/SonHeung-Min.gif';
+
+function SonVariant({ data, onDone }: VariantProps) {
+  const [phase, setPhase] = useState(0);
+  useEffect(() => {
+    const timers = [
+      setTimeout(() => setPhase(1), 100),
+      setTimeout(() => setPhase(2), 900),
+      setTimeout(() => setPhase(3), 1800),
+      setTimeout(() => setPhase(4), 4600),
+      setTimeout(() => onDone(), 5400),
+    ];
+    return () => timers.forEach(clearTimeout);
+  }, [onDone]);
+  const fullName = [data.given, data.surname].filter(Boolean).join(' ') || 'Son';
+  const scoreStr = `${data.homeTeam} ${data.homeScore}–${data.awayScore} ${data.awayTeam}`;
+  return (
+    <div className="sn-root" data-phase={phase}>
+      <img className="sn-bg-gif" src={SON_GIF} alt="" aria-hidden="true" />
+      <div className="sn-overlay" />
+      <div className="sn-vignette" />
+      <div className="sn-watermark">SON</div>
+      <div className="sn-shout">SON!</div>
+      <div className="sn-player">
+        <div className="sn-name">#{data.number} {fullName}</div>
+        <div className="sn-meta">{data.minute}&apos; · <span className="sn-score">{scoreStr}</span></div>
+        {data.assist && <div className="sn-meta" style={{ marginTop: 4, fontSize: 'clamp(10px,1.4vw,14px)' }}>ASS. {data.assist}</div>}
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------
+ * RAUL — Raúl González Easter egg
+ * ------------------------------------------------------------ */
+const RAUL_GIF = '/gifs/raul.gif';
+
+function RaulVariant({ data, onDone }: VariantProps) {
+  const [phase, setPhase] = useState(0);
+  useEffect(() => {
+    const timers = [
+      setTimeout(() => setPhase(1), 100),
+      setTimeout(() => setPhase(2), 900),
+      setTimeout(() => setPhase(3), 1800),
+      setTimeout(() => setPhase(4), 4600),
+      setTimeout(() => onDone(), 5400),
+    ];
+    return () => timers.forEach(clearTimeout);
+  }, [onDone]);
+  const fullName = [data.given, data.surname].filter(Boolean).join(' ') || 'Raul';
+  const scoreStr = `${data.homeTeam} ${data.homeScore}–${data.awayScore} ${data.awayTeam}`;
+  return (
+    <div className="rl-root" data-phase={phase}>
+      <img className="rl-bg-gif" src={RAUL_GIF} alt="" aria-hidden="true" />
+      <div className="rl-overlay" />
+      <div className="rl-vignette" />
+      <div className="rl-watermark">R7</div>
+      <div className="rl-shout">RAUL!</div>
+      <div className="rl-player">
+        <div className="rl-name">#{data.number} {fullName}</div>
+        <div className="rl-meta">{data.minute}&apos; · <span className="rl-score">{scoreStr}</span></div>
+        {data.assist && <div className="rl-meta" style={{ marginTop: 4, fontSize: 'clamp(10px,1.4vw,14px)' }}>ASS. {data.assist}</div>}
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------
  * Main exported component
  * ------------------------------------------------------------ */
 const VARIANTS: GoalVariant[] = ['broadcast', 'arcade', 'cinematic', 'stadium'];
@@ -646,6 +754,8 @@ const VARIANT_MAP: Record<GoalVariant, React.ComponentType<VariantProps>> = {
   stadium: StadiumVariant,
   siuuu: SiuuuVariant,
   goat: GoatVariant,
+  son: SonVariant,
+  raul: RaulVariant,
 };
 
 export function GoalNotification({ trigger, data, variant, onComplete }: GoalNotificationProps) {

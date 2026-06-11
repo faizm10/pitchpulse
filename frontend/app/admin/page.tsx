@@ -270,7 +270,7 @@ function ServiceHealthPanel() {
 
 // ── Goal scorer test panel ────────────────────────────────────────────────────
 
-const GOAL_VARIANTS: GoalVariant[] = ['broadcast', 'arcade', 'cinematic', 'stadium', 'siuuu', 'goat'];
+const GOAL_VARIANTS: GoalVariant[] = ['broadcast', 'arcade', 'cinematic', 'stadium', 'siuuu', 'goat', 'son', 'raul'];
 
 const CR7_PRESET = {
   playerName: 'Cristiano Ronaldo',
@@ -286,6 +286,22 @@ const MESSI_PRESET = {
   flag: '🇦🇷',
   assist: '',
   minute: 73,
+};
+
+const SON_PRESET = {
+  playerName: 'Son Heung-Min',
+  number: 7,
+  flag: '🇰🇷',
+  assist: '',
+  minute: 45,
+};
+
+const RAUL_PRESET = {
+  playerName: 'Raul Gonzalez',
+  number: 7,
+  flag: '🇪🇸',
+  assist: '',
+  minute: 66,
 };
 
 function GoalTestPanel({
@@ -457,6 +473,20 @@ function GoalTestPanel({
                 style={{ padding: '8px 0', borderRadius: 7, border: '2px solid #74ACDF', cursor: 'pointer', background: 'linear-gradient(135deg, #74ACDF, #fff)', color: '#003087', fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '0.1em', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
               >
                 🇦🇷 MESSI GOAT
+              </button>
+              <button
+                type="button"
+                onClick={() => { setPlayerName(SON_PRESET.playerName); setNumber(SON_PRESET.number); setFlag(SON_PRESET.flag); setAssist(SON_PRESET.assist); setMinute(SON_PRESET.minute); setVariant('son'); }}
+                style={{ padding: '8px 0', borderRadius: 7, border: '2px solid #C60C30', cursor: 'pointer', background: 'linear-gradient(135deg, #003478, #C60C30)', color: '#fff', fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '0.1em', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+              >
+                🇰🇷 SON
+              </button>
+              <button
+                type="button"
+                onClick={() => { setPlayerName(RAUL_PRESET.playerName); setNumber(RAUL_PRESET.number); setFlag(RAUL_PRESET.flag); setAssist(RAUL_PRESET.assist); setMinute(RAUL_PRESET.minute); setVariant('raul'); }}
+                style={{ padding: '8px 0', borderRadius: 7, border: '2px solid #FEBE10', cursor: 'pointer', background: 'linear-gradient(135deg, #000, #1a1a2e)', color: '#FEBE10', fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '0.1em', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+              >
+                🇪🇸 RAUL
               </button>
             </div>
 
@@ -1036,6 +1066,20 @@ function SimulateTab({
                     style={{ padding: '8px 0', borderRadius: 7, border: '2px solid #74ACDF', cursor: 'pointer', background: 'linear-gradient(135deg, #74ACDF, #fff)', color: '#003087', fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '0.1em', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
                   >
                     🇦🇷 MESSI GOAT
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setPlayerName(SON_PRESET.playerName); setNumber(SON_PRESET.number); setFlag(SON_PRESET.flag); setAssist(SON_PRESET.assist); setMinute(SON_PRESET.minute); setVariant('son'); setScoringSide('home'); }}
+                    style={{ padding: '8px 0', borderRadius: 7, border: '2px solid #C60C30', cursor: 'pointer', background: 'linear-gradient(135deg, #003478, #C60C30)', color: '#fff', fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '0.1em', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+                  >
+                    🇰🇷 SON
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setPlayerName(RAUL_PRESET.playerName); setNumber(RAUL_PRESET.number); setFlag(RAUL_PRESET.flag); setAssist(RAUL_PRESET.assist); setMinute(RAUL_PRESET.minute); setVariant('raul'); setScoringSide('home'); }}
+                    style={{ padding: '8px 0', borderRadius: 7, border: '2px solid #FEBE10', cursor: 'pointer', background: 'linear-gradient(135deg, #000, #1a1a2e)', color: '#FEBE10', fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '0.1em', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+                  >
+                    🇪🇸 RAUL
                   </button>
                 </div>
 
