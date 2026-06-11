@@ -30,7 +30,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Providers>
           <div className="app paper-grain">
             <Topbar />
-            {children}
+            <main className="app-main">{children}</main>
           </div>
         </Providers>
       </body>
