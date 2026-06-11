@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Logo, Flag } from './Shared';
-import { useMyTeam, useJourneyRequest } from './Providers';
+import { useTeamFollow } from './Providers';
 import { teams } from '@/lib/data';
 
 const tabs = [
@@ -59,13 +59,21 @@ function getTournamentStatus(): string {
 export function Topbar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { myTeam } = useMyTeam();
-  const { requestJourney } = useJourneyRequest();
+  const { myTeam, openTeamPicker, selectFollowedTeam } = useTeamFollow();
   const [tournamentLine, setTournamentLine] = useState<string>('');
 
-  const handleFollowTeam = (codeOrOpen: string) => {
-    requestJourney(codeOrOpen);        // signal MapView via context
-    if (pathname !== '/') router.push('/'); // navigate to homepage if needed
+  const goHome = () => {
+    if (pathname !== '/') router.push('/');
+  };
+
+  const handleFollowTeam = () => {
+    openTeamPicker();
+    goHome();
+  };
+
+  const handleFollowMyTeam = () => {
+    if (myTeam) selectFollowedTeam(myTeam);
+    goHome();
   };
 
   useEffect(() => {
@@ -123,7 +131,7 @@ export function Topbar() {
             type="button"
             className="my-team-link"
             title="Follow your team's journey"
-            onClick={() => handleFollowTeam(myTeam)}
+            onClick={handleFollowMyTeam}
             style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
           >
             <Flag code={myTeam} w={20} h={13} />
@@ -133,7 +141,7 @@ export function Topbar() {
           <button
             type="button"
             className="btn btn-pulse topbar-cta"
-            onClick={() => handleFollowTeam('open')}
+            onClick={handleFollowTeam}
           >
             Follow a Team
           </button>
