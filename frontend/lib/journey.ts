@@ -197,6 +197,7 @@ export function buildJourney(
   teamCode: string,
   scenario: JourneyScenario,
   liveSchedule: LiveSchedule | null = null,
+  liveForms: Record<string, import('@/lib/types').FormResult[]> | null = null,
 ): JourneyState | null {
   const team = teams[teamCode];
   if (!team) return null;
@@ -301,8 +302,9 @@ export function buildJourney(
   const cities = new Set(allStops.map((s) => s.city));
   const stadiums = new Set(allStops.map((s) => s.venueId));
 
+  const formData = liveForms?.[teamCode] ?? team.form;
   const formScore =
-    team.form.reduce((acc, r) => acc + (r === 'W' ? 3 : r === 'D' ? 1 : 0), 0) / 15;
+    formData.reduce((acc, r) => acc + (r === 'W' ? 3 : r === 'D' ? 1 : 0), 0) / 15;
 
   const stageProbabilities = calcStageProbabilities(formScore, scenario);
   const narrative = buildNarrative(team.name, allStops, Math.round(totalDistanceKm), scenario);

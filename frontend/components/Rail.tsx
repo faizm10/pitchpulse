@@ -10,7 +10,9 @@ import { TeamTravelStats } from './rail/TeamTravelStats';
 import { GroupFinishToggle } from './rail/GroupFinishToggle';
 import { TournamentPath } from './rail/TournamentPath';
 import { JourneyStopsList } from './rail/JourneyStopsList';
+import { useLiveForms } from '@/hooks/useLiveForms';
 import type { Match } from '@/types/espn';
+import type { FormResult } from '@/lib/types';
 
 interface StandingsRow {
   team: { id: string; name: string; abbreviation: string; logo: string | null };
@@ -419,6 +421,10 @@ function MyTeamBanner({
   onChangeTeam: () => void;
 }) {
   const t = myTeam ? teams[myTeam] : null;
+  const liveForms = useLiveForms();
+
+  const form: FormResult[] = (myTeam ? liveForms?.[myTeam] : null) ?? t?.form ?? [];
+
   return (
     <div
       className="rail-section"
@@ -440,7 +446,7 @@ function MyTeamBanner({
               </div>
               <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 10, fontSize: 12, opacity: 0.95 }}>
                 <span className="mono">FORM</span>
-                <FormDots form={t.form} />
+                <FormDots form={form} />
               </div>
             </div>
           </div>
