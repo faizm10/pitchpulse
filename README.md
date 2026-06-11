@@ -2,7 +2,13 @@
 
 ⚽ Map-first FIFA World Cup 2026 dashboard. Live scores, standings, news, match detail, and ML win/draw/loss predictions across 16 host venues.
 
-https://github.com/hamzaelmi068/pitchpulse/raw/main/public/demo.mp4
+<p align="center">
+  <a href="./public/demo.mp4">
+    <img src="./public/demo.gif" alt="PitchPulse demo" width="100%" />
+  </a>
+</p>
+
+<p align="center"><sub><a href="./public/demo.mp4">▶ Full demo (MP4)</a></sub></p>
 
 ## Stack
 
