@@ -1173,6 +1173,15 @@ export default function MatchPage({ params }: { params: { id: string } }) {
           />
         )}
 
+        {(match.headToHead?.length > 0) && (
+          <H2HSection
+            games={match.headToHead}
+            homeTeam={match.homeTeam}
+            awayTeam={match.awayTeam}
+            isMobile={isMobile}
+          />
+        )}
+
         {/* News + Standings two-column layout */}
         {(match.news?.length > 0 || match.standingsGroups?.length > 0) && (
           <div style={{
@@ -1198,15 +1207,6 @@ export default function MatchPage({ params }: { params: { id: string } }) {
               </div>
             )}
           </div>
-        )}
-
-        {(match.headToHead?.length > 0) && (
-          <H2HSection
-            games={match.headToHead}
-            homeTeam={match.homeTeam}
-            awayTeam={match.awayTeam}
-            isMobile={isMobile}
-          />
         )}
 
         <div style={{ height: isMobile ? 32 : 0 }} aria-hidden="true" />

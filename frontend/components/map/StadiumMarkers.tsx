@@ -1,6 +1,22 @@
+import { useEffect, useState } from "react";
 import { MapMarker, MarkerContent, MarkerPopup } from "@/components/ui/map";
 import { VENUES, COUNTRY_COLORS } from "@/data/venues";
 import type { Match } from "@/types/espn";
+
+function useNow(intervalMs = 30_000) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), intervalMs);
+    return () => clearInterval(id);
+  }, [intervalMs]);
+  return now;
+}
+
+function minsUntil(dateStr: string, now: number): number | null {
+  const diff = new Date(dateStr).getTime() - now;
+  if (diff <= 0 || diff > 30 * 60 * 1000) return null;
+  return Math.ceil(diff / 60_000);
+}
 
 interface StadiumMarkersProps {
   matches: Match[];
@@ -20,20 +36,33 @@ function useIsMobile() {
   return window.innerWidth < 640;
 }
 
-function MatchPopupSection({ match, compact }: { match: Match; compact: boolean }) {
+function MatchPopupSection({ match, compact, minsAway }: { match: Match; compact: boolean; minsAway: number | null }) {
   const isLive = match.state === "in";
   const isFinished = match.state === "post";
+  const isSoon = minsAway !== null;
 
   return (
     <div style={{ borderTop: "1px solid var(--rule-soft)", paddingTop: compact ? 6 : 8, marginTop: compact ? 6 : 8 }}>
       <div style={{ marginBottom: compact ? 5 : 8 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span style={{
-            fontSize: 10, color: "var(--ink-3)",
-            textTransform: "uppercase", letterSpacing: "0.08em",
-          }}>
-            {isLive ? "Live" : isFinished ? "Full Time" : "Upcoming"}
-          </span>
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <span style={{
+              fontSize: 10, color: isSoon ? "#f59e0b" : "var(--ink-3)",
+              textTransform: "uppercase", letterSpacing: "0.08em",
+              fontWeight: isSoon ? 700 : 400,
+            }}>
+              {isLive ? "Live" : isFinished ? "Full Time" : isSoon ? "Kickoff Soon" : "Upcoming"}
+            </span>
+            {isSoon && (
+              <span style={{
+                background: "#f59e0b", color: "#000",
+                fontSize: 9, fontWeight: 700, fontFamily: "var(--mono)",
+                padding: "1px 5px", borderRadius: 4, lineHeight: 1.4,
+              }}>
+                {minsAway! <= 1 ? "NOW" : `${minsAway}m`}
+              </span>
+            )}
+          </div>
           {isLive && (
             <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 10, fontWeight: 700, color: "var(--live)" }}>
               <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--live)" }} />
@@ -82,6 +111,7 @@ function MatchPopupSection({ match, compact }: { match: Match; compact: boolean 
 
 export function StadiumMarkers({ matches, onSelectMatch }: StadiumMarkersProps) {
   const isMobile = useIsMobile();
+  const now = useNow();
 
   const matchesByVenue = new Map<string, Match[]>();
   for (const match of matches) {
@@ -97,42 +127,62 @@ export function StadiumMarkers({ matches, onSelectMatch }: StadiumMarkersProps) 
         const match = getNextMatch(venueMatches);
         const isLive = match?.state === "in";
         const color = COUNTRY_COLORS[venue.country];
+        const minsAway = match?.state === "pre" ? minsUntil(match.date, now) : null;
 
         return (
           <MapMarker key={venue.id} longitude={venue.longitude} latitude={venue.latitude}>
             <MarkerContent>
-              <div style={{ position: "relative" }}>
-                {isLive && (
-                  <>
-                    <span style={{
-                      position: "absolute", inset: 0, borderRadius: "50%",
-                      backgroundColor: color,
-                      animation: "pulse-ring 1.8s ease-out infinite",
-                    }} />
-                    <span style={{
-                      position: "absolute", inset: -6, borderRadius: "50%",
-                      border: "1px solid rgba(229,57,43,0.3)",
-                    }} />
-                  </>
+              <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                {minsAway !== null && (
+                  <div style={{
+                    background: "#f59e0b",
+                    color: "#000",
+                    fontSize: 9,
+                    fontWeight: 700,
+                    fontFamily: "var(--mono)",
+                    letterSpacing: "0.06em",
+                    padding: "2px 5px",
+                    borderRadius: 4,
+                    whiteSpace: "nowrap",
+                    boxShadow: "0 1px 4px rgba(0,0,0,0.25)",
+                    lineHeight: 1.4,
+                  }}>
+                    {minsAway <= 1 ? "NOW" : `${minsAway}m`}
+                  </div>
                 )}
-                <div style={{
-                  position: "absolute", inset: -4, borderRadius: "50%",
-                  filter: "blur(6px)", opacity: 0.7,
-                  backgroundColor: color,
-                }} />
-                <button
-                  type="button"
-                  style={{
-                    position: "relative",
-                    width: 14, height: 14, borderRadius: "50%",
-                    border: "2px solid white",
+                <div style={{ position: "relative" }}>
+                  {isLive && (
+                    <>
+                      <span style={{
+                        position: "absolute", inset: 0, borderRadius: "50%",
+                        backgroundColor: color,
+                        animation: "pulse-ring 1.8s ease-out infinite",
+                      }} />
+                      <span style={{
+                        position: "absolute", inset: -6, borderRadius: "50%",
+                        border: "1px solid rgba(229,57,43,0.3)",
+                      }} />
+                    </>
+                  )}
+                  <div style={{
+                    position: "absolute", inset: -4, borderRadius: "50%",
+                    filter: "blur(6px)", opacity: 0.7,
                     backgroundColor: color,
-                    cursor: "pointer",
-                    boxShadow: "0 0 12px rgba(255,255,255,0.15)",
-                    transition: "transform 200ms",
-                    padding: 0,
-                  }}
-                />
+                  }} />
+                  <button
+                    type="button"
+                    style={{
+                      position: "relative",
+                      width: 14, height: 14, borderRadius: "50%",
+                      border: "2px solid white",
+                      backgroundColor: color,
+                      cursor: "pointer",
+                      boxShadow: "0 0 12px rgba(255,255,255,0.15)",
+                      transition: "transform 200ms",
+                      padding: 0,
+                    }}
+                  />
+                </div>
               </div>
             </MarkerContent>
 
@@ -192,7 +242,7 @@ export function StadiumMarkers({ matches, onSelectMatch }: StadiumMarkersProps) 
                     </div>
                   </div>
 
-                  {match && <MatchPopupSection match={match} compact={isMobile} />}
+                  {match && <MatchPopupSection match={match} compact={isMobile} minsAway={minsAway} />}
 
                   {match && onSelectMatch && (
                     <button

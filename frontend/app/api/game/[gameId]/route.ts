@@ -404,6 +404,7 @@ export async function GET(
       if (fixture) {
         fotmobMatchId = String(fixture.id);
         source = "espn+fotmob";
+
         const fStatus = fixture.status ?? {};
 
         if (fStatus.started && !fStatus.finished && !clockSuppressed) {
