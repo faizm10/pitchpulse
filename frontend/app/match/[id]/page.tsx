@@ -14,7 +14,7 @@ import { stadiums } from '@/lib/data';
 import { posthog } from '@/lib/posthog';
 import type { PredictResponse } from '@/types/predict';
 
-const POLL_LIVE = 5_000;
+const POLL_LIVE = 2_000;
 const POLL_IDLE = 30_000;
 
 // ── Types ─────────────────────────────────────────────────────────────────────

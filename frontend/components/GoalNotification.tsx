@@ -761,16 +761,19 @@ const VARIANT_MAP: Record<GoalVariant, React.ComponentType<VariantProps>> = {
 export function GoalNotification({ trigger, data, variant, onComplete }: GoalNotificationProps) {
   ensureStyles();
   const [active, setActive] = useState<null | { key: number; data: GoalData; variant: GoalVariant }>(null);
+  const [lastTrigger, setLastTrigger] = useState(0);
   const keyRef = useRef(0);
   const dataRef = useRef(data);
   dataRef.current = data;
 
-  useEffect(() => {
-    if (!trigger) return;
+  // Synchronous state derivation: activates in the same render as the key-events update,
+  // avoiding a visible flash where the events list updates before the animation overlay.
+  if (trigger !== lastTrigger && trigger > 0) {
+    setLastTrigger(trigger);
     keyRef.current += 1;
     const chosen = variant ?? VARIANTS[Math.floor(Math.random() * VARIANTS.length)];
     setActive({ key: keyRef.current, data: dataRef.current, variant: chosen });
-  }, [trigger, variant]);
+  }
 
   if (!active) return null;
   const VariantComponent = VARIANT_MAP[active.variant];

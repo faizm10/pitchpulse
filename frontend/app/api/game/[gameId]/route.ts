@@ -37,6 +37,9 @@ const NOTABLE_TYPES = new Set([
 function normalizeTypeSlug(slug: string): string {
   if (slug === "penalty---scored") return "penalty-scored";
   if (slug === "penalty---missed") return "penalty-missed";
+  // ESPN uses "goal---header", "goal---volley", "goal---free-kick", etc.
+  if (slug.startsWith("goal---")) return "goal";
+  if (slug.startsWith("own-goal---")) return "own-goal";
   return slug;
 }
 
@@ -299,6 +302,25 @@ export async function GET(
   const broadcast = (espnData.broadcasts?.[0]?.names ?? []).join(", ");
 
   const extras = parseEspnExtras(espnData);
+
+  // Back-fill missing homeScore/awayScore on goal events by parsing commentary text.
+  // ESPN often returns null on play objects even when the text says "Goal! Mexico 2, South Africa 0."
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  for (const ev of extras.keyEvents as any[]) {
+    if (ev.homeScore != null || ev.awayScore != null) continue;
+    if (ev.typeSlug !== "goal" && ev.typeSlug !== "own-goal" && ev.typeSlug !== "penalty-scored") continue;
+    const text: string = ev.fullText ?? ev.text ?? "";
+    // "Goal! Mexico 2, South Africa 0." — team names may contain spaces
+    const m = text.match(/Goal!\s+(.+?)\s+(\d+),\s+(.+?)\s+(\d+)\./i);
+    if (!m) continue;
+    const [, t1, s1, t2, s2] = m;
+    const norm = (s: string) => s.toLowerCase().replace(/\s+/g, " ").trim();
+    const hn = norm(homeTeam.name), an = norm(awayTeam.name);
+    const n1 = norm(t1), n2 = norm(t2);
+    const t1IsHome = hn.includes(n1) || n1.includes(hn);
+    ev.homeScore = t1IsHome ? parseInt(s1, 10) : parseInt(s2, 10);
+    ev.awayScore = t1IsHome ? parseInt(s2, 10) : parseInt(s1, 10);
+  }
 
   // Penalty shootout score from period-5 events
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
