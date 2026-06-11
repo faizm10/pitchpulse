@@ -3,9 +3,8 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Logo, Flag } from './Shared';
+import { Logo } from './Shared';
 import { useTeamFollow } from './Providers';
-import { teams } from '@/lib/data';
 import { useLiveMatches } from '@/hooks/useLiveMatches';
 
 const tabs = [
@@ -176,9 +175,7 @@ export function Topbar() {
               title="Follow your team's journey"
               onClick={handleFollowMyTeam}
             >
-              <Flag code={myTeam} w={20} h={13} />
-              <span className="my-team-follow-prefix">Follow </span>
-              <span className="my-team-name">{teams[myTeam]?.name}</span>
+              Follow
             </button>
           ) : (
             <button
