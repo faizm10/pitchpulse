@@ -2,6 +2,7 @@ import type { FotmobFixture, FotmobSquadMember, FotmobTeamProfile } from "@/type
 import { parseLeagueOverview } from "./parse-league";
 import { fetchLeagueRaw, FOTMOB_WC_LEAGUE_ID } from "./client";
 import { parseSquadMemberExtended } from "./parse-squad";
+import { parseTeamFormFromOverview, resolveTeamForm } from "./parse-form";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function parseSquad(raw: any): FotmobSquadMember[] {
@@ -41,6 +42,10 @@ export function parseTeamProfile(
     fifaRanking?: { rank?: number; points?: number; updated?: string };
     primaryLeagueName?: string;
   } | undefined;
+  const teamFixtures = fixturesForTeam(leagueFixtures, teamId);
+  const overviewForm = parseTeamFormFromOverview(raw);
+  const form = resolveTeamForm(teamId, overviewForm, leagueFixtures);
+
   return {
     teamId,
     name: String(details?.name ?? ""),
@@ -51,8 +56,9 @@ export function parseTeamProfile(
     groupLabel: details?.primaryLeagueName
       ? String(details.primaryLeagueName)
       : undefined,
+    form,
     squad: parseSquad(raw),
-    fixtures: fixturesForTeam(leagueFixtures, teamId),
+    fixtures: teamFixtures,
   };
 }
 
