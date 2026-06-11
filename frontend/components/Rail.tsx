@@ -1,11 +1,15 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { teams } from '@/lib/data'; 
+import { teams } from '@/lib/data';
 import { Flag, FormDots, ago } from './Shared';
-import { useTweaks, useMyTeam } from './Providers';
+import { useTweaks, useTeamFollow } from './Providers';
+import { TeamTravelStats } from './rail/TeamTravelStats';
+import { GroupFinishToggle } from './rail/GroupFinishToggle';
+import { TournamentPath } from './rail/TournamentPath';
+import { JourneyStopsList } from './rail/JourneyStopsList';
 import type { Match } from '@/types/espn';
 
 interface StandingsRow {
@@ -26,9 +30,33 @@ interface GoalPulseEvent {
 import { buildPredictionNarrative, fetchPrediction } from '@/lib/predict';
 import { useTypewriter } from '@/hooks/useTypewriter';
 
+function findGroupForTeam(
+  groups: StandingsGroup[],
+  teamCode: string | null,
+): StandingsGroup | null {
+  if (!teamCode || !teams[teamCode]) return null;
+  const letter = teams[teamCode].group.toUpperCase();
+  return (
+    groups.find(
+      (g) =>
+        g.abbreviation?.toUpperCase().endsWith(letter) ||
+        g.name?.toUpperCase().includes(`GROUP ${letter}`) ||
+        g.abbreviation?.toUpperCase() === letter,
+    ) ?? null
+  );
+}
+
 export function Rail() {
   const { tweaks } = useTweaks();
-  const { myTeam } = useMyTeam();
+  const {
+    myTeam,
+    journey,
+    scenario,
+    teamColor,
+    openTeamPicker,
+    setScenario,
+    replayJourney,
+  } = useTeamFollow();
   const [liveMatches, setLiveMatches] = useState<Match[]>([]);
   const [upcomingMatches, setUpcomingMatches] = useState<Match[]>([]); // top-5 for "UP NEXT"
   const [allUpcoming, setAllUpcoming] = useState<Match[]>([]); // full list for team search
@@ -122,146 +150,100 @@ export function Rail() {
     return () => clearInterval(interval);
   }, []);
 
+  const pinnedGroup = useMemo(
+    () => (myTeam ? findGroupForTeam(standingsGroups, myTeam) : null),
+    [myTeam, standingsGroups],
+  );
+
+  const displayGroup = myTeam && pinnedGroup ? pinnedGroup : standingsGroups[groupIdx % standingsGroups.length] ?? null;
+
+  const teamUpcoming = useMemo(() => {
+    if (!myTeam) return upcomingMatches;
+    return allUpcoming
+      .filter(
+        (m) =>
+          m.homeTeam.abbreviation.toUpperCase() === myTeam.toUpperCase() ||
+          m.awayTeam.abbreviation.toUpperCase() === myTeam.toUpperCase(),
+      )
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }, [myTeam, allUpcoming, upcomingMatches]);
+
+  const followingTeam = Boolean(myTeam && journey);
+
   return (
     <aside className="rail">
-      <MyTeamBanner myTeam={myTeam} />
+      <MyTeamBanner myTeam={myTeam} onFollow={openTeamPicker} onChangeTeam={openTeamPicker} />
 
-      {/* Live Now — or next match for selected team when nothing is live */}
-      {(() => {
-        const myNextMatch = myTeam
-          ? allUpcoming.find(
-              (m) =>
-                m.homeTeam.abbreviation.toUpperCase() === myTeam.toUpperCase() ||
-                m.awayTeam.abbreviation.toUpperCase() === myTeam.toUpperCase(),
-            )
-          : null;
-        const showNextMatch = liveMatches.length === 0 && myNextMatch;
-
-        return (
-          <div className="rail-section">
-            <div className="rail-h">
-              {showNextMatch ? (
-                <>
-                  <span>NEXT MATCH · {teams[myTeam!]?.name?.toUpperCase()}</span>
-                  <span style={{ color: 'var(--ink-3)', display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 9 }}>
-                    UPCOMING
-                  </span>
-                </>
-              ) : (
-                <>
-                  <span>LIVE NOW · {liveMatches.length}</span>
-                  <span style={{ color: 'var(--live)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                    <span className="status-dot live" /> ON AIR
-                  </span>
-                </>
-              )}
-            </div>
-
+      {/* Live first when browsing without a followed team */}
+      {!followingTeam && (
+        <div className="rail-section">
+          <div className="rail-h">
+            <span>LIVE NOW · {liveMatches.length}</span>
             {liveMatches.length > 0 ? (
-              liveMatches.map((m) => <LiveMatchRow key={m.id} m={m} />)
-            ) : showNextMatch ? (
-              <UpcomingMatchRow m={myNextMatch} />
+              <span style={{ color: 'var(--live)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <span className="status-dot live" /> ON AIR
+              </span>
             ) : (
-              <div className="mono" style={{ fontSize: 11, color: 'var(--ink-3)', padding: '8px 0' }}>
-                No live matches right now.
-              </div>
+              <span style={{ fontSize: 9, color: 'var(--ink-3)' }}>OFF AIR</span>
             )}
           </div>
-        );
-      })()}
-
-      {tweaks.aiSummary && railNarrative && (
-        <div className="rail-section" style={{ background: 'var(--ink)', color: 'var(--paper)' }}>
-          <div className="rail-h" style={{ color: 'rgba(242,238,227,0.65)' }}>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: '50%', background: 'var(--pulse)', boxShadow: '0 0 0 2px rgba(229,57,43,0.25)' }} />
-              PULSE · LIVE SUMMARY
-            </span>
-            <span style={{ fontSize: 9 }}>AI · 14s ago</span>
-          </div>
-          <div className="serif" style={{ fontSize: 17, lineHeight: 1.35, fontStyle: 'italic' }}>
-            {aiText}
-            {isTyping && (
-              <span style={{ display: 'inline-block', width: 8, height: 18, background: 'var(--pulse)', verticalAlign: 'text-bottom', marginLeft: 2, animation: 'blink 1s steps(2) infinite' }} />
-            )}
-          </div>
+          {liveMatches.length > 0 ? (
+            liveMatches.map((m) => <LiveMatchRow key={m.id} m={m} />)
+          ) : (
+            <div className="mono" style={{ fontSize: 11, color: 'var(--ink-3)', padding: '8px 0' }}>
+              No live matches right now.
+            </div>
+          )}
         </div>
       )}
 
-      {/* ── Goal Pulses Feed ── */}
-      <div className="rail-section">
-        <div className="rail-h">
-          <span>GOAL PULSES</span>
-          <span style={{ fontSize: 9 }}>LIVE STREAM</span>
-        </div>
-        {goalPulses.length === 0 ? (
-          <div className="mono" style={{ fontSize: 11, color: 'var(--ink-3)', padding: '8px 0' }}>
-            Waiting for live match events...
-          </div>
-        ) : (
-          goalPulses.slice(0, 6).map((p) => {
-            const teamName = teams[p.team]?.name ?? p.team;
-            return (
-              <Link key={p.id} href={`/match/${p.matchId}`}
-                style={{
-                  textDecoration: 'none', color: 'inherit',
-                  padding: '10px 0', borderTop: '1px dashed var(--rule-soft)',
-                  display: 'grid', gridTemplateColumns: 'auto 1fr auto', alignItems: 'center', gap: 12,
-                }}>
-                <div style={{
-                  width: 36, height: 36, borderRadius: '50%',
-                  background: 'var(--pulse)', color: '#fff',
-                  display: 'grid', placeItems: 'center',
-                  fontFamily: 'var(--mono)', fontSize: 11, fontWeight: 600,
-                }}>{p.minute}&apos;</div>
-                <div style={{ minWidth: 0 }}>
-                  <div className="serif" style={{ fontSize: 16, lineHeight: 1.1 }}>{p.scorer}</div>
-                  <div className="mono" style={{ fontSize: 10, color: 'var(--ink-3)', letterSpacing: '0.06em', marginTop: 2 }}>
-                    {teamName.toUpperCase()} · {p.venueCity.toUpperCase()}
-                  </div>
-                </div>
-                <div className="mono" style={{ fontSize: 10, color: 'var(--ink-3)' }}>{ago(p.timestamp)}</div>
-              </Link>
-            );
-          })
-        )}
-      </div>
-
-      {/* Group standings */}
-      {standingsGroups.length > 0 && (() => {
-        const group = standingsGroups[groupIdx % standingsGroups.length];
-        return (
-          <div className="rail-section">
-            <div className="rail-h">
-              <span>{group.name.toUpperCase()} · STANDINGS</span>
+      {/* Group standings — pinned near top when following a team */}
+      {displayGroup && (
+        <div className="rail-section">
+          <div className="rail-h">
+            <span>{displayGroup.name.toUpperCase()} · STANDINGS</span>
+            {!myTeam && standingsGroups.length > 1 && (
               <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
                 <button
+                  type="button"
                   onClick={() => setGroupIdx((i) => (i - 1 + standingsGroups.length) % standingsGroups.length)}
                   style={{ background: 'none', border: '1px solid var(--rule)', borderRadius: 4, width: 22, height: 18, cursor: 'pointer', fontSize: 12, color: 'var(--ink-3)', display: 'grid', placeItems: 'center' }}
                 >‹</button>
                 <span style={{ fontSize: 9, color: 'var(--ink-3)', minWidth: 32, textAlign: 'center' }}>{groupIdx + 1}/{standingsGroups.length}</span>
                 <button
+                  type="button"
                   onClick={() => setGroupIdx((i) => (i + 1) % standingsGroups.length)}
                   style={{ background: 'none', border: '1px solid var(--rule)', borderRadius: 4, width: 22, height: 18, cursor: 'pointer', fontSize: 12, color: 'var(--ink-3)', display: 'grid', placeItems: 'center' }}
                 >›</button>
               </div>
-            </div>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'var(--mono)', fontSize: 11 }}>
-              <thead>
-                <tr style={{ color: 'var(--ink-3)', fontSize: 9, letterSpacing: '0.14em' }}>
-                  <th style={{ textAlign: 'left', padding: '6px 0' }}>TEAM</th>
-                  <th>P</th><th>W</th><th>D</th><th>L</th><th>GD</th><th>PTS</th>
-                </tr>
-              </thead>
-              <tbody>
-                {group.rows.map((row, i) => (
-                  <tr key={row.team.id} style={{ borderTop: '1px dashed var(--rule-soft)' }}>
+            )}
+          </div>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'var(--mono)', fontSize: 11 }}>
+            <thead>
+              <tr style={{ color: 'var(--ink-3)', fontSize: 9, letterSpacing: '0.14em' }}>
+                <th style={{ textAlign: 'left', padding: '6px 0' }}>TEAM</th>
+                <th>P</th><th>W</th><th>D</th><th>L</th><th>GD</th><th>PTS</th>
+              </tr>
+            </thead>
+            <tbody>
+              {displayGroup.rows.map((row, i) => {
+                const isFollowed =
+                  myTeam &&
+                  row.team.abbreviation.toUpperCase() === myTeam.toUpperCase();
+                return (
+                  <tr
+                    key={row.team.id}
+                    style={{
+                      borderTop: '1px dashed var(--rule-soft)',
+                      background: isFollowed ? 'rgba(14,22,38,0.06)' : undefined,
+                    }}
+                  >
                     <td style={{ padding: '8px 0', display: 'flex', alignItems: 'center', gap: 8 }}>
                       <span style={{ width: 16, color: 'var(--ink-3)', fontSize: 10 }}>{i + 1}</span>
                       {row.team.logo
                         ? <img src={row.team.logo} alt={row.team.abbreviation} style={{ width: 18, height: 18, objectFit: 'contain' }} />
                         : <Flag code={row.team.abbreviation} w={18} h={12} />}
-                      <span style={{ fontFamily: 'var(--sans)', fontSize: 12 }}>{row.team.name}</span>
+                      <span style={{ fontFamily: 'var(--sans)', fontSize: 12, fontWeight: isFollowed ? 600 : 400 }}>{row.team.name}</span>
                     </td>
                     <td style={{ textAlign: 'center' }}>{row.played}</td>
                     <td style={{ textAlign: 'center' }}>{row.wins}</td>
@@ -270,66 +252,221 @@ export function Rail() {
                     <td style={{ textAlign: 'center' }}>{row.gd > 0 ? `+${row.gd}` : row.gd}</td>
                     <td style={{ textAlign: 'center', fontWeight: 700, color: 'var(--ink)' }}>{row.pts}</td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        );
-      })()}
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
 
-      {/* Up next */}
+      {/* Up next — chronological fixture list (no duplicate top "next match" card) */}
       <div className="rail-section">
         <div className="rail-h">
-          <span>UP NEXT</span>
-          <span style={{ fontSize: 9 }}>{upcomingMatches.length > 0 ? `${upcomingMatches.length} MATCHES` : ''}</span>
+          <span>{myTeam ? `${teams[myTeam]?.name?.toUpperCase() ?? 'TEAM'} · UP NEXT` : 'UP NEXT'}</span>
+          <span style={{ fontSize: 9 }}>{teamUpcoming.length > 0 ? `${teamUpcoming.length} MATCHES` : ''}</span>
         </div>
-        {upcomingMatches.length === 0 ? (
+        {teamUpcoming.length === 0 ? (
           <div className="mono" style={{ fontSize: 11, color: 'var(--ink-3)', padding: '8px 0' }}>No upcoming matches.</div>
         ) : (
-          upcomingMatches.map((m) => <UpcomingMatchRow key={m.id} m={m} />)
+          teamUpcoming.map((m) => <UpcomingMatchRow key={m.id} m={m} />)
         )}
       </div>
+
+      {/* Live — after standings/up next when following; only if something is on air */}
+      {followingTeam && liveMatches.length > 0 && (
+        <div className="rail-section">
+          <div className="rail-h">
+            <span>LIVE NOW · {liveMatches.length}</span>
+            <span style={{ color: 'var(--live)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <span className="status-dot live" /> ON AIR
+            </span>
+          </div>
+          {liveMatches.map((m) => <LiveMatchRow key={m.id} m={m} />)}
+        </div>
+      )}
+
+      {followingTeam && (
+        <div className="rail-section rail-team-journey">
+          <TeamTravelStats journey={journey!} />
+          <GroupFinishToggle
+            teamCode={myTeam!}
+            scenario={scenario}
+            onScenarioChange={setScenario}
+          />
+          <JourneyStopsList stops={journey!.stops} />
+          <TournamentPath journey={journey!} teamColor={teamColor} />
+          <div className="rail-team-actions">
+            <button type="button" className="btn btn-sm" onClick={replayJourney}>
+              Replay journey
+            </button>
+          </div>
+        </div>
+      )}
+
+      {goalPulses.length > 0 && (
+        <div className="rail-section">
+          <div className="rail-h">
+            <span>GOAL PULSES</span>
+            <span style={{ fontSize: 9 }}>LIVE STREAM</span>
+          </div>
+          {goalPulses.slice(0, 6).map((p) => {
+            const teamName = teams[p.team]?.name ?? p.team;
+            return (
+              <Link
+                key={p.id}
+                href={`/match/${p.matchId}`}
+                style={{
+                  textDecoration: 'none',
+                  color: 'inherit',
+                  padding: '10px 0',
+                  borderTop: '1px dashed var(--rule-soft)',
+                  display: 'grid',
+                  gridTemplateColumns: 'auto 1fr auto',
+                  alignItems: 'center',
+                  gap: 12,
+                }}
+              >
+                <div
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: '50%',
+                    background: 'var(--pulse)',
+                    color: '#fff',
+                    display: 'grid',
+                    placeItems: 'center',
+                    fontFamily: 'var(--mono)',
+                    fontSize: 11,
+                    fontWeight: 600,
+                  }}
+                >
+                  {p.minute}&apos;
+                </div>
+                <div style={{ minWidth: 0 }}>
+                  <div className="serif" style={{ fontSize: 16, lineHeight: 1.1 }}>
+                    {p.scorer}
+                  </div>
+                  <div
+                    className="mono"
+                    style={{
+                      fontSize: 10,
+                      color: 'var(--ink-3)',
+                      letterSpacing: '0.06em',
+                      marginTop: 2,
+                    }}
+                  >
+                    {teamName.toUpperCase()} · {p.venueCity.toUpperCase()}
+                  </div>
+                </div>
+                <div className="mono" style={{ fontSize: 10, color: 'var(--ink-3)' }}>
+                  {ago(p.timestamp)}
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      )}
+
+      {tweaks.aiSummary && railNarrative && liveMatches.length > 0 && (
+        <div className="rail-section" style={{ background: 'var(--ink)', color: 'var(--paper)' }}>
+          <div className="rail-h" style={{ color: 'rgba(242,238,227,0.65)' }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+              <span
+                style={{
+                  display: 'inline-block',
+                  width: 10,
+                  height: 10,
+                  borderRadius: '50%',
+                  background: 'var(--pulse)',
+                  boxShadow: '0 0 0 2px rgba(229,57,43,0.25)',
+                }}
+              />
+              PULSE · LIVE SUMMARY
+            </span>
+            <span style={{ fontSize: 9 }}>AI · 14s ago</span>
+          </div>
+          <div className="serif" style={{ fontSize: 17, lineHeight: 1.35, fontStyle: 'italic' }}>
+            {aiText}
+            {isTyping && (
+              <span
+                style={{
+                  display: 'inline-block',
+                  width: 8,
+                  height: 18,
+                  background: 'var(--pulse)',
+                  verticalAlign: 'text-bottom',
+                  marginLeft: 2,
+                  animation: 'blink 1s steps(2) infinite',
+                }}
+              />
+            )}
+          </div>
+        </div>
+      )}
     </aside>
   );
 }
 
 // ── SUB-COMPONENTS ────────────────────────────────────────────────
 
-function MyTeamBanner({ myTeam }: { myTeam: string | null }) {
+function MyTeamBanner({
+  myTeam,
+  onFollow,
+  onChangeTeam,
+}: {
+  myTeam: string | null;
+  onFollow: () => void;
+  onChangeTeam: () => void;
+}) {
   const t = myTeam ? teams[myTeam] : null;
   return (
-    <Link href="/mywc" style={{ textDecoration: 'none', color: 'inherit' }}>
-      <div className="rail-section" style={{
+    <div
+      className="rail-section"
+      style={{
         background: t ? `linear-gradient(135deg, ${t.flag[0]} 0%, ${t.flag[2]} 100%)` : 'transparent',
         color: t ? '#fff' : 'inherit',
-        cursor: 'pointer',
-      }}>
-        {t ? (
-          <div>
-            <div className="mono" style={{ fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', opacity: 0.8 }}>
-              YOUR WORLD CUP
-            </div>
-            <div className="serif" style={{ fontSize: 28, lineHeight: 1.05, marginTop: 6, fontStyle: 'italic' }}>
-              You&apos;re with <span style={{ fontWeight: 600, fontStyle: 'normal' }}>{t.name}</span>
-            </div>
-            <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 10, fontSize: 12, opacity: 0.95 }}>
-              <span className="mono">FORM</span>
-              <FormDots form={t.form} />
+      }}
+    >
+      {t ? (
+        <div>
+          <div className="mono" style={{ fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', opacity: 0.8 }}>
+            YOUR WORLD CUP · GROUP {t.group}
+          </div>
+          <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 14 }}>
+            <Flag code={myTeam!} w={48} h={32} />
+            <div>
+              <div className="serif" style={{ fontSize: 28, lineHeight: 1.05, fontStyle: 'italic' }}>
+                You&apos;re with <span style={{ fontWeight: 600, fontStyle: 'normal' }}>{t.name}</span>
+              </div>
+              <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 10, fontSize: 12, opacity: 0.95 }}>
+                <span className="mono">FORM</span>
+                <FormDots form={t.form} />
+              </div>
             </div>
           </div>
-        ) : (
-          <div>
-            <div className="mono" style={{ fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--ink-3)' }}>
-              MAKE IT YOURS
-            </div>
-            <div className="serif" style={{ fontSize: 24, lineHeight: 1.1, marginTop: 6 }}>
-              Pick your team —<br /><em style={{ color: 'var(--pulse)' }}>the app adapts.</em>
-            </div>
-            <button className="btn" style={{ marginTop: 14 }}>SET UP MY WORLD CUP →</button>
+          <div className="rail-team-banner__actions">
+            <Link href={`/team/${myTeam}`} className="rail-team-banner__btn rail-team-banner__btn--primary">
+              View squad →
+            </Link>
+            <button type="button" className="rail-team-banner__btn rail-team-banner__btn--ghost" onClick={onChangeTeam}>
+              Change team
+            </button>
           </div>
-        )}
-      </div>
-    </Link>
+        </div>
+      ) : (
+        <div>
+          <div className="mono" style={{ fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--ink-3)' }}>
+            MAKE IT YOURS
+          </div>
+          <div className="serif" style={{ fontSize: 24, lineHeight: 1.1, marginTop: 6 }}>
+            Pick your team —<br /><em style={{ color: 'var(--pulse)' }}>map &amp; rail sync.</em>
+          </div>
+          <button type="button" className="btn btn-pulse" style={{ marginTop: 14 }} onClick={onFollow}>
+            Follow a Team
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
 
