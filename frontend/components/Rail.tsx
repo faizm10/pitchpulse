@@ -161,7 +161,7 @@ export function Rail() {
     
     loadMatches();
     loadStandings();
-    const interval = setInterval(loadMatches, 30000);
+    const interval = setInterval(() => { loadMatches(); loadStandings(); }, 30_000);
     return () => clearInterval(interval);
   }, []);
 
