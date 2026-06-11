@@ -15,8 +15,10 @@ const tabs = [
   { label: 'News', href: '/news' },
 ];
 
-// WC2026 phase boundaries — opening match June 11 at 3 PM EST (20:00 UTC)
-const WC_START   = new Date('2026-06-11T20:00:00Z'); // opening match kickoff
+// WC2026 phase boundaries (all UTC)
+const WC_START   = new Date('2026-06-11T00:00:00Z'); // tournament day 1 begins
+const WC_MD2     = new Date('2026-06-18T00:00:00Z'); // group stage matchday 2
+const WC_MD3     = new Date('2026-06-24T00:00:00Z'); // group stage matchday 3
 const WC_R32     = new Date('2026-06-29T00:00:00Z'); // round of 32 begins
 const WC_R16     = new Date('2026-07-05T00:00:00Z'); // round of 16 begins
 const WC_QF      = new Date('2026-07-11T00:00:00Z'); // quarter-finals
@@ -48,16 +50,15 @@ function getCountdown(compact = false): string {
 function getTournamentStatus(compact = false): string {
   const now = new Date();
   if (now < WC_START) return getCountdown(compact);
-  if (now >= WC_END)   return 'WORLD CUP 2026 · COMPLETE';
-  const day = Math.floor((now.getTime() - WC_START.getTime()) / 86_400_000) + 1;
-  let stage: string;
-  if (now >= WC_FINAL) stage = 'FINAL';
-  else if (now >= WC_SF) stage = 'SEMI-FINALS';
-  else if (now >= WC_QF) stage = 'QUARTER-FINALS';
-  else if (now >= WC_R16) stage = 'ROUND OF 16';
-  else if (now >= WC_R32) stage = 'ROUND OF 32';
-  else stage = 'GROUP STAGE';
-  return `DAY ${day} · ${stage}`;
+  if (now >= WC_END)  return 'WORLD CUP 2026 · COMPLETE';
+  if (now >= WC_FINAL) return 'FINAL';
+  if (now >= WC_SF)    return compact ? 'SEMI-FINALS'  : 'SEMI-FINALS';
+  if (now >= WC_QF)    return compact ? 'QTR-FINALS'   : 'QUARTER-FINALS';
+  if (now >= WC_R16)   return 'ROUND OF 16';
+  if (now >= WC_R32)   return 'ROUND OF 32';
+  if (now >= WC_MD3)   return compact ? 'MATCHDAY 3'  : 'GROUP STAGE · MATCHDAY 3';
+  if (now >= WC_MD2)   return compact ? 'MATCHDAY 2'  : 'GROUP STAGE · MATCHDAY 2';
+  return compact ? 'MATCHDAY 1' : 'GROUP STAGE · MATCHDAY 1';
 }
 
 export function Topbar() {
