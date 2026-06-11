@@ -149,13 +149,6 @@ function useCountdown(dateStr: string): number | null {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function ago(ts: number): string {
-  const s = Math.floor((Date.now() - ts) / 1000);
-  if (s < 5) return 'just now';
-  if (s < 60) return `${s}s ago`;
-  return `${Math.floor(s / 60)}m ago`;
-}
-
 function clockToSeconds(clock: string): number {
   if (!clock) return 0;
   if (clock.includes("'") || !clock.includes(':')) {
@@ -967,7 +960,6 @@ export default function MatchPage({ params }: { params: { id: string } }) {
   const [match, setMatch] = useState<MatchData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [lastFetched, setLastFetched] = useState<number | null>(null);
   const [liveClock, setLiveClock] = useState('');
   const [, setTick] = useState(0);
   const [prediction, setPrediction] = useState<PredictResponse | null>(null);
@@ -1018,7 +1010,6 @@ export default function MatchPage({ params }: { params: { id: string } }) {
 
       setMatch(incoming);
       setError(null);
-      setLastFetched(Date.now());
 
       if (!hasTrackedView.current) {
         hasTrackedView.current = true;
@@ -1122,62 +1113,11 @@ export default function MatchPage({ params }: { params: { id: string } }) {
     );
   }
 
-  const isHybrid = match.source === 'espn+fotmob';
-
   return (
     <>
       {celebration}
       <div className="screen" style={{ minHeight: '100vh', maxWidth: '100vw', overflowX: 'hidden' }}>
         <PitchPulseToaster position={isMobile ? 'top-center' : 'bottom-right'} />
-
-        <header style={{
-          padding: isMobile ? '10px 16px' : '12px 40px',
-          borderBottom: '1px solid var(--rule)',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          background: 'var(--paper-2)', flexWrap: 'wrap', gap: 8,
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-            <Link
-              href="/matches"
-              className="mono"
-              style={{ fontSize: 10, color: 'var(--ink-3)', textDecoration: 'none', letterSpacing: '0.12em', marginRight: 4 }}
-            >
-              ← Matches
-            </Link>
-            <div className="mono" style={{ fontSize: 10, letterSpacing: '0.18em', color: 'var(--ink-3)' }}>
-              {match.league}{match.seasonNote ? ` · ${match.seasonNote}` : ''}
-            </div>
-            <div className="mono" style={{
-              fontSize: 9, padding: '2px 7px', borderRadius: 3,
-              background: 'rgba(255,60,60,0.12)', color: '#e63c3c',
-              letterSpacing: '0.1em',
-            }}>
-              ESPN
-            </div>
-            {isHybrid && (
-              <div className="mono" style={{
-                fontSize: 9, padding: '2px 7px', borderRadius: 3,
-                background: 'rgba(0,120,255,0.12)', color: '#0078ff',
-                letterSpacing: '0.1em',
-              }}>
-                + FOTMOB
-              </div>
-            )}
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div role="status" aria-live="polite" className="mono" style={{ fontSize: 10, color: 'var(--ink-3)' }}>
-              {lastFetched ? `Updated ${ago(lastFetched)}` : 'Fetching…'}
-            </div>
-            <button
-              className="btn"
-              onClick={() => { posthog.capture('match_refreshed', { match_id: gameId }); fetchMatch(); }}
-              aria-label="Refresh match data"
-              style={{ fontSize: 10, padding: '0 12px', minHeight: 36 }}
-            >
-              Refresh
-            </button>
-          </div>
-        </header>
 
         <ScoreHero match={match} liveClock={liveClock} isMobile={isMobile} />
 
@@ -1197,24 +1137,6 @@ export default function MatchPage({ params }: { params: { id: string } }) {
             error={predictionError}
           />
         </section>
-
-        <div role="note" style={{
-          margin: isMobile ? '16px 16px 0' : '20px 40px 0',
-          padding: '10px 14px', borderRadius: 6,
-          border: '1px solid var(--rule-soft)',
-          background: 'var(--paper-2)',
-          display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap',
-        }}>
-          <span className="mono" style={{ fontSize: 9, color: 'var(--ink-3)', letterSpacing: '0.12em' }}>DATA SOURCES</span>
-          <span className="mono" style={{ fontSize: 9, padding: '1px 6px', borderRadius: 2, background: 'rgba(255,60,60,0.12)', color: '#e63c3c', letterSpacing: '0.1em' }}>ESPN</span>
-          <span className="mono" style={{ fontSize: 9, color: 'var(--ink-3)' }}>Events · Stats · News · Leaders</span>
-          {isHybrid && (
-            <>
-              <span className="mono" style={{ fontSize: 9, padding: '1px 6px', borderRadius: 2, background: 'rgba(0,120,255,0.12)', color: '#0078ff', letterSpacing: '0.1em', marginLeft: 6 }}>FOTMOB</span>
-              <span className="mono" style={{ fontSize: 9, color: 'var(--ink-3)' }}>Live clock · Standings</span>
-            </>
-          )}
-        </div>
 
         {match.hadPenaltyShootout && (
           <PenaltyShootoutPanel
