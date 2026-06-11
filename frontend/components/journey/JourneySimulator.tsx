@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { buildJourney } from '@/lib/journey';
-import { teams } from '@/lib/data';
+import { getTeamColor } from '@/lib/teamColor';
 import { useLiveForms } from '@/hooks/useLiveForms';
 import type { JourneyState, JourneyScenario, LiveSchedule } from '@/types/journey';
 
@@ -75,15 +75,7 @@ export function useJourneySimulator(liveSchedule: LiveSchedule | null = null): J
     setAnimateKey((k) => k + 1);
   }, []);
 
-  // Pick the first flag colour that isn't too light (e.g. England's flag[0] is #FFFFFF)
-  const teamColor = journey
-    ? (teams[journey.teamCode]?.flag.find((c) => {
-        const r = parseInt(c.slice(1, 3), 16) / 255;
-        const g = parseInt(c.slice(3, 5), 16) / 255;
-        const b = parseInt(c.slice(5, 7), 16) / 255;
-        return 0.299 * r + 0.587 * g + 0.114 * b < 0.72;
-      }) ?? '#4285F4')
-    : '#4285F4';
+  const teamColor = getTeamColor(journey?.teamCode ?? null);
 
   return {
     isOpen,

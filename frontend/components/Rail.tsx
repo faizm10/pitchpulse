@@ -31,6 +31,7 @@ interface GoalPulseEvent {
 
 import { buildPredictionNarrative, fetchPrediction } from '@/lib/predict';
 import { useTypewriter } from '@/hooks/useTypewriter';
+import { getTeamBannerStyle } from '@/lib/teamColor';
 
 function findGroupForTeam(
   groups: StandingsGroup[],
@@ -422,24 +423,32 @@ function MyTeamBanner({
 }) {
   const t = myTeam ? teams[myTeam] : null;
   const liveForms = useLiveForms();
+  const banner = t ? getTeamBannerStyle(myTeam) : null;
 
   const form: FormResult[] = (myTeam ? liveForms?.[myTeam] : null) ?? t?.form ?? [];
 
   return (
     <div
-      className="rail-section"
-      style={{
-        background: t ? `linear-gradient(135deg, ${t.flag[0]} 0%, ${t.flag[2]} 100%)` : 'transparent',
-        color: t ? '#fff' : 'inherit',
-      }}
+      className={
+        t
+          ? `rail-section rail-team-banner${banner?.onLight ? ' rail-team-banner--on-light' : ''}`
+          : 'rail-section'
+      }
+      style={
+        banner
+          ? { background: banner.background, color: banner.color }
+          : undefined
+      }
     >
       {t ? (
         <div>
-          <div className="mono" style={{ fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', opacity: 0.8 }}>
+          <div className="mono rail-team-banner__eyebrow">
             YOUR WORLD CUP · GROUP {t.group}
           </div>
           <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 14 }}>
-            <Flag code={myTeam!} w={48} h={32} />
+            <span className="rail-team-banner__flag">
+              <Flag code={myTeam!} w={48} h={32} />
+            </span>
             <div>
               <div className="serif" style={{ fontSize: 28, lineHeight: 1.05, fontStyle: 'italic' }}>
                 You&apos;re with <span style={{ fontWeight: 600, fontStyle: 'normal' }}>{t.name}</span>

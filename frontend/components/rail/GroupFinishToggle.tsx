@@ -1,6 +1,6 @@
 'use client';
 
-import { contrastText } from '@/lib/teamColor';
+import { contrastText, getTeamColor } from '@/lib/teamColor';
 import { teams } from '@/lib/data';
 import type { JourneyScenario } from '@/types/journey';
 
@@ -14,7 +14,7 @@ interface GroupFinishToggleProps {
 
 export function GroupFinishToggle({ teamCode, scenario, onScenarioChange }: GroupFinishToggleProps) {
   const team = teams[teamCode];
-  const teamColor = team?.flag[0] ?? '#4285F4';
+  const teamColor = getTeamColor(teamCode);
   const group = team?.group ?? '';
   const thirdEligible = THIRD_PLACE_ELIGIBLE_GROUPS.has(group);
 

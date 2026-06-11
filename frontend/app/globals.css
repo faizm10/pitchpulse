@@ -543,11 +543,46 @@ body {
   border-top: 1px solid var(--rule-soft);
   margin-top: 8px;
 }
+.rail-team-banner__eyebrow {
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+.rail-team-banner__flag {
+  display: inline-flex;
+  flex-shrink: 0;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.12),
+    0 4px 14px rgba(0, 0, 0, 0.18);
+}
 .rail-team-banner__actions {
   display: flex;
   gap: 10px;
   margin-top: 16px;
   flex-wrap: wrap;
+}
+.rail-team-banner--on-light .rail-team-banner__btn--primary {
+  background: rgba(0, 0, 0, 0.08);
+  border-color: rgba(0, 0, 0, 0.16);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+}
+.rail-team-banner--on-light .rail-team-banner__btn--primary:hover {
+  background: rgba(0, 0, 0, 0.12);
+  border-color: rgba(0, 0, 0, 0.22);
+}
+.rail-team-banner--on-light .rail-team-banner__btn--ghost {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.18);
+}
+.rail-team-banner--on-light .rail-team-banner__btn--ghost:hover {
+  background: rgba(0, 0, 0, 0.08);
+  border-color: rgba(0, 0, 0, 0.28);
+}
+.rail-team-banner--on-light .rail-team-banner__btn:focus-visible {
+  outline-color: rgba(10, 14, 22, 0.55);
 }
 .rail-team-banner__btn {
   display: inline-flex;
