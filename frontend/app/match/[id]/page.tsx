@@ -1123,22 +1123,25 @@ export default function MatchPage({ params }: { params: { id: string } }) {
 
         <ScoreHero match={match} liveClock={liveClock} isMobile={isMobile} />
 
-        <section
-          aria-label="AI match prediction"
-          style={{
-            padding: isMobile ? '20px 16px' : '28px 40px',
-            borderBottom: '1px solid var(--rule)',
-            background: 'var(--paper)',
-          }}
-        >
-          <MatchPrediction
-            homeLabel={match.homeTeam.name}
-            awayLabel={match.awayTeam.name}
-            prediction={prediction}
-            loading={predictionLoading}
-            error={predictionError}
-          />
-        </section>
+        {/* Pre-match: show prediction right below the score hero */}
+        {match.state === 'pre' && (
+          <section
+            aria-label="AI match prediction"
+            style={{
+              padding: isMobile ? '20px 16px' : '28px 40px',
+              borderBottom: '1px solid var(--rule)',
+              background: 'var(--paper)',
+            }}
+          >
+            <MatchPrediction
+              homeLabel={match.homeTeam.name}
+              awayLabel={match.awayTeam.name}
+              prediction={prediction}
+              loading={predictionLoading}
+              error={predictionError}
+            />
+          </section>
+        )}
 
         {match.hadPenaltyShootout && (
           <PenaltyShootoutPanel
@@ -1173,6 +1176,26 @@ export default function MatchPage({ params }: { params: { id: string } }) {
             isMatchLeaders={match.isMatchLeaders}
             isMobile={isMobile}
           />
+        )}
+
+        {/* Live/post-match: show prediction just before H2H */}
+        {match.state !== 'pre' && (
+          <section
+            aria-label="AI match prediction"
+            style={{
+              padding: isMobile ? '20px 16px' : '28px 40px',
+              borderTop: '1px solid var(--rule)',
+              background: 'var(--paper)',
+            }}
+          >
+            <MatchPrediction
+              homeLabel={match.homeTeam.name}
+              awayLabel={match.awayTeam.name}
+              prediction={prediction}
+              loading={predictionLoading}
+              error={predictionError}
+            />
+          </section>
         )}
 
         {(match.headToHead?.length > 0) && (
