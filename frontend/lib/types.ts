@@ -22,7 +22,7 @@ export interface Team {
   name: string;
   flag: [string, string, string];
   group: string;
-  form: FormResult[];
+  form?: FormResult[];
 }
 
 export type MatchStatus = 'live' | 'ft' | 'upcoming';

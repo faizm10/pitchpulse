@@ -302,7 +302,7 @@ export function buildJourney(
   const cities = new Set(allStops.map((s) => s.city));
   const stadiums = new Set(allStops.map((s) => s.venueId));
 
-  const formData = liveForms?.[teamCode] ?? team.form;
+  const formData = liveForms?.[teamCode] ?? team.form ?? [];
   const formScore =
     formData.reduce((acc, r) => acc + (r === 'W' ? 3 : r === 'D' ? 1 : 0), 0) / 15;
 
