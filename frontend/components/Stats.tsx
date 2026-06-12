@@ -23,17 +23,20 @@ interface TopAssist {
   key: number;
 }
 
-interface TopCards {
-  team: string;
-  name: string;
-  y: number;
-  r: number;
+interface DisciplineEntry {
+  rank: number;
+  player: string;
+  teamCode: string;
+  value: number;
 }
 
 interface StatsData {
   topScorers: TopScorer[];
   topAssists: TopAssist[];
-  topCards: TopCards[];
+  yellowCards: DisciplineEntry[];
+  redCards: DisciplineEntry[];
+  saves: DisciplineEntry[];
+  shotsOnTarget: DisciplineEntry[];
   totals: {
     goals: number;
     avgPerMatch: number;
@@ -43,98 +46,80 @@ interface StatsData {
 }
 
 // ── ESPN response parsers ─────────────────────────────────────────
+// ESPN returns { stats: [{ name: 'goalsLeaders'|'assistsLeaders', leaders: [...] }] }
+// Each leader: { value, athlete: { displayName, shortName, team: { abbreviation } }, shortDisplayValue }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function findCategory(data: any, name: string): any[] {
-  const cats = data?.categories ?? data?.results ?? [];
-  if (!Array.isArray(cats)) return [];
-
-  const cat = cats.find((c: any) =>
-    String(c?.name ?? c?.displayName ?? '').toLowerCase().includes(name.toLowerCase())
-  );
-  
-  return Array.isArray(cat?.leaders) ? cat.leaders : (Array.isArray(cat?.athletes) ? cat.athletes : []);
+function findStat(data: any, statName: string): any[] {
+  const stats: any[] = data?.stats ?? [];
+  const stat = stats.find((s: any) => String(s?.name ?? '').toLowerCase().includes(statName.toLowerCase()));
+  return Array.isArray(stat?.leaders) ? stat.leaders : [];
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function teamCode(entry: any): string {
-  return (
-    entry?.athlete?.team?.abbreviation ??
-    entry?.team?.abbreviation ??
-    entry?.athlete?.flag?.alt ??
-    'UNK'
-  ).toUpperCase();
+  return (entry?.athlete?.team?.abbreviation ?? 'UNK').toUpperCase();
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function getStatValue(statsArray: any[] | undefined, targetNames: string[]): number {
-  if (!Array.isArray(statsArray)) return 0;
-  const stat = statsArray.find((s: any) => 
-    targetNames.some(name => String(s?.name ?? s?.displayName ?? '').toLowerCase() === name.toLowerCase())
-  );
-  return Number(stat?.value ?? stat?.statValue ?? 0);
+// Parse "M: 1, G: 1: A: 0" style shortDisplayValue
+function parseShortDisplay(s: string, key: string): number {
+  const m = s?.match(new RegExp(`${key}:\\s*(\\d+)`, 'i'));
+  return m ? Number(m[1]) : 0;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function parseTopScorers(scoring: any): TopScorer[] {
-  const leaders = findCategory(scoring, 'goal');
+  const leaders = findStat(scoring, 'goals');
   if (!leaders.length) return [];
 
-  return leaders.slice(0, 10).map((e: any, i: number) => {
-    const statPool = e?.statistics ?? e?.stats;
+  return leaders.filter((e: any) => Number(e?.value ?? 0) > 0).slice(0, 10).map((e: any, i: number) => {
+    const short = e?.shortDisplayValue ?? '';
     return {
       rank: i + 1,
       player: e?.athlete?.displayName ?? e?.athlete?.shortName ?? 'Unknown Player',
       team: teamCode(e),
-      goals: Number(e?.value ?? e?.statValue ?? 0),
-      assists: getStatValue(statPool, ['assists', 'assist', 'a']),
-      xg: getStatValue(statPool, ['xgoals', 'xg', 'expectedgoals']),
-      mp: getStatValue(statPool, ['gamesplayed', 'gp', 'matchesplayed', 'mp']),
+      goals: Number(e?.value ?? 0),
+      assists: parseShortDisplay(short, 'A'),
+      xg: 0,
+      mp: parseShortDisplay(short, 'M'),
     };
   });
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function parseTopAssists(scoring: any): TopAssist[] {
-  const leaders = findCategory(scoring, 'assist');
+  const leaders = findStat(scoring, 'assists');
   if (!leaders.length) return [];
 
-  return leaders.slice(0, 5).map((e: any, i: number) => {
-    const statPool = e?.statistics ?? e?.stats;
-    return {
-      rank: i + 1,
-      player: e?.athlete?.displayName ?? e?.athlete?.shortName ?? 'Unknown Player',
-      team: teamCode(e),
-      assists: Number(e?.value ?? e?.statValue ?? 0),
-      key: getStatValue(statPool, ['keypasses', 'kp', 'key']),
-    };
-  });
+  return leaders.slice(0, 5).map((e: any, i: number) => ({
+    rank: i + 1,
+    player: e?.athlete?.displayName ?? e?.athlete?.shortName ?? 'Unknown Player',
+    team: teamCode(e),
+    assists: Number(e?.value ?? 0),
+    key: 0,
+  }));
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function parseTopCards(discipline: any): TopCards[] {
-  const yellows = findCategory(discipline, 'yellow');
-  if (!yellows.length) return [];
-
-  return yellows.slice(0, 5).map((e: any) => {
-    const statPool = e?.statistics ?? e?.stats;
-    return {
-      team: teamCode(e),
-      name: e?.athlete?.team?.displayName ?? e?.team?.displayName ?? teamCode(e),
-      y: Number(e?.value ?? e?.statValue ?? 0),
-      r: getStatValue(statPool, ['redcards', 'rc', 'red']),
-    };
-  });
+function parseDisciplineList(entries: any[]): DisciplineEntry[] {
+  if (!Array.isArray(entries)) return [];
+  return entries.map((e: any, i: number) => ({
+    rank: i + 1,
+    player: e.player ?? 'Unknown',
+    teamCode: e.teamCode ?? 'UNK',
+    value: Number(e.value ?? 0),
+  }));
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function parseTotals(scoring: any) {
-  const totals = scoring?.totals ?? scoring?.summary ?? {};
+  const goalLeaders = findStat(scoring, 'goals');
+  const totalGoals = goalLeaders.reduce((sum: number, e: any) => sum + Number(e?.value ?? 0), 0);
   return {
-    goals: Number(totals?.goals ?? totals?.totalGoals ?? 0),
-    avgPerMatch: Number(totals?.goalsPerMatch ?? totals?.avgGoals ?? 0),
-    teams: 48, // Verified 48 teams for FIFA World Cup 2026
-    matchesPlayed: Number(totals?.gamesPlayed ?? totals?.matchesPlayed ?? 0),
+    goals: totalGoals,
+    avgPerMatch: 0,
+    teams: 48,
+    matchesPlayed: 0,
   };
 }
 
@@ -158,14 +143,17 @@ export function Stats() {
 
         const topScorers = parseTopScorers(json?.scoring);
         const topAssists = parseTopAssists(json?.scoring);
-        const topCards = parseTopCards(json?.discipline);
+        const yellowCards = parseDisciplineList(json?.discipline?.yellowCards ?? []);
+        const redCards = parseDisciplineList(json?.discipline?.redCards ?? []);
+        const saves = parseDisciplineList(json?.discipline?.saves ?? []);
+        const shotsOnTarget = parseDisciplineList(json?.discipline?.shotsOnTarget ?? []);
         const totals = parseTotals(json?.scoring);
 
         if (isMounted) {
           if (!topScorers.length && !topAssists.length) {
             setEmpty(true);
           } else {
-            setData({ topScorers, topAssists, topCards, totals });
+            setData({ topScorers, topAssists, yellowCards, redCards, saves, shotsOnTarget, totals });
             setEmpty(false);
           }
         }
@@ -178,7 +166,8 @@ export function Stats() {
     }
 
     loadStats();
-    return () => { isMounted = false; };
+    const interval = setInterval(loadStats, 10 * 60 * 1000);
+    return () => { isMounted = false; clearInterval(interval); };
   }, []);
 
   if (loading) {
@@ -227,12 +216,11 @@ export function Stats() {
             Tournament not started yet.
           </div>
           <div style={{ fontSize: 15, color: 'var(--ink-2)', maxWidth: 420, lineHeight: 1.6 }}>
-            Stats will appear here once the FIFA World Cup 2026 kicks off on{' '}
-            <strong>June 11, 2026</strong>. Check back then for live golden boot
-            standings, top assists, and disciplinary records.
+            No stats data available yet. ESPN will populate golden boot standings,
+            top assists, and disciplinary records once matches have been completed.
           </div>
           <div className="mono" style={{ fontSize: 10, letterSpacing: '0.18em', color: 'var(--ink-3)', textTransform: 'uppercase', marginTop: 8 }}>
-            Via ESPN · Auto-updates every 5 min
+            Via ESPN · Auto-updates every 10 min
           </div>
         </div>
       </div>
@@ -321,24 +309,71 @@ export function Stats() {
             </div>
           )}
 
-          {data.topCards.length > 0 && (
+          {data.yellowCards.length > 0 && (
             <div>
-              <div className="eyebrow">Cards per team</div>
-              <div className="serif it" style={{ fontSize: 24, marginTop: 6, marginBottom: 14 }}>Disciplinary</div>
+              <div className="eyebrow">Discipline</div>
+              <div className="serif it" style={{ fontSize: 24, marginTop: 6, marginBottom: 14 }}>Cards</div>
               <div>
-                {data.topCards.map((c) => (
-                  <div key={c.team} style={{
-                    display: 'grid', gridTemplateColumns: '24px 1fr auto auto',
-                    gap: 10, alignItems: 'center', padding: '8px 0',
+                {data.yellowCards.map((c) => (
+                  <div key={c.player + c.teamCode} style={{
+                    display: 'grid', gridTemplateColumns: '20px 18px 1fr auto auto',
+                    gap: 8, alignItems: 'center', padding: '8px 0',
+                    borderTop: '1px dashed var(--rule-soft)',
                   }}>
-                    <Flag code={c.team} w={20} h={13} />
-                    <div style={{ fontSize: 13 }}>{c.name || c.team}</div>
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontFamily: 'var(--mono)', fontSize: 11 }}>
-                      <span style={{ width: 11, height: 14, background: 'var(--gold)', borderRadius: 1 }} /> {c.y}
+                    <div className="mono" style={{ fontSize: 11, color: 'var(--ink-3)' }}>{c.rank}</div>
+                    <Flag code={c.teamCode} w={16} h={11} />
+                    <div style={{ fontSize: 12, fontWeight: 500, lineHeight: 1.2 }}>{c.player}</div>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontFamily: 'var(--mono)', fontSize: 11 }}>
+                      <span style={{ width: 9, height: 12, background: 'var(--gold)', borderRadius: 1 }} /> {c.value}
                     </span>
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontFamily: 'var(--mono)', fontSize: 11 }}>
-                      <span style={{ width: 11, height: 14, background: 'var(--pulse)', borderRadius: 1 }} /> {c.r}
-                    </span>
+                    {data.redCards.find((r) => r.player === c.player) && (
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontFamily: 'var(--mono)', fontSize: 11 }}>
+                        <span style={{ width: 9, height: 12, background: 'var(--pulse)', borderRadius: 1 }} />{' '}
+                        {data.redCards.find((r) => r.player === c.player)?.value ?? 0}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {data.saves.length > 0 && (
+            <div>
+              <div className="eyebrow">Goalkeepers</div>
+              <div className="serif it" style={{ fontSize: 24, marginTop: 6, marginBottom: 14 }}>Top saves</div>
+              <div>
+                {data.saves.map((s) => (
+                  <div key={s.player + s.teamCode} style={{
+                    display: 'grid', gridTemplateColumns: '20px 18px 1fr auto',
+                    gap: 8, alignItems: 'center', padding: '8px 0',
+                    borderTop: '1px dashed var(--rule-soft)',
+                  }}>
+                    <div className="mono" style={{ fontSize: 11, color: 'var(--ink-3)' }}>{s.rank}</div>
+                    <Flag code={s.teamCode} w={16} h={11} />
+                    <div style={{ fontSize: 12, fontWeight: 500 }}>{s.player}</div>
+                    <div className="serif tnum" style={{ fontSize: 18 }}>{s.value}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {data.shotsOnTarget.length > 0 && (
+            <div>
+              <div className="eyebrow">Attack</div>
+              <div className="serif it" style={{ fontSize: 24, marginTop: 6, marginBottom: 14 }}>Shots on target</div>
+              <div>
+                {data.shotsOnTarget.map((s) => (
+                  <div key={s.player + s.teamCode} style={{
+                    display: 'grid', gridTemplateColumns: '20px 18px 1fr auto',
+                    gap: 8, alignItems: 'center', padding: '8px 0',
+                    borderTop: '1px dashed var(--rule-soft)',
+                  }}>
+                    <div className="mono" style={{ fontSize: 11, color: 'var(--ink-3)' }}>{s.rank}</div>
+                    <Flag code={s.teamCode} w={16} h={11} />
+                    <div style={{ fontSize: 12, fontWeight: 500 }}>{s.player}</div>
+                    <div className="serif tnum" style={{ fontSize: 18 }}>{s.value}</div>
                   </div>
                 ))}
               </div>
