@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Flag } from './Shared';
 import { posthog } from '@/lib/posthog';
 
-interface LiveBracketMatch {
+export interface LiveBracketMatch {
   id: string;
   a: string | null;
   b: string | null;
@@ -18,7 +18,7 @@ interface LiveBracketMatch {
   venue: { name: string; city: string };
 }
 
-interface LiveBracket {
+export interface LiveBracket {
   R32: LiveBracketMatch[];
   R16: LiveBracketMatch[];
   QF: LiveBracketMatch[];
@@ -27,22 +27,22 @@ interface LiveBracket {
 }
 
 /** Fixed slot geometry so gutters and pair blocks stay aligned across rounds */
-const CARD_H = 106;
-const SLOT_GAP = 14;
-const PAIR_GAP = 20;
-const GUTTER_W = 44;
-const H0 = 2 * CARD_H + SLOT_GAP;
+export const CARD_H = 106;
+export const SLOT_GAP = 14;
+export const PAIR_GAP = 20;
+export const GUTTER_W = 44;
+export const H0 = 2 * CARD_H + SLOT_GAP;
 
-type RoundId = keyof LiveBracket;
+export type RoundId = keyof LiveBracket;
 
-interface RoundConfig {
+export interface RoundConfig {
   id: RoundId;
   label: string;
   mergeLevel: number;
   slotsPerPair: 1 | 2;
 }
 
-const ROUNDS: RoundConfig[] = [
+export const ROUNDS: RoundConfig[] = [
   { id: 'R32', label: 'Round of 32', mergeLevel: 0, slotsPerPair: 2 },
   { id: 'R16', label: 'Round of 16', mergeLevel: 0, slotsPerPair: 1 },
   { id: 'QF', label: 'Quarter-finals', mergeLevel: 1, slotsPerPair: 1 },
@@ -50,7 +50,7 @@ const ROUNDS: RoundConfig[] = [
   { id: 'F', label: 'Final', mergeLevel: 3, slotsPerPair: 1 },
 ];
 
-const blank = (id: string): LiveBracketMatch => ({
+export const blank = (id: string): LiveBracketMatch => ({
   id,
   a: null,
   b: null,
@@ -73,7 +73,7 @@ const STATIC_HINTS: LiveBracket = {
   F: [blank('f1')],
 };
 
-const R32_HINTS = [
+export const R32_HINTS = [
   ['2A', '2B'],
   ['1E', '3rd A/B/C/D/F'],
   ['1F', '2C'],
@@ -92,7 +92,7 @@ const R32_HINTS = [
   ['1B', '3rd A/C/D/F/L'],
 ];
 
-const ROUND_SIZES: Record<RoundId, number> = {
+export const ROUND_SIZES: Record<RoundId, number> = {
   R32: 16,
   R16: 8,
   QF: 4,
@@ -100,7 +100,7 @@ const ROUND_SIZES: Record<RoundId, number> = {
   F: 1,
 };
 
-function padRound(
+export function padRound(
   matches: LiveBracketMatch[],
   size: number,
   idPrefix: string
@@ -112,7 +112,7 @@ function padRound(
   return out;
 }
 
-function normalizeBracket(raw: Partial<LiveBracket>): LiveBracket {
+export function normalizeBracket(raw: Partial<LiveBracket>): LiveBracket {
   return {
     R32: padRound(raw.R32 ?? [], ROUND_SIZES.R32, 'r'),
     R16: padRound(raw.R16 ?? [], ROUND_SIZES.R16, 'm'),
@@ -196,7 +196,7 @@ function bracketSlotLabel(
 
   return { display: 'TBD', full: 'TBD', isPlaceholder: true };
 }
-const R32_DATES = [
+export const R32_DATES = [
   'Jun 28',
   'Jun 29',
   'Jun 29',
@@ -215,7 +215,7 @@ const R32_DATES = [
   'Jul 4',
 ];
 
-function pairBlockHeight(mergeLevel: number): number {
+export function pairBlockHeight(mergeLevel: number): number {
   let h = H0;
   for (let i = 0; i < mergeLevel; i++) {
     h = 2 * h + PAIR_GAP;
@@ -363,7 +363,7 @@ function getWinner(m: LiveBracketMatch): string | null {
   return null;
 }
 
-function GutterColumn({
+export function GutterColumn({
   count,
   mergeLevel,
 }: {
@@ -433,18 +433,20 @@ function BracketConnector({
   );
 }
 
-function RoundColumn({
+export function RoundColumn({
   round,
   matches,
   hints,
   dates,
   isFinal,
+  noLink,
 }: {
   round: RoundConfig;
   matches: LiveBracketMatch[];
   hints?: string[][];
   dates?: string[];
   isFinal?: boolean;
+  noLink?: boolean;
 }) {
   const blockH = pairBlockHeight(round.mergeLevel);
   const pairCount = Math.ceil(matches.length / round.slotsPerPair);
@@ -495,6 +497,7 @@ function RoundColumn({
                       hintB={hints?.[matchIndex]?.[1]}
                       date={dates?.[matchIndex]}
                       isFinal={isFinal}
+                      noLink={noLink}
                     />
                   </div>
                 );
@@ -513,12 +516,14 @@ function Card({
   hintB,
   date,
   isFinal,
+  noLink,
 }: {
   m: LiveBracketMatch;
   hintA?: string;
   hintB?: string;
   date?: string;
   isFinal?: boolean;
+  noLink?: boolean;
 }) {
   const isLive = m.status === 'live';
   const isFt = m.status === 'ft';
@@ -582,7 +587,7 @@ function Card({
     </div>
   );
 
-  if (!hasTeams) return card;
+  if (!hasTeams || noLink) return card;
 
   return (
     <Link href={`/match/${m.id}`} className="bracket-link">
@@ -624,8 +629,25 @@ function TeamRow({
       <span
         className={isPlaceholder ? 'bracket-team-hint' : 'bracket-team-name'}
         title={full !== display ? full : undefined}
+        style={{ display: 'flex', alignItems: 'baseline', gap: 5, minWidth: 0 }}
       >
-        {display}
+        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {display}
+        </span>
+        {!isPlaceholder && hint && (
+          <span
+            className="mono"
+            style={{
+              fontSize: 9,
+              color: 'var(--ink-4)',
+              letterSpacing: '0.08em',
+              flexShrink: 0,
+              fontWeight: 500,
+            }}
+          >
+            {hint}
+          </span>
+        )}
       </span>
 
       <span className="mono tnum bracket-score">
@@ -635,7 +657,7 @@ function TeamRow({
   );
 }
 
-function TrophyColumn({
+export function TrophyColumn({
   winner,
   slotHeight,
 }: {
