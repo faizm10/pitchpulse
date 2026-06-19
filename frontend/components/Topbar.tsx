@@ -10,7 +10,7 @@ const tabs = [
   { label: 'Map', href: '/' },
   { label: 'Matches', href: '/matches' },
   { label: 'Standings', href: '/standings' },
-  // { label: 'Bracket', href: '/bracket' },
+  { label: 'Bracket', href: '/bracket' },
   { label: 'Stats', href: '/stats' },
   { label: 'News', href: '/news' },
 ];
